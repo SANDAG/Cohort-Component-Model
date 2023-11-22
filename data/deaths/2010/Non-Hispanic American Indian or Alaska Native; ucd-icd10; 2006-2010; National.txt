@@ -1,0 +1,239 @@
+"Notes"	"Gender"	"Gender Code"	"Single-Year Ages"	"Single-Year Ages Code"	Deaths	Population	Crude Rate	Crude Rate Standard Error
+	"Female"	"F"	"< 1 year"	"0"	711	104535	680.2	25.5
+	"Female"	"F"	"1 year"	"1"	62	102007	60.8	7.7
+	"Female"	"F"	"2 years"	"2"	48	102097	47.0	6.8
+	"Female"	"F"	"3 years"	"3"	34	100986	33.7	5.8
+	"Female"	"F"	"4 years"	"4"	31	100475	30.9	5.5
+	"Female"	"F"	"5 years"	"5"	23	100071	23.0	4.8
+	"Female"	"F"	"6 years"	"6"	17	98924	Unreliable	4.2
+	"Female"	"F"	"7 years"	"7"	18	98936	Unreliable	4.3
+	"Female"	"F"	"8 years"	"8"	14	98143	Unreliable	3.8
+	"Female"	"F"	"9 years"	"9"	18	99394	Unreliable	4.3
+	"Female"	"F"	"10 years"	"10"	13	105170	Unreliable	3.4
+	"Female"	"F"	"11 years"	"11"	14	103443	Unreliable	3.6
+	"Female"	"F"	"12 years"	"12"	17	106821	Unreliable	3.9
+	"Female"	"F"	"13 years"	"13"	27	107806	25.0	4.8
+	"Female"	"F"	"14 years"	"14"	39	109767	35.5	5.7
+	"Female"	"F"	"15 years"	"15"	61	114190	53.4	6.8
+	"Female"	"F"	"16 years"	"16"	83	118529	70.0	7.7
+	"Female"	"F"	"17 years"	"17"	69	118986	58.0	7.0
+	"Female"	"F"	"18 years"	"18"	87	117127	74.3	8.0
+	"Female"	"F"	"19 years"	"19"	94	113140	83.1	8.6
+	"Female"	"F"	"20 years"	"20"	89	108475	82.0	8.7
+	"Female"	"F"	"21 years"	"21"	92	104099	88.4	9.2
+	"Female"	"F"	"22 years"	"22"	98	101080	97.0	9.8
+	"Female"	"F"	"23 years"	"23"	83	99367	83.5	9.2
+	"Female"	"F"	"24 years"	"24"	96	97693	98.3	10.0
+	"Female"	"F"	"25 years"	"25"	96	95299	100.7	10.3
+	"Female"	"F"	"26 years"	"26"	103	91839	112.2	11.1
+	"Female"	"F"	"27 years"	"27"	113	89545	126.2	11.9
+	"Female"	"F"	"28 years"	"28"	114	86789	131.4	12.3
+	"Female"	"F"	"29 years"	"29"	109	85779	127.1	12.2
+	"Female"	"F"	"30 years"	"30"	101	84484	119.5	11.9
+	"Female"	"F"	"31 years"	"31"	124	81250	152.6	13.7
+	"Female"	"F"	"32 years"	"32"	105	81493	128.8	12.6
+	"Female"	"F"	"33 years"	"33"	142	80869	175.6	14.7
+	"Female"	"F"	"34 years"	"34"	139	80279	173.1	14.7
+	"Female"	"F"	"35 years"	"35"	168	83732	200.6	15.5
+	"Female"	"F"	"36 years"	"36"	145	84015	172.6	14.3
+	"Female"	"F"	"37 years"	"37"	178	84496	210.7	15.8
+	"Female"	"F"	"38 years"	"38"	201	84747	237.2	16.7
+	"Female"	"F"	"39 years"	"39"	227	84582	268.4	17.8
+	"Female"	"F"	"40 years"	"40"	202	85123	237.3	16.7
+	"Female"	"F"	"41 years"	"41"	211	86937	242.7	16.7
+	"Female"	"F"	"42 years"	"42"	284	90363	314.3	18.6
+	"Female"	"F"	"43 years"	"43"	284	92611	306.7	18.2
+	"Female"	"F"	"44 years"	"44"	303	94595	320.3	18.4
+	"Female"	"F"	"45 years"	"45"	328	96614	339.5	18.7
+	"Female"	"F"	"46 years"	"46"	339	96501	351.3	19.1
+	"Female"	"F"	"47 years"	"47"	361	97287	371.1	19.5
+	"Female"	"F"	"48 years"	"48"	373	97421	382.9	19.8
+	"Female"	"F"	"49 years"	"49"	406	95899	423.4	21.0
+	"Female"	"F"	"50 years"	"50"	379	93640	404.7	20.8
+	"Female"	"F"	"51 years"	"51"	431	91503	471.0	22.7
+	"Female"	"F"	"52 years"	"52"	422	88745	475.5	23.1
+	"Female"	"F"	"53 years"	"53"	447	85557	522.5	24.7
+	"Female"	"F"	"54 years"	"54"	450	83390	539.6	25.4
+	"Female"	"F"	"55 years"	"55"	439	78204	561.4	26.8
+	"Female"	"F"	"56 years"	"56"	473	74435	635.5	29.2
+	"Female"	"F"	"57 years"	"57"	496	71647	692.3	31.1
+	"Female"	"F"	"58 years"	"58"	460	68930	667.3	31.1
+	"Female"	"F"	"59 years"	"59"	488	66329	735.7	33.3
+	"Female"	"F"	"60 years"	"60"	491	60608	810.1	36.6
+	"Female"	"F"	"61 years"	"61"	472	57384	822.5	37.9
+	"Female"	"F"	"62 years"	"62"	557	52339	1064.2	45.1
+	"Female"	"F"	"63 years"	"63"	535	49213	1087.1	47.0
+	"Female"	"F"	"64 years"	"64"	486	44043	1103.5	50.1
+	"Female"	"F"	"65 years"	"65"	514	42138	1219.8	53.8
+	"Female"	"F"	"66 years"	"66"	537	39680	1353.3	58.4
+	"Female"	"F"	"67 years"	"67"	591	36516	1618.5	66.6
+	"Female"	"F"	"68 years"	"68"	601	33894	1773.2	72.3
+	"Female"	"F"	"69 years"	"69"	612	31790	1925.1	77.8
+	"Female"	"F"	"70 years"	"70"	585	29780	1964.4	81.2
+	"Female"	"F"	"71 years"	"71"	598	27981	2137.2	87.4
+	"Female"	"F"	"72 years"	"72"	594	25963	2287.9	93.9
+	"Female"	"F"	"73 years"	"73"	618	24437	2529.0	101.7
+	"Female"	"F"	"74 years"	"74"	642	22741	2823.1	111.4
+	"Female"	"F"	"75 years"	"75"	651	20800	3129.8	122.7
+	"Female"	"F"	"76 years"	"76"	630	19249	3272.9	130.4
+	"Female"	"F"	"77 years"	"77"	629	18105	3474.2	138.5
+	"Female"	"F"	"78 years"	"78"	639	16499	3873.0	153.2
+	"Female"	"F"	"79 years"	"79"	643	15806	4068.1	160.4
+	"Female"	"F"	"80 years"	"80"	691	14277	4840.0	184.1
+	"Female"	"F"	"81 years"	"81"	655	12785	5123.2	200.2
+	"Female"	"F"	"82 years"	"82"	673	12097	5563.4	214.5
+	"Female"	"F"	"83 years"	"83"	666	11128	5984.9	231.9
+	"Female"	"F"	"84 years"	"84"	616	9630	6396.7	257.7
+	"Male"	"M"	"< 1 year"	"0"	971	105851	917.3	29.4
+	"Male"	"M"	"1 year"	"1"	97	103962	93.3	9.5
+	"Male"	"M"	"2 years"	"2"	60	103323	58.1	7.5
+	"Male"	"M"	"3 years"	"3"	39	103151	37.8	6.1
+	"Male"	"M"	"4 years"	"4"	33	102802	32.1	5.6
+	"Male"	"M"	"5 years"	"5"	27	103540	26.1	5.0
+	"Male"	"M"	"6 years"	"6"	18	101315	Unreliable	4.2
+	"Male"	"M"	"7 years"	"7"	17	101663	Unreliable	4.1
+	"Male"	"M"	"8 years"	"8"	27	101833	26.5	5.1
+	"Male"	"M"	"9 years"	"9"	19	103199	Unreliable	4.2
+	"Male"	"M"	"10 years"	"10"	24	108570	22.1	4.5
+	"Male"	"M"	"11 years"	"11"	19	106165	Unreliable	4.1
+	"Male"	"M"	"12 years"	"12"	28	108283	25.9	4.9
+	"Male"	"M"	"13 years"	"13"	35	110303	31.7	5.4
+	"Male"	"M"	"14 years"	"14"	52	113349	45.9	6.4
+	"Male"	"M"	"15 years"	"15"	83	118523	70.0	7.7
+	"Male"	"M"	"16 years"	"16"	129	122270	105.5	9.3
+	"Male"	"M"	"17 years"	"17"	158	123918	127.5	10.1
+	"Male"	"M"	"18 years"	"18"	237	123332	192.2	12.5
+	"Male"	"M"	"19 years"	"19"	240	117721	203.9	13.2
+	"Male"	"M"	"20 years"	"20"	226	111892	202.0	13.4
+	"Male"	"M"	"21 years"	"21"	255	108882	234.2	14.7
+	"Male"	"M"	"22 years"	"22"	257	103160	249.1	15.5
+	"Male"	"M"	"23 years"	"23"	265	101292	261.6	16.1
+	"Male"	"M"	"24 years"	"24"	277	96417	287.3	17.3
+	"Male"	"M"	"25 years"	"25"	240	94675	253.5	16.4
+	"Male"	"M"	"26 years"	"26"	235	90927	258.4	16.9
+	"Male"	"M"	"27 years"	"27"	234	88484	264.5	17.3
+	"Male"	"M"	"28 years"	"28"	237	85318	277.8	18.0
+	"Male"	"M"	"29 years"	"29"	230	84041	273.7	18.0
+	"Male"	"M"	"30 years"	"30"	220	83681	262.9	17.7
+	"Male"	"M"	"31 years"	"31"	254	79955	317.7	19.9
+	"Male"	"M"	"32 years"	"32"	229	79363	288.5	19.1
+	"Male"	"M"	"33 years"	"33"	255	78572	324.5	20.3
+	"Male"	"M"	"34 years"	"34"	274	78477	349.1	21.1
+	"Male"	"M"	"35 years"	"35"	275	80715	340.7	20.5
+	"Male"	"M"	"36 years"	"36"	286	80988	353.1	20.9
+	"Male"	"M"	"37 years"	"37"	294	81261	361.8	21.1
+	"Male"	"M"	"38 years"	"38"	333	81586	408.2	22.4
+	"Male"	"M"	"39 years"	"39"	371	81837	453.3	23.5
+	"Male"	"M"	"40 years"	"40"	355	81981	433.0	23.0
+	"Male"	"M"	"41 years"	"41"	397	82524	481.1	24.1
+	"Male"	"M"	"42 years"	"42"	421	84284	499.5	24.3
+	"Male"	"M"	"43 years"	"43"	432	87409	494.2	23.8
+	"Male"	"M"	"44 years"	"44"	464	87749	528.8	24.5
+	"Male"	"M"	"45 years"	"45"	519	90834	571.4	25.1
+	"Male"	"M"	"46 years"	"46"	511	89862	568.6	25.2
+	"Male"	"M"	"47 years"	"47"	521	89908	579.5	25.4
+	"Male"	"M"	"48 years"	"48"	601	88801	676.8	27.6
+	"Male"	"M"	"49 years"	"49"	634	88189	718.9	28.6
+	"Male"	"M"	"50 years"	"50"	668	85102	784.9	30.4
+	"Male"	"M"	"51 years"	"51"	611	83139	734.9	29.7
+	"Male"	"M"	"52 years"	"52"	587	80306	731.0	30.2
+	"Male"	"M"	"53 years"	"53"	676	77600	871.1	33.5
+	"Male"	"M"	"54 years"	"54"	632	74620	847.0	33.7
+	"Male"	"M"	"55 years"	"55"	682	71052	959.9	36.8
+	"Male"	"M"	"56 years"	"56"	720	68687	1048.2	39.1
+	"Male"	"M"	"57 years"	"57"	684	64788	1055.8	40.4
+	"Male"	"M"	"58 years"	"58"	675	62730	1076.0	41.4
+	"Male"	"M"	"59 years"	"59"	716	60405	1185.3	44.3
+	"Male"	"M"	"60 years"	"60"	686	56615	1211.7	46.3
+	"Male"	"M"	"61 years"	"61"	686	52990	1294.6	49.4
+	"Male"	"M"	"62 years"	"62"	686	48285	1420.7	54.2
+	"Male"	"M"	"63 years"	"63"	646	44790	1442.3	56.7
+	"Male"	"M"	"64 years"	"64"	678	40011	1694.5	65.1
+	"Male"	"M"	"65 years"	"65"	666	38637	1723.7	66.8
+	"Male"	"M"	"66 years"	"66"	681	35278	1930.4	74.0
+	"Male"	"M"	"67 years"	"67"	676	33456	2020.6	77.7
+	"Male"	"M"	"68 years"	"68"	707	30847	2292.0	86.2
+	"Male"	"M"	"69 years"	"69"	658	28155	2337.1	91.1
+	"Male"	"M"	"70 years"	"70"	676	25737	2626.6	101.0
+	"Male"	"M"	"71 years"	"71"	667	23400	2850.4	110.4
+	"Male"	"M"	"72 years"	"72"	699	21811	3204.8	121.2
+	"Male"	"M"	"73 years"	"73"	672	19800	3393.9	130.9
+	"Male"	"M"	"74 years"	"74"	694	17921	3872.6	147.0
+	"Male"	"M"	"75 years"	"75"	663	16375	4048.9	157.2
+	"Male"	"M"	"76 years"	"76"	627	14873	4215.7	168.4
+	"Male"	"M"	"77 years"	"77"	654	13477	4852.7	189.8
+	"Male"	"M"	"78 years"	"78"	630	12115	5200.2	207.2
+	"Male"	"M"	"79 years"	"79"	592	10707	5529.1	227.2
+	"Male"	"M"	"80 years"	"80"	578	9904	5836.0	242.7
+	"Male"	"M"	"81 years"	"81"	540	8729	6186.3	266.2
+	"Male"	"M"	"82 years"	"82"	586	7548	7763.6	320.7
+	"Male"	"M"	"83 years"	"83"	541	6979	7751.8	333.3
+	"Male"	"M"	"84 years"	"84"	499	5739	8694.9	389.2
+"---"
+"Dataset: Underlying Cause of Death, 1999-2020"
+"Query Parameters:"
+"Title: Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2006-2010; National"
+"Hispanic Origin: Not Hispanic or Latino"
+"Race: American Indian or Alaska Native"
+"Single-Year Ages: < 1 year; 1 year; 2 years; 3 years; 4 years; 5 years; 6 years; 7 years; 8 years; 9 years; 10 years; 11 years;"
+"12 years; 13 years; 14 years; 15 years; 16 years; 17 years; 18 years; 19 years; 20 years; 21 years; 22 years; 23 years; 24"
+"years; 25 years; 26 years; 27 years; 28 years; 29 years; 30 years; 31 years; 32 years; 33 years; 34 years; 35 years; 36 years;"
+"37 years; 38 years; 39 years; 40 years; 41 years; 42 years; 43 years; 44 years; 45 years; 46 years; 47 years; 48 years; 49"
+"years; 50 years; 51 years; 52 years; 53 years; 54 years; 55 years; 56 years; 57 years; 58 years; 59 years; 60 years; 61 years;"
+"62 years; 63 years; 64 years; 65 years; 66 years; 67 years; 68 years; 69 years; 70 years; 71 years; 72 years; 73 years; 74"
+"years; 75 years; 76 years; 77 years; 78 years; 79 years; 80 years; 81 years; 82 years; 83 years; 84 years"
+"Year/Month: 2006; 2007; 2008; 2009; 2010"
+"Group By: Gender; Single-Year Ages"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/ucd.html for more information."
+"---"
+"Query Date: Nov 16, 2023 12:44:20 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 1999-2020 on CDC WONDER Online Database, released in 2021. Data are from the Multiple Cause of Death Files,"
+"1999-2020, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/ucd-icd10.html on Nov 16, 2023 12:44:20 PM"
+"---"
+Caveats:
+"1. Death rates are flagged as Unreliable when the rate is calculated with a numerator of 20 or less. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Unreliable."
+"2. Deaths of persons with Age ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among age groups,"
+"so are not included in age-specific counts, age-specific rates or in any age-adjusted rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"3. Deaths of persons with Hispanic origin ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among"
+"Hispanic Origin groups, so are not included in the Hispanic Origin specific counts and rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"4. Information included on the death certificate about the race and Hispanic ethnicity of the decedent is reported by the"
+"funeral director as provided by an informant, often the surviving next of kin, or, in the absence of an informant, on the basis"
+"of observation. Race and ethnicity information from the census is by self-report. To the extent that race and Hispanic origin"
+"are inconsistent between these two data sources, death rates will be biased. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Racial Differences."
+"5. The method used to calculate standard errors is documented here: More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Standard-Errors."
+"6. The population figures for year 2020 are bridged-race estimates of the July 1 resident population, from the Vintage 2020"
+"postcensal series released by NCHS on September 22, 2021. The population figures for year 2019 are bridged-race estimates of the"
+"July 1 resident population, from the Vintage 2019 postcensal series released by NCHS on July 9, 2020. The population figures for"
+"year 2018 are bridged-race estimates of the July 1 resident population, from the Vintage 2018 postcensal series released by NCHS"
+"on June 25, 2019. The population figures for year 2017 are bridged-race estimates of the July 1 resident population, from the"
+"Vintage 2017 postcensal series released by NCHS on June 27, 2018. The population figures for year 2016 are bridged-race"
+"estimates of the July 1 resident population, from the Vintage 2016 postcensal series released by NCHS on June 26, 2017. The"
+"population figures for year 2015 are bridged-race estimates of the July 1 resident population, from the Vintage 2015 postcensal"
+"series released by NCHS on June 28, 2016. The population figures for year 2014 are bridged-race estimates of the July 1 resident"
+"population, from the Vintage 2014 postcensal series released by NCHS on June 30, 2015. The population figures for year 2013 are"
+"bridged-race estimates of the July 1 resident population, from the Vintage 2013 postcensal series released by NCHS on June 26,"
+"2014. The population figures for year 2012 are bridged-race estimates of the July 1 resident population, from the Vintage 2012"
+"postcensal series released by NCHS on June 13, 2013. The population figures for year 2011 are bridged-race estimates of the July"
+"1 resident population, from the Vintage 2011 postcensal series released by NCHS on July 18, 2012. Population figures for 2010"
+"are April 1 Census counts. The population figures for years 2001 - 2009 are bridged-race estimates of the July 1 resident"
+"population, from the revised intercensal county-level 2000 - 2009 series released by NCHS on October 26, 2012. Population"
+"figures for 2000 are April 1 Census counts. Population figures for 1999 are from the 1990-1999 intercensal series of July 1"
+"estimates. Population figures for the infant age groups are the number of live births. <br/><b>Note:</b> Rates and population"
+"figures for years 2001 - 2009 differ slightly from previously published reports, due to use of the population estimates which"
+"were available at the time of release."
+"7. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Age Group."
