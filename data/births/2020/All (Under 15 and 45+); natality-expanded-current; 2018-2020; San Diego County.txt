@@ -1,0 +1,28 @@
+"Notes"	"Age of Mother 9"	"Age of Mother 9 Code"	Births
+	"Under 15 years"	"15"	22
+	"45-49 years"	"45-49"	611
+	"50 years and over"	"50+"	131
+"---"
+"Dataset: Natality, 2016-2022 expanded"
+"Query Parameters:"
+"Title: All (Under 15 and 45+); natality-expanded-current; 2018-2020; San Diego County, CA (06073).txt"
+"Age of Mother 9: Under 15 years; 45-49 years; 50 years and over"
+"States: San Diego County, CA (06073)"
+"Year: 2018; 2019; 2020"
+"Group By: Age of Mother 9"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 1,000"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/Natality-expanded.html for more information."
+"---"
+"Query Date: Nov 14, 2023 12:04:12 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Natality on CDC WONDER Online Database. Data are from the Natality Records 2016-2022, as compiled from data provided by"
+"the 57 vital statistics jurisdictions through the Vital Statistics Cooperative Program. Accessed at"
+"http://wonder.cdc.gov/natality-expanded-current.html on Nov 14, 2023 12:04:12 PM"
+"---"
+Caveats:
+"1. Each birth record represents one liveborn infant."
