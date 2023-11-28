@@ -1,6 +1,7 @@
 from python.base_yr import get_active_duty_mil, get_base_yr_2020
 from python.birth_rates import get_birth_rates
 from python.death_rates import get_death_rates, load_ss_life_tbl
+from python.migration_rates import get_migration_rates
 import json
 import pandas as pd
 import sqlalchemy as sql
@@ -19,6 +20,9 @@ with engine.connect() as connection:
     # get State of CA active-duty military ACS PUMS total
     with open(config["sql"]["acs5yr_pums_ca_mil"], "r") as query:
         acs5yr_pums_ca_mil = pd.read_sql_query(query.read(), connection)
+    # get ACS PUMS in/out migrants for San Diego County
+    with open(config["sql"]["acs5yr_pums_migrants"], "r") as query:
+        acs5yr_pums_migrants = pd.read_sql_query(query.read(), connection)
     # get San Diego County ACS PUMS persons
     with open(config["sql"]["acs5yr_pums_persons"], "r") as query:
         acs5yr_pums_persons = pd.read_sql_query(query.read(), connection)
@@ -68,13 +72,17 @@ base_df = get_active_duty_mil(
 )
 
 
-# Get crude death rates
-death_rates = get_death_rates(
-    base_yr=config["interval"]["base"], ss_life_tbl=ss_life_tbl, rates_map=rates_map
-)
-
-
-# Get crude birth rates
-birth_rates = get_birth_rates(
-    base_yr=config["interval"]["base"], base_df=base_df, rates_map=rates_map
-)
+# Get base-year crude birth, death, and migration rates
+base_rates = {
+    "births": get_birth_rates(
+        base_yr=config["interval"]["base"], base_df=base_df, rates_map=rates_map
+    ),
+    "deaths": get_death_rates(
+        base_yr=config["interval"]["base"], ss_life_tbl=ss_life_tbl, rates_map=rates_map
+    ),
+    "migration": get_migration_rates(
+        base_yr=config["interval"]["base"],
+        base_df=base_df,
+        acs5yr_pums_migrants=acs5yr_pums_migrants,
+    ),
+}
