@@ -146,7 +146,7 @@ def get_base_yr_2020(
     if 2020 not in acs5yr_pums_persons["year"].unique():
         raise ValueError("2020 not in ACS PUMS persons dataset")
 
-    if base_yr not in dof_estimates["year"].unique():
+    if base_yr not in dof_estimates["vintage"].unique():
         raise ValueError(str(base_yr) + ": Not in DOF Estimates dataset")
 
     if 2020 not in dof_projections["year"].unique():
@@ -182,7 +182,9 @@ def get_base_yr_2020(
     # Matching the DOF Estimates value for total population for the
     # Chosen base year
     scale_pop_pct = (
-        dof_estimates[dof_estimates["year"] == base_yr]["pop"].iloc[0]
+        dof_estimates[
+            (dof_estimates["vintage"] == base_yr) & (dof_estimates["year"] == base_yr)
+        ]["pop"].iloc[0]
         / df["pop_blended"].sum()
     )
 

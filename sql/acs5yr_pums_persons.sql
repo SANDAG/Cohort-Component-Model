@@ -33,10 +33,10 @@ with
 	[pums_persons]
 	AS
 	(
-					SELECT 2020 AS [year], [ST], [PUMA], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [PWGTP]
+					SELECT 2020 AS [year], [ST], [PUMA], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], [SPORDER], [PWGTP]
 			FROM [census].[acs_pums].[y2020_p_us_a]
 		UNION ALL
-			SELECT 2020 AS [year], [ST], [PUMA], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [PWGTP]
+			SELECT 2020 AS [year], [ST], [PUMA], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], [SPORDER], [PWGTP]
 			FROM [census].[acs_pums].[y2020_p_us_b]
 	),
 	[transformed_tt]
@@ -55,6 +55,8 @@ with
 				WHEN [RAC1P] = '9' THEN 'Two or More Races'
 				ELSE NULL END AS [race],
 			[MIL],
+			[RELSHIPP],
+			[SPORDER],
 			[PWGTP]
 		FROM
 			[pums_persons]
@@ -69,7 +71,10 @@ SELECT
 	[sex],
 	[age],
 	SUM([PWGTP]) AS [pop],
-	SUM(CASE WHEN [MIL] = '1' THEN [PWGTP] ELSE 0 END) AS [pop_mil]
+	SUM(CASE WHEN [MIL] = '1' THEN [PWGTP] ELSE 0 END) AS [pop_mil],
+	SUM(CASE WHEN [RELSHIPP] IN ('37','38') THEN [PWGTP] ELSE 0 END) AS [pop_gq],
+	SUM(CASE WHEN [RELSHIPP] NOT IN ('37','38') THEN [PWGTP] ELSE 0 END) AS [pop_hh],
+	SUM(CASE WHEN [RELSHIPP] NOT IN ('37','38') AND [SPORDER] = 1 THEN [PWGTP] ELSE 0 END) AS [pop_hh_head]
 FROM
 	[transformed_tt]
 GROUP BY

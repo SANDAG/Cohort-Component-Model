@@ -1,6 +1,7 @@
 from python.base_yr import get_active_duty_mil, get_base_yr_2020
 from python.birth_rates import get_birth_rates
 from python.death_rates import get_death_rates, load_ss_life_tbl
+from python.formation_rates import get_formation_rates
 from python.migration_rates import get_migration_rates
 import json
 import pandas as pd
@@ -72,17 +73,26 @@ base_df = get_active_duty_mil(
 )
 
 
-# Get base-year crude birth, death, and migration rates
+# Get base-year rates
 base_rates = {
+    # Crude Birth Rates
     "births": get_birth_rates(
         base_yr=config["interval"]["base"], base_df=base_df, rates_map=rates_map
     ),
+    # Crude Death Rates
     "deaths": get_death_rates(
         base_yr=config["interval"]["base"], ss_life_tbl=ss_life_tbl, rates_map=rates_map
     ),
+    # Crude Migration Rates
     "migration": get_migration_rates(
         base_yr=config["interval"]["base"],
         base_df=base_df,
         acs5yr_pums_migrants=acs5yr_pums_migrants,
+    ),
+    # Crude Group Quarters and Household Formation Rates
+    "formation_hq_hh": get_formation_rates(
+        base_yr=config["interval"]["base"],
+        acs5yr_pums_persons=acs5yr_pums_persons,
+        dof_estimates=dof_estimates,
     ),
 }
