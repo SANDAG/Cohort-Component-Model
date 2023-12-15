@@ -1,4 +1,5 @@
-from python.base_yr import get_active_duty_mil, get_base_yr_2020
+from python.active_duty_military import get_active_duty_military
+from python.base_yr import get_base_yr_2020
 from python.birth_rates import get_birth_rates
 from python.death_rates import get_death_rates, load_ss_life_tbl
 from python.formation_rates import get_formation_rates
@@ -44,55 +45,38 @@ sdmac_report = pd.read_csv(config["csv"]["sdmac_report"])
 ss_life_tbl = load_ss_life_tbl(config["csv"]["ss_life_table"])
 
 
-# Initialize chosen base year dataset
-# For base years >= 2020 use the blended base year approach
-if 2020 <= config["interval"]["base"] < 2030:
-    base_df = get_base_yr_2020(
-        base_yr=config["interval"]["base"],
+# Initialize base year dataset using launch year
+# For launch years >= 2020 use the blended base year approach
+if 2020 <= config["interval"]["launch"] < 2030:
+    base_yr = 2020
+
+    pop_df = get_base_yr_2020(
+        launch_yr=config["interval"]["launch"],
         acs5yr_pums_persons=acs5yr_pums_persons,
         dof_estimates=dof_estimates,
         dof_projections=dof_projections,
         census_redistricting=census_redistricting,
     )
-# For base years >= 2010 (and < 2020) use the 2010 decennial Census
-elif 2010 <= config["interval"]["base"] < 2020:
-    raise ValueError("Base years prior to 2020 not available.")
+# For launch years >= 2010 (and < 2020) use the 2010 decennial Census
+elif 2010 <= config["interval"]["launch"] < 2020:
+    raise ValueError("Launch years prior to 2020 not available.")
+# Only valid for launch years 2010-2029
 else:
-    raise ValueError("Invalid base year provided.")
+    raise ValueError("Invalid launch year provided.")
 
 
-# Break out the base year active-duty military population
-# From the total population of the chosen base year dataset
-base_df = get_active_duty_mil(
-    base_yr=config["interval"]["base"],
-    base_df=base_df,
-    acs5yr_pums_persons=acs5yr_pums_persons,
-    acs5yr_pums_ca_mil=acs5yr_pums_ca_mil,
-    dmdc_location_report=dmdc_location_report,
-    sdmac_report=sdmac_report,
-)
+# Loop increment years from base year to horizon year
+for increment in range(base_yr, config["interval"]["horizon"] + 1):
+    print("Starting Increment: ", str(increment))
 
-
-# Get base-year rates
-base_rates = {
-    # Crude Birth Rates
-    "births": get_birth_rates(
-        base_yr=config["interval"]["base"], base_df=base_df, rates_map=rates_map
-    ),
-    # Crude Death Rates
-    "deaths": get_death_rates(
-        base_yr=config["interval"]["base"], ss_life_tbl=ss_life_tbl, rates_map=rates_map
-    ),
-    # Crude Migration Rates
-    "migration": get_migration_rates(
-        base_yr=config["interval"]["base"],
-        base_df=base_df,
-        acs5yr_pums_migrants=acs5yr_pums_migrants,
-    ),
-    # Crude Group Quarters and Household Formation Rates
-    "formation_hq_hh": get_formation_rates(
-        base_yr=config["interval"]["base"],
+    # Break out the active-duty military population
+    # From the total population for the increment year
+    pop_df = get_active_duty_military(
+        yr=increment,
+        launch_yr=config["interval"]["launch"],
+        pop_df=pop_df,
         acs5yr_pums_persons=acs5yr_pums_persons,
-        dof_estimates=dof_estimates,
-    ),
-}
+        acs5yr_pums_ca_mil=acs5yr_pums_ca_mil,
+        dmdc_location_report=dmdc_location_report,
+        sdmac_report=sdmac_report,
+    )
