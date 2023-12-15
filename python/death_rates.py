@@ -1,6 +1,6 @@
 """Get crude death rates by race, sex, and single year of age."""
-# TODO: Add function to allow for input % adjustments to death rates.
-# TODO: Potentially implement smoothing function within race and sex categories.
+# TODO: (6-feature) Add function to allow for input % adjustments to death rates.
+# TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import pandas as pd
 
@@ -25,7 +25,7 @@ def deaths_recode(deaths: str, pop: str) -> float:
 
 
 def get_death_rates(
-    base_yr: int, ss_life_tbl: pd.DataFrame, rates_map: dict
+    yr: int, launch_yr: int, ss_life_tbl: pd.DataFrame, rates_map: dict
 ) -> pd.DataFrame:
     """Create death rates broken down by race, sex, and single year of age.
 
@@ -43,7 +43,8 @@ def get_death_rates(
     discontinuities, range bounded > 0 and < 1.
 
     Args:
-        base_yr (int): Chosen base year
+        yr: Increment year
+        launch_yr: Launch year
         ss_life_tbl (pd.DataFrame): Social Security Actuarial Life Table from
             death_rates.load_ss_life_tbl
         rates_map (dict): loaded JSON configuration birth/death rate map
@@ -52,89 +53,95 @@ def get_death_rates(
         pd.DataFrame: Death rates broken down by race, sex, and single year
             of age
     """
+    # Death rates calculated from base year up to the launch year
+    if yr <= launch_yr:
+        if yr not in ss_life_tbl["year"].unique():
+            if yr == 2018 and 2017 in ss_life_tbl["year"].unique():
+                pass  # 2018 base year uses 2017 data
+            elif yr == 2012 and 2011 in ss_life_tbl["year"].unique():
+                pass  # 2012 base year uses 2011 data
+            else:
+                raise ValueError(
+                    str(yr) + ": Not in Social Security Actuarial Life Table"
+                )
 
-    if base_yr not in ss_life_tbl["year"].unique():
-        if base_yr == 2018 and 2017 in ss_life_tbl["year"].unique():
-            pass  # 2018 base year uses 2017 data
-        elif base_yr == 2012 and 2011 in ss_life_tbl["year"].unique():
-            pass  # 2012 base year uses 2011 data
+        if str(yr) not in rates_map["deaths"].keys():
+            raise ValueError("No death rate mapping for: " + str(yr))
+
+        # Filter the Social Security Actuarial Life Table to the chosen base year
+        # Note that 2020, 2021 data is not used to COVID-19 adverse impact on geriatric death rates
+        # Note that there was no 2018 published data so default to using 2017
+        # Note that there was no 2012 published data so default to using 2011
+        # Remove records where age < 85
+        if yr in [2020, 2021]:
+            ss_life_tbl = ss_life_tbl[
+                (ss_life_tbl["year"] == 2019) & (ss_life_tbl["age"] >= 85)
+            ]
+        elif yr == 2018:
+            ss_life_tbl = ss_life_tbl[
+                (ss_life_tbl["year"] == 2017) & (ss_life_tbl["age"] >= 85)
+            ]
+        elif yr == 2012:
+            ss_life_tbl = ss_life_tbl[
+                (ss_life_tbl["year"] == 2011) & (ss_life_tbl["age"] >= 85)
+            ]
         else:
-            raise ValueError(
-                str(base_yr) + ": Not in Social Security Actuarial Life Table"
+            ss_life_tbl = ss_life_tbl[
+                (ss_life_tbl["year"] == yr) & (ss_life_tbl["age"] >= 85)
+            ]
+
+        rates = pd.DataFrame()
+        # For each WONDER death rate file path in the chosen base year
+        for k, v in rates_map["deaths"][str(yr)].items():
+            fp = "data/deaths/" + str(yr) + "/" + v
+
+            # Get WONDER death rate data for ages < 85
+            wonder_rates = (
+                pd.read_csv(
+                    fp,
+                    delimiter="\t",
+                    usecols=["Gender", "Single-Year Ages Code", "Deaths", "Population"],
+                    dtype={
+                        "Gender": str,
+                        "Single-Year Ages Code": str,
+                        "Deaths": str,
+                        "Population": str,
+                    },
+                )
+                .rename(
+                    columns={
+                        "Gender": "sex",
+                        "Single-Year Ages Code": "age",
+                        "Deaths": "deaths",
+                        "Population": "pop",
+                    }
+                )
+                .dropna(subset=["sex", "age"])
+                .assign(race=k)
+                .astype({"age": "int", "pop": "int"})
+                .query("age < 85")
             )
 
-    if str(base_yr) not in rates_map["deaths"].keys():
-        raise ValueError("No death rate mapping for: " + str(base_yr))
+            # Recode 0 deaths to 1, Recode Suppressed deaths to 4.5
+            wonder_rates["deaths"] = wonder_rates.apply(
+                lambda x: deaths_recode(x["deaths"], x["pop"]), axis=1
+            )
 
-    # Filter the Social Security Actuarial Life Table to the chosen base year
-    # Note that 2020, 2021 data is not used to COVID-19 adverse impact on geriatric death rates
-    # Note that there was no 2018 published data so default to using 2017
-    # Note that there was no 2012 published data so default to using 2011
-    # Remove records where age < 85
-    if base_yr in [2020, 2021]:
-        ss_life_tbl = ss_life_tbl[
-            (ss_life_tbl["year"] == 2019) & (ss_life_tbl["age"] >= 85)
-        ]
-    elif base_yr == 2018:
-        ss_life_tbl = ss_life_tbl[
-            (ss_life_tbl["year"] == 2017) & (ss_life_tbl["age"] >= 85)
-        ]
-    elif base_yr == 2012:
-        ss_life_tbl = ss_life_tbl[
-            (ss_life_tbl["year"] == 2011) & (ss_life_tbl["age"] >= 85)
-        ]
+            # Calculate crude death rate
+            wonder_rates["rate"] = wonder_rates["deaths"] / wonder_rates["pop"]
+            wonder_rates = wonder_rates[["race", "sex", "age", "rate"]]
+
+            # Add Social Security Actuarial Life Table rates for each race
+            ss_rates = ss_life_tbl.assign(race=k)[["race", "sex", "age", "rate"]]
+
+            rates = pd.concat([rates, wonder_rates, ss_rates])
+
+        return rates
+
+    # Death rates are not calculated after the launch year
+    # TODO: (6-feature) Adjustments to death rates would be made post-launch year through horizon
     else:
-        ss_life_tbl = ss_life_tbl[
-            (ss_life_tbl["year"] == base_yr) & (ss_life_tbl["age"] >= 85)
-        ]
-
-    rates = pd.DataFrame()
-    # For each WONDER death rate file path in the chosen base year
-    for k, v in rates_map["deaths"][str(base_yr)].items():
-        fp = "data/deaths/" + str(base_yr) + "/" + v
-
-        # Get WONDER death rate data for ages < 85
-        wonder_rates = (
-            pd.read_csv(
-                fp,
-                delimiter="\t",
-                usecols=["Gender", "Single-Year Ages Code", "Deaths", "Population"],
-                dtype={
-                    "Gender": str,
-                    "Single-Year Ages Code": str,
-                    "Deaths": str,
-                    "Population": str,
-                },
-            )
-            .rename(
-                columns={
-                    "Gender": "sex",
-                    "Single-Year Ages Code": "age",
-                    "Deaths": "deaths",
-                    "Population": "pop",
-                }
-            )
-            .dropna(subset=["sex", "age"])
-            .assign(race=k)
-            .astype({"age": "int", "pop": "int"})
-            .query("age < 85")
-        )
-
-        # Recode 0 deaths to 1, Recode Suppressed deaths to 4.5
-        wonder_rates["deaths"] = wonder_rates.apply(
-            lambda x: deaths_recode(x["deaths"], x["pop"]), axis=1
-        )
-
-        # Calculate crude death rate
-        wonder_rates["rate"] = wonder_rates["deaths"] / wonder_rates["pop"]
-        wonder_rates = wonder_rates[["race", "sex", "age", "rate"]]
-
-        # Add Social Security Actuarial Life Table rates for each race
-        ss_rates = ss_life_tbl.assign(race=k)[["race", "sex", "age", "rate"]]
-
-        rates = pd.concat([rates, wonder_rates, ss_rates])
-
-    return rates
+        raise ValueError("Death rates not calculated past launch year")
 
 
 def load_ss_life_tbl(file_path: str) -> pd.DataFrame:

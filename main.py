@@ -80,3 +80,39 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         dmdc_location_report=dmdc_location_report,
         sdmac_report=sdmac_report,
     )
+
+    # Get Rates up to launch year
+    if increment <= config["interval"]["launch"]:
+        rates = {
+            # Crude Birth Rates
+            "births": get_birth_rates(
+                yr=increment,
+                launch_yr=config["interval"]["launch"],
+                pop_df=pop_df,
+                rates_map=rates_map,
+            ),
+            # Crude Death Rates
+            "deaths": get_death_rates(
+                yr=increment,
+                launch_yr=config["interval"]["launch"],
+                ss_life_tbl=ss_life_tbl,
+                rates_map=rates_map,
+            ),
+            # Crude Migration Rates
+            "migration": get_migration_rates(
+                yr=increment,
+                launch_yr=config["interval"]["launch"],
+                pop_df=pop_df,
+                acs5yr_pums_migrants=acs5yr_pums_migrants,
+            ),
+            # Crude Group Quarters and Household Formation Rates
+            "formation_hq_hh": get_formation_rates(
+                yr=increment,
+                launch_yr=config["interval"]["launch"],
+                acs5yr_pums_persons=acs5yr_pums_persons,
+                dof_estimates=dof_estimates,
+            ),
+        }
+    # TODO: (6,7,10-feature) adjustments to rates would be made post-launch year through horizon
+    else:
+        pass

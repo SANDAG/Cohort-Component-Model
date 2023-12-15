@@ -1,7 +1,7 @@
 """Generate active-duty military population by race, sex, and single year of age."""
 
-import numpy as np
 import pandas as pd
+from python.utilities import distribute_excess
 
 
 def get_active_duty_military(
@@ -109,28 +109,7 @@ def get_active_duty_military(
         # To categories where it is less than the total population using the
         # Distribution of active-duty military within categories where the
         # Active-duty military is less than the total population
-        excess_mil = (
-            df[df["pop_mil"] > df["pop"]]["pop_mil"].sum()
-            - df[df["pop_mil"] > df["pop"]]["pop"].sum()
-        )
-
-        while excess_mil > 0:
-            df["pop_mil"] = np.where(
-                df["pop_mil"] > df["pop"], df["pop"], df["pop_mil"]
-            )
-
-            condition = df["pop_mil"] < df["pop"]
-
-            df.loc[condition, "pop_mil"] = df.loc[condition]["pop_mil"] + (
-                excess_mil
-                * df.loc[condition]["pop_mil"]
-                / df.loc[condition]["pop_mil"].sum()
-            )
-
-            excess_mil = (
-                df[df["pop_mil"] > df["pop"]]["pop_mil"].sum()
-                - df[df["pop_mil"] > df["pop"]]["pop"].sum()
-            )
+        df["pop_mil"] = distribute_excess(df=df, subset="pop_mil", total="pop")
 
         return df[["race", "sex", "age", "pop", "pop_mil"]]
 
