@@ -5,9 +5,8 @@
         "ss_life_table": "data/Social Security Actuarial Life Table.csv"
     },
     "interval": {
-        "base": 2020,
-        "horizon": 2050,
-        "increment": 1
+        "launch": 2020,
+        "horizon": 2050
     },
     "sql": {
         "server": "",
