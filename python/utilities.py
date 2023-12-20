@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+from typing import List
 
 
 def distribute_excess(df: pd.DataFrame, subset: str, total: str):
@@ -53,5 +54,25 @@ def distribute_excess(df: pd.DataFrame, subset: str, total: str):
 
         return df[subset]
 
+    else:
+        return ValueError("All columns must be integer or floating point.")
+
+
+def adjust_sum(df: pd.DataFrame, cols: List[str], sum: float) -> pd.DataFrame:
+    """Adjust column values such that sum does not exceed asserted value.
+
+    Args:
+        df (pd.DataFrame): Input DataFrame
+        cols (List[str]): List of column names
+        sum (float): Asserted value
+
+    Returns:
+        pd.DataFrame: Returns adjusted input DataFrame columns
+    """
+    # Check columns are integer or floating point data types
+    if all(x.kind in "if" for x in df[cols].dtypes.tolist()):
+        return df[cols].apply(
+            lambda x: x * (sum / x.sum()) if x.sum() > sum else x, axis=1
+        )
     else:
         return ValueError("All columns must be integer or floating point.")

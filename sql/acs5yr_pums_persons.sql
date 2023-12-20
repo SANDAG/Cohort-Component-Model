@@ -1,4 +1,5 @@
 -- Create temporary table of Census 2010 San Diego County PUMAs
+-- 5yr ACS PUMS from 2012-2016 to 2017-2021 use 2010 Census PUMAS
 DROP TABLE IF EXISTS tt_sd_pumas_2010
 DECLARE @tt_sd_pumas_2010 TABLE ([PUMA] varchar(5))
 INSERT INTO @tt_sd_pumas_2010
@@ -61,7 +62,8 @@ with
 		FROM
 			[pums_persons]
 		WHERE  -- Note the [ST] and [PUMA] fields are specific to certain years of ACS
-		([year] = 2020 AND [ST] = '06' -- 2016-2020 ACS uses 2010 Census PUMAS
+		-- 5yr ACS PUMS from 2012-2016 to 2017-2021 use 2010 Census PUMAS
+		([year] BETWEEN 2016 AND 2021 AND [ST] = '06'
 			AND [PUMA] IN (SELECT [PUMA]
 			FROM @tt_sd_pumas_2010))
 	)
