@@ -14,6 +14,8 @@ with open("config.JSON") as file:
     config = json.load(file)
 with open("rates_map.JSON") as file:
     rates_map = json.load(file)
+with open("sandag_estimates.JSON") as file:
+    sandag_estimates = json.load(file)
 
 
 # Get SQL data sources
@@ -57,6 +59,8 @@ if 2020 <= config["interval"]["launch"] < 2030:
         dof_projections=dof_projections,
         census_redistricting=census_redistricting,
     )
+
+    print("Initialized: Base Year 2020")
 # For launch years >= 2010 (and < 2020) use the 2010 decennial Census
 elif 2010 <= config["interval"]["launch"] < 2020:
     raise ValueError("Launch years prior to 2020 not available.")
@@ -81,7 +85,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         sdmac_report=sdmac_report,
     )
 
-    # Get Rates up to launch year
+    # Calculate rates for each increment up to the launch year
     if increment <= config["interval"]["launch"]:
         rates = {
             # Crude Birth Rates
@@ -111,6 +115,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 acs5yr_pums_persons=acs5yr_pums_persons,
                 dof_estimates=dof_estimates,
+                sandag_estimates=sandag_estimates,
             ),
         }
     # TODO: (6,7,10-feature) adjustments to rates would be made post-launch year through horizon

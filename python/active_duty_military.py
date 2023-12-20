@@ -115,5 +115,4 @@ def get_active_duty_military(
 
     # Active-duty military population held constant past the launch year
     else:
-        Warning("Active-duty Military Population held constant past launch year.")
         return pop_df
