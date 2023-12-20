@@ -1,9 +1,9 @@
 """Get group quarters and household formation rates by race, sex, and single year of age."""
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
-# TODO: (13-feature) Add CONCEP control totals to adjust household formation rates to match SANDAG estimates.
 
 import pandas as pd
 from python.utilities import distribute_excess
+import warnings
 
 
 def get_formation_rates(
@@ -11,6 +11,7 @@ def get_formation_rates(
     launch_yr: int,
     acs5yr_pums_persons: pd.DataFrame,
     dof_estimates: pd.DataFrame,
+    sandag_estimates: dict,
 ) -> pd.DataFrame:
     """Generate group quarters and household formation rates broken
     down by race, sex, and single year of age.
@@ -30,6 +31,8 @@ def get_formation_rates(
         launch_yr: Launch year
         acs5yr_pums_persons (pd.DataFrame): 5-year ACS PUMS persons
         dof_estimates (pd.DataFrame): CA DOF Population Estimates
+        sandag_estimates (dict): loaded JSON control totals from historical
+            SANDAG Estimates programs
 
     Returns:
         pd.DataFrame: Group quarters and household formation rates broken down
@@ -64,12 +67,24 @@ def get_formation_rates(
 
         pums_df["pop_gq"] = pums_df["pop_gq"] * scale_gq_pct
 
-        # Distribute excess group quarters population from categories where
-        # The group quarters population exceeds the total population
-        # To categories where it is less than the total population using the
-        # Distribution of group quarters population within categories where the
-        # Group quarters population is less than the total population
+        # Take total households and apply regional scaling factor
+        # Matching the SANDAG Estimates Program households for the increment
+        # Year from the vintage associated with the chosen launch year
+        control_hh = sandag_estimates[str(launch_yr)][str(yr)]["households"]["total"]
+        if control_hh is not None:
+            scale_hh_pct = control_hh / pums_df["pop_hh_head"].sum()
+            pums_df["pop_hh_head"] = pums_df["pop_hh_head"] * scale_hh_pct
+        else:
+            warnings.warn("No household control total provided.", UserWarning)
+
+        # Distribute excess head of household and group quarters population
+        # Note that group quarters population is done using total population
+        # Then head of household population is done using remaining
         pums_df["pop_gq"] = distribute_excess(df=pums_df, subset="pop_gq", total="pop")
+        pums_df["pop_non_gq"] = pums_df["pop"] - pums_df["pop_gq"]
+        pums_df["pop_hh_head"] = distribute_excess(
+            df=pums_df, subset="pop_hh_head", total="pop_non_gq"
+        )
 
         # Calculate the over 70 Group Quarters Formation Rate by Sex
         rates_70plus_gq = (
@@ -80,7 +95,7 @@ def get_formation_rates(
             .assign(rate_gq=lambda x: x["pop_gq"] / x["pop"])[["sex", "rate_gq"]]
         )
 
-        # Calculate the over 70 Group Quarters Formation Rate by Race and Sex
+        # Calculate the over 70 Household Formation Rate by Race and Sex
         rates_70plus_hh_head = (
             pums_df[pums_df["age"] > 70]
             .groupby(["race", "sex"])[["pop_hh_head", "pop_hh"]]
@@ -100,7 +115,7 @@ def get_formation_rates(
             .fillna(0)[["race", "sex", "age", "rate_gq", "rate_hh"]]
         )
 
-        # Calculate the <=70 Group Quarters Formation Rate
+        # Calculate the <=70 Group Quarters and Household Formation Rates
         rates_70under = (
             pums_df[pums_df["age"] <= 70]
             .assign(rate_gq=lambda x: x["pop_gq"] / x["pop"])

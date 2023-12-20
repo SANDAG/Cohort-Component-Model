@@ -1,0 +1,840 @@
+{
+    "2010": {
+        "source": "Estimates 2010 - Unknown Source - DS2",
+        "2010": {
+            "households": {
+                "comment": "Estimates 2010 disagrees slightly with Census 2010",
+                "total": 1086865,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2011": {
+        "source": "None Exists - Default to Estimates 2014 - Unknown Source - DS22",
+        "2010": {
+            "households": {
+                "comment": "Used Census 2010 for total as no control existed",
+                "total": 1086845,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1094673,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2012": {
+        "source": "None Exists - Default to Estimates 2014 - Unknown Source - DS22",
+        "2010": {
+            "households": {
+                "comment": "Used Census 2010 for total as no control existed",
+                "total": 1086845,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1094673,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1098251,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2013": {
+        "source": "None Exists - Default to Estimates 2014 - Unknown Source - DS22",
+        "2010": {
+            "households": {
+                "comment": "Used Census 2010 for total as no control existed",
+                "total": 1086845,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1094673,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1098251,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2013": {
+            "households": {
+                "total": 1105120,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2014": {
+        "source": "Estimates 2014 - Unknown Source - DS22",
+        "2010": {
+            "households": {
+                "comment": "Used Census 2010 for total as no control existed",
+                "total": 1086845,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1094673,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1098251,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2013": {
+            "households": {
+                "total": 1105120,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2014": {
+            "households": {
+                "total": 1118183,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2015": {
+        "source": "Estimates 2015 - Unknown Source - DS23",
+        "2010": {
+            "households": {
+                "comment": "Used Census 2010 for total as no control existed",
+                "total": 1086845,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1093537,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1095848,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2013": {
+            "households": {
+                "total": 1108221,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2014": {
+            "households": {
+                "total": 1115961,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2015": {
+            "households": {
+                "total": 1126873,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2016": {
+        "source": "Estimates 2016 - Unknown Source - DS24",
+        "2010": {
+            "households": {
+                "total": 1086865,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1089523,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1096071,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2013": {
+            "households": {
+                "total": 1105711,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2014": {
+            "households": {
+                "total": 1112291,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2015": {
+            "households": {
+                "total": 1120502,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2016": {
+            "households": {
+                "total": 1126029,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2017": {
+        "source": "Estimates 2017 - Unknown Source - DS25",
+        "2010": {
+            "households": {
+                "total": 1085069,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1089195,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1095197,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2013": {
+            "households": {
+                "total": 1102925,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2014": {
+            "households": {
+                "total": 1109224,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2015": {
+            "households": {
+                "total": 1117456,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2016": {
+            "households": {
+                "total": 1126029,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2017": {
+            "households": {
+                "total": 1133723,
+                "size1": null,
+                "size2": null,
+                "size3+": null,
+                "children1+": null,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2018": {
+        "source": "Estimates 2018 - [estimates].[est_2018_03] - DS27",
+        "2010": {
+            "households": {
+                "total": 1086865,
+                "size1": 261217,
+                "size2": 339416,
+                "size3+": 486232,
+                "children1+": 371864,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1091907,
+                "size1": 257565,
+                "size2": 339712,
+                "size3+": 494630,
+                "children1+": 380460,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1100838,
+                "size1": 256624,
+                "size2": 341632,
+                "size3+": 502582,
+                "children1+": 388371,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2013": {
+            "households": {
+                "total": 1106819,
+                "size1": 250904,
+                "size2": 341266,
+                "size3+": 514649,
+                "children1+": 395704,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2014": {
+            "households": {
+                "total": 1113667,
+                "size1": 248549,
+                "size2": 342111,
+                "size3+": 523007,
+                "children1+": 399554,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2015": {
+            "households": {
+                "total": 1122768,
+                "size1": 248657,
+                "size2": 344381,
+                "size3+": 529730,
+                "children1+": 402064,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2016": {
+            "households": {
+                "total": 1130464,
+                "size1": 249847,
+                "size2": 347284,
+                "size3+": 533333,
+                "children1+": 402462,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2017": {
+            "households": {
+                "total": 1134848,
+                "size1": 247368,
+                "size2": 347186,
+                "size3+": 540294,
+                "children1+": 402562,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2018": {
+            "households": {
+                "total": 1139651,
+                "size1": 245890,
+                "size2": 347616,
+                "size3+": 546145,
+                "children1+": 402909,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2019": {
+        "source": "Estimates 2019 - [estimates].[est_2019_01] - DS33",
+        "2010": {
+            "households": {
+                "total": 1086866,
+                "size1": 261218,
+                "size2": 339416,
+                "size3+": 486232,
+                "children1+": 371864,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2011": {
+            "households": {
+                "total": 1090193,
+                "size1": 254690,
+                "size2": 338081,
+                "size3+": 497422,
+                "children1+": 377658,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2012": {
+            "households": {
+                "total": 1095461,
+                "size1": 249697,
+                "size2": 337675,
+                "size3+": 508089,
+                "children1+": 383667,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2013": {
+            "households": {
+                "total": 1105229,
+                "size1": 247574,
+                "size2": 338994,
+                "size3+": 518661,
+                "children1+": 388272,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2014": {
+            "households": {
+                "total": 1107110,
+                "size1": 241720,
+                "size2": 336890,
+                "size3+": 528500,
+                "children1+": 390902,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2015": {
+            "households": {
+                "total": 1112457,
+                "size1": 239246,
+                "size2": 336616,
+                "size3+": 536595,
+                "children1+": 392947,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2016": {
+            "households": {
+                "total": 1119508,
+                "size1": 240221,
+                "size2": 338838,
+                "size3+": 540449,
+                "children1+": 392634,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2017": {
+            "households": {
+                "total": 1119916,
+                "size1": 234994,
+                "size2": 336561,
+                "size3+": 548361,
+                "children1+": 391301,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2018": {
+            "households": {
+                "total": 1125379,
+                "size1": 235093,
+                "size2": 337586,
+                "size3+": 552700,
+                "children1+": 389425,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2019": {
+            "households": {
+                "total": 1134031,
+                "size1": 236347,
+                "size2": 343209,
+                "size3+": 554475,
+                "children1+": 391037,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2020": {
+        "source": "Estimates 2020 - [estimates].[est_2020_06] - DS44",
+        "2020": {
+            "households": {
+                "total": 1159439,
+                "size1": 251339,
+                "size2": 372029,
+                "size3+": 536071,
+                "children1+": 401713,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2021": {
+        "source": "Estimates 2021 - [estimates].[est_2021_01] - DS45",
+        "2020": {
+            "households": {
+                "total": 1153981,
+                "size1": 248026,
+                "size2": 371869,
+                "size3+": 534086,
+                "children1+": 400533,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        },
+        "2021": {
+            "households": {
+                "total": 1160772,
+                "size1": 249359,
+                "size2": 381157,
+                "size3+": 530256,
+                "children1+": 397435,
+                "workers0": null,
+                "workers1": null,
+                "workers2": null,
+                "workers3+": null
+            }
+        }
+    },
+    "2022": {
+        "source": "Estimates 2022 - [estimates].[est_2022_04] - DS 46",
+        "2020": {
+            "households": {
+                "total": 1144270,
+                "size1": 272996,
+                "size2": 377440,
+                "size3+": 493834,
+                "children1+": 371497,
+                "workers0": 255385,
+                "workers1": 427801,
+                "workers2": 359198,
+                "workers3+": 101886
+            }
+        },
+        "2021": {
+            "households": {
+                "total": 1148706,
+                "size1": 275720,
+                "size2": 377886,
+                "size3+": 495100,
+                "children1+": 368582,
+                "workers0": 255620,
+                "workers1": 430078,
+                "workers2": 359243,
+                "workers3+": 103765
+            }
+        },
+        "2022": {
+            "households": {
+                "total": 1160472,
+                "size1": 278544,
+                "size2": 381757,
+                "size3+": 500171,
+                "children1+": 372357,
+                "workers0": 258238,
+                "workers1": 434484,
+                "workers2": 362923,
+                "workers3+": 104827
+            }
+        }
+    }
+}
