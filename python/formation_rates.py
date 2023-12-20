@@ -2,7 +2,7 @@
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import pandas as pd
-from python.utilities import distribute_excess
+from python.utilities import adjust_sum, distribute_excess
 import warnings
 
 
@@ -78,12 +78,10 @@ def get_formation_rates(
             warnings.warn("No household control total provided.", UserWarning)
 
         # Distribute excess head of household and group quarters population
-        # Note that group quarters population is done using total population
-        # Then head of household population is done using remaining
+        # This is done to avoid formation rates > 1
         pums_df["pop_gq"] = distribute_excess(df=pums_df, subset="pop_gq", total="pop")
-        pums_df["pop_non_gq"] = pums_df["pop"] - pums_df["pop_gq"]
         pums_df["pop_hh_head"] = distribute_excess(
-            df=pums_df, subset="pop_hh_head", total="pop_non_gq"
+            df=pums_df, subset="pop_hh_head", total="pop_hh"
         )
 
         # Calculate the over 70 Group Quarters Formation Rate by Sex
@@ -123,8 +121,14 @@ def get_formation_rates(
             .fillna(0)[["race", "sex", "age", "rate_gq", "rate_hh"]]
         )
 
-        # Return Formation Rates
-        return pd.concat([rates_70under, rates_70plus], ignore_index=True)
+        # Combine Formation Rates
+        # Adjust categories where sum of formation rates > 1
+        rates = pd.concat([rates_70under, rates_70plus], ignore_index=True)
+        rates[["rate_gq", "rate_hh"]] = adjust_sum(
+            df=rates, cols=["rate_gq", "rate_hh"], sum=1
+        )
+
+        return rates
 
     # Formation rates are not calculated after the launch year
     else:

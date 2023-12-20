@@ -118,6 +118,20 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 sandag_estimates=sandag_estimates,
             ),
         }
+
+        # Apply Formation Rates and Characteristics
+        # Controlling to DOF and CONCEP values where applicable
+        # this would be added to the increment dataset
+        # need to apply rounding and IPF
+        # and these rates are adjusted to hit their targets
+
+        # Then Apply Birth/Death/Migration Rates to move into next increment dataset
+        # Controlling to DOF and CONCEP where applicable
+        # need to apply rounding and IPF
+        # the rates go to the increment dataset, the population goes to next increment
+        # store the current increment pop and rates and move on
+        # cannot adjust the rates here since it's not 1 to 1
+
     # TODO: (6,7,10-feature) adjustments to rates would be made post-launch year through horizon
     else:
         pass
