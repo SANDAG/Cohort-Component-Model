@@ -3,6 +3,7 @@ from python.base_yr import get_base_yr_2020
 from python.birth_rates import get_birth_rates
 from python.death_rates import get_death_rates, load_ss_life_tbl
 from python.formation_rates import get_formation_rates
+from python.hh_characteristics_rates import get_hh_characteristic_rates
 from python.migration_rates import get_migration_rates
 import json
 import pandas as pd
@@ -110,11 +111,18 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 acs5yr_pums_migrants=acs5yr_pums_migrants,
             ),
             # Crude Group Quarters and Household Formation Rates
-            "formation_hq_hh": get_formation_rates(
+            "formation_gq_hh": get_formation_rates(
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
                 acs5yr_pums_persons=acs5yr_pums_persons,
                 dof_estimates=dof_estimates,
+                sandag_estimates=sandag_estimates,
+            ),
+            # Household Characteristics Rates
+            "hh_characteristics": get_hh_characteristic_rates(
+                yr=increment,
+                launch_yr=config["interval"]["launch"],
+                acs5yr_pums_persons=acs5yr_pums_persons,
                 sandag_estimates=sandag_estimates,
             ),
         }

@@ -18,7 +18,8 @@ def get_formation_rates(
 
     Group quarter and household formation rates are calculated using the
     5-year ACS PUMS persons. Prior to calculation, the total number of group
-    quarters are scaled to match the CA DOF Population Estimates.
+    quarters are scaled to match the CA DOF Population Estimates and the total
+    number of households are scaled to match SANDAG Estimates.
 
     Note that formation rates for persons over 70 are calculated as a
     single composite rate for all persons over 70, where group quarters rates
