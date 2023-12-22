@@ -1,0 +1,33 @@
+"Notes"	"Age of Mother 9"	"Age of Mother 9 Code"	Births
+	"15-19 years"	"15-19"	4238
+	"20-24 years"	"20-24"	13697
+	"25-29 years"	"25-29"	14445
+	"30-34 years"	"30-34"	12623
+	"35-39 years"	"35-39"	6650
+	"40-44 years"	"40-44"	1548
+"---"
+"Dataset: Natality, 2007-2022"
+"Query Parameters:"
+"Title: Hispanic or Latino; natality-current; 2013-2015; San Diego County (06073)"
+"Age of Mother 9: 15-19 years; 20-24 years; 25-29 years; 30-34 years; 35-39 years; 40-44 years"
+"Mother's Hispanic Origin: Hispanic or Latino"
+"States: San Diego County, CA (06073)"
+"Year: 2013; 2014; 2015"
+"Group By: Age of Mother 9"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 1,000"
+"Population Option: No populations shown because rates were not selected."
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/Natality.html for more information."
+"---"
+"Query Date: Dec 21, 2023 4:02:43 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Natality on CDC WONDER Online Database. Data are from the Natality Records 2007-2022, as compiled from data provided by"
+"the 57 vital statistics jurisdictions through the Vital Statistics Cooperative Program. Accessed at"
+"http://wonder.cdc.gov/natality-current.html on Dec 21, 2023 4:02:43 PM"
+"---"
+Caveats:
+"1. Each birth record represents one liveborn infant."

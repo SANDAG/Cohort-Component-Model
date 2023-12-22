@@ -1,0 +1,36 @@
+"Notes"	"Age of Mother 9"	"Age of Mother 9 Code"	Births
+	"15-19 years"	"15-19"	128
+	"20-24 years"	"20-24"	1092
+	"25-29 years"	"25-29"	3375
+	"30-34 years"	"30-34"	6124
+	"35-39 years"	"35-39"	3574
+	"40-44 years"	"40-44"	840
+"---"
+"Dataset: Natality, 2007-2022"
+"Query Parameters:"
+"Title: Non-Hispanic Asian or Pacific Islander; natality-current; 2014-2016; San Diego County (06073)"
+"Age of Mother 9: 15-19 years; 20-24 years; 25-29 years; 30-34 years; 35-39 years; 40-44 years"
+"Mother's Bridged Race: Asian or Pacific Islander"
+"Mother's Hispanic Origin: Not Hispanic or Latino"
+"States: San Diego County, CA (06073)"
+"Year: 2014; 2015; 2016"
+"Group By: Age of Mother 9"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 1,000"
+"Population Option: No populations shown because rates were not selected."
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/Natality.html for more information."
+"---"
+"Query Date: Dec 21, 2023 4:15:58 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Natality on CDC WONDER Online Database. Data are from the Natality Records 2007-2022, as compiled from data provided by"
+"the 57 vital statistics jurisdictions through the Vital Statistics Cooperative Program. Accessed at"
+"http://wonder.cdc.gov/natality-current.html on Dec 21, 2023 4:15:58 PM"
+"---"
+Caveats:
+"1. Each birth record represents one liveborn infant."
+"2. Beginning with 2020, bridged race categories are no longer included in the national birth file. Beginning with year 2021,"
+"bridged race population estimates are not available as rate denominators."

@@ -4,6 +4,7 @@
 
 import pandas as pd
 import numpy as np
+import warnings
 
 
 def get_birth_rates(
@@ -41,25 +42,30 @@ def get_birth_rates(
         births = pd.DataFrame()
         # For each WONDER births file path in the chosen base year
         for k, v in rates_map["births"][str(yr)].items():
-            fp = "data/births/" + str(yr) + "/" + v
+            if v is not None:
+                fp = "data/births/" + str(yr) + "/" + v
 
-            # Get WONDER births data
-            wonder_births = (
-                pd.read_csv(
-                    fp,
-                    delimiter="\t",
-                    usecols=["Age of Mother 9 Code", "Births"],
-                    dtype={"Age of Mother 9 Code": str, "Births": str},
+                # Get WONDER births data
+                wonder_births = (
+                    pd.read_csv(
+                        fp,
+                        delimiter="\t",
+                        usecols=["Age of Mother 9 Code", "Births"],
+                        dtype={"Age of Mother 9 Code": str, "Births": str},
+                    )
+                    .rename(
+                        columns={"Age of Mother 9 Code": "age_5yr", "Births": "births"}
+                    )
+                    .dropna(subset=["age_5yr"])
+                    .assign(race=k)
+                    .replace({"births": {"Suppressed": "4.5"}})
+                    .astype({"births": "float"})
+                    .assign(births=lambda x: x["births"] / 3)
                 )
-                .rename(columns={"Age of Mother 9 Code": "age_5yr", "Births": "births"})
-                .dropna(subset=["age_5yr"])
-                .assign(race=k)
-                .replace({"births": {"Suppressed": "4.5"}})
-                .astype({"births": "float"})
-                .assign(births=lambda x: x["births"] / 3)
-            )
 
-            births = pd.concat([births, wonder_births])
+                births = pd.concat([births, wonder_births])
+            else:
+                warnings.warn("No birth data available for: " + v, UserWarning)
 
         # Create lower/upper boundaries for the 5-year age groups
         age_bounds = {
