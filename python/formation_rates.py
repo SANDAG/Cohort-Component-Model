@@ -10,16 +10,16 @@ def get_formation_rates(
     yr: int,
     launch_yr: int,
     acs5yr_pums_persons: pd.DataFrame,
-    dof_estimates: pd.DataFrame,
     sandag_estimates: dict,
 ) -> pd.DataFrame:
     """Generate group quarters and household formation rates broken
     down by race, sex, and single year of age.
 
     Group quarter and household formation rates are calculated using the
-    5-year ACS PUMS persons. Prior to calculation, the total number of group
-    quarters are scaled to match the CA DOF Population Estimates and the total
-    number of households are scaled to match SANDAG Estimates.
+    5-year ACS PUMS persons. Prior to calculation, the total number of
+    households, group quarters, and population are scaled to match SANDAG
+    Estimates for the increment year from the vintage associated with the
+    launch year.
 
     Note that formation rates for persons over 70 are calculated as a
     single composite rate for all persons over 70, where group quarters rates
@@ -31,7 +31,6 @@ def get_formation_rates(
         yr: Increment year
         launch_yr: Launch year
         acs5yr_pums_persons (pd.DataFrame): 5-year ACS PUMS persons
-        dof_estimates (pd.DataFrame): CA DOF Population Estimates
         sandag_estimates (dict): loaded JSON control totals from historical
             SANDAG Estimates programs
 
@@ -46,37 +45,24 @@ def get_formation_rates(
         # Select the 5-year ACS PUMS data
         pums_df = acs5yr_pums_persons[(acs5yr_pums_persons["year"] == yr)].copy()
 
-        # Take total group quarters and apply regional scaling factor
-        # Matching the DOF Estimates value for total group quarters
-        # For the increment year (note that 2010-2012 uses 2013 data)
+        # Take total households/group quarters/population and apply scaling factor
+        # Matching the SANDAG Estimates Program for the increment year
         # From the vintage associated with the chosen launch year
-        if yr in [2010, 2011, 2012]:
-            scale_gq_pct = (
-                dof_estimates[
-                    (dof_estimates["vintage"] == 2013) & (dof_estimates["year"] == yr)
-                ]["pop"].iloc[0]
-                / pums_df["pop_gq"].sum()
-            )
-        else:
-            scale_gq_pct = (
-                dof_estimates[
-                    (dof_estimates["vintage"] == launch_yr)
-                    & (dof_estimates["year"] == yr)
-                ]["pop"].iloc[0]
-                / pums_df["pop_gq"].sum()
-            )
+        control_map = {
+            "households": {"col": "pop_hh_head", "control": "hh"},
+            "population": {"col": "pop", "control": "pop"},
+            "population": {"col": "pop_gq", "control": "gq"},
+        }
 
-        pums_df["pop_gq"] = pums_df["pop_gq"] * scale_gq_pct
-
-        # Take total households and apply regional scaling factor
-        # Matching the SANDAG Estimates Program households for the increment
-        # Year from the vintage associated with the chosen launch year
-        control_hh = sandag_estimates[str(launch_yr)][str(yr)]["households"]["total"]
-        if control_hh is not None:
-            scale_hh_pct = control_hh / pums_df["pop_hh_head"].sum()
-            pums_df["pop_hh_head"] = pums_df["pop_hh_head"] * scale_hh_pct
-        else:
-            warnings.warn("No household control total provided.", UserWarning)
+        for k, v in control_map.items():
+            control = sandag_estimates[str(launch_yr)][str(yr)][k][v["control"]]
+            if control is not None:
+                scale_pct = control / pums_df[v["col"]].sum()
+                pums_df[v["col"]] = pums_df[v["col"]] * scale_pct
+            else:
+                warnings.warn(
+                    "No " + v["control"] + " control total provided.", UserWarning
+                )
 
         # Distribute excess head of household and group quarters population
         # This is done to avoid formation rates > 1
@@ -126,7 +112,7 @@ def get_formation_rates(
         # Adjust categories where sum of formation rates > 1
         rates = pd.concat([rates_70under, rates_70plus], ignore_index=True)
         rates[["rate_gq", "rate_hh"]] = adjust_sum(
-            df=rates, cols=["rate_gq", "rate_hh"], sum=1
+            df=rates, cols=["rate_gq", "rate_hh"], sum=1, option="exceeds"
         )
 
         return rates

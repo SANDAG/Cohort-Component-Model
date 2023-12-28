@@ -5,24 +5,40 @@ import pandas as pd
 from typing import List
 
 
-def adjust_sum(df: pd.DataFrame, cols: List[str], sum: float) -> pd.DataFrame:
-    """Adjust column values such that sum does not exceed asserted value.
+def adjust_sum(
+    df: pd.DataFrame, cols: List[str], sum: float, option: str
+) -> pd.DataFrame:
+    """Adjust row values for columns such that sum equals or does not exceed
+    specified value. Use for positive vales only.
 
     Args:
         df (pd.DataFrame): Input DataFrame
         cols (List[str]): List of column names
         sum (float): Asserted value
+        option (str): Set to 'equals' or 'exceeds'
 
     Returns:
         pd.DataFrame: Returns adjusted input DataFrame columns
     """
     # Check columns are integer or floating point data types
-    if all(x.kind in "if" for x in df[cols].dtypes.tolist()):
-        return df[cols].apply(
-            lambda x: x * (sum / x.sum()) if x.sum() > sum else x, axis=1
-        )
+    if sum > 0:
+        if all(x.kind in "if" for x in df[cols].dtypes.tolist()):
+            if option == "equals":
+                return df[cols].apply(
+                    lambda x: x * (sum / x.sum()) if x.sum() > 0 else x, axis=1
+                )
+            elif option == "exceeds":
+                return df[cols].apply(
+                    lambda x: x * (sum / x.sum()) if x.sum() > sum else x, axis=1
+                )
+            else:
+                return ValueError(
+                    "Parameter 'option': must be one of 'equals' or 'exceeds'."
+                )
+        else:
+            return ValueError("All columns must be integer or floating point.")
     else:
-        return ValueError("All columns must be integer or floating point.")
+        return ValueError("Parameter: 'sum': must be > 0")
 
 
 def distribute_excess(df: pd.DataFrame, subset: str, total: str):

@@ -3,7 +3,7 @@
 
 import numpy as np
 import pandas as pd
-from python.utilities import adjust_sum
+from python.utilities import adjust_sum, distribute_excess
 import warnings
 
 
@@ -49,10 +49,10 @@ def get_hh_characteristic_rates(
         # Year from the vintage associated with the launch year
         controls = sandag_estimates[str(launch_yr)][str(yr)]["households"]
 
-        # Create mapping of household attributes to ACS PUMS columns
+        # Create mapping of household attributes to ACS PUMS columns and SANDAG Estimates
         # Include whether attribute is controlled and whether to create crude rate
         hh_attributes = {
-            "total": {"col": "pop_hh_head", "control": "total", "rate": None},
+            "hh": {"col": "pop_hh_head", "control": "total", "rate": None},
             "laborforce": {
                 "col": "hh_head_lf",
                 "control": None,
@@ -60,9 +60,9 @@ def get_hh_characteristic_rates(
             },
             "size1": {"col": "size1", "control": "size1", "rate": "rate_size1"},
             "size2": {"col": "size2", "control": "size2", "rate": "rate_size2"},
-            "size3+": {"col": "size3+", "control": "size3+", "rate": "rate_size3+"},
-            "child1+": {"col": "child1+", "control": "child1+", "rate": "rate_child1+"},
-            "senior1+": {"col": "senior1+", "control": None, "rate": "rate_senior1+"},
+            "size3": {"col": "size3", "control": "size3", "rate": "rate_size3"},
+            "child1": {"col": "child1", "control": "child1", "rate": "rate_child1"},
+            "senior1": {"col": "senior1", "control": None, "rate": "rate_senior1"},
             "workers0": {
                 "col": "workers0",
                 "control": "workers0",
@@ -78,15 +78,15 @@ def get_hh_characteristic_rates(
                 "control": "workers2",
                 "rate": "rate_workers2",
             },
-            "workers3+": {
-                "col": "workers3+",
-                "control": "workers3+",
-                "rate": "rate_workers3+",
+            "workers3": {
+                "col": "workers3",
+                "control": "workers3",
+                "rate": "rate_workers3",
             },
         }
 
-        # Apply total households regional scaling factor
-        control_hh = controls["total"]
+        # Apply total households scaling factor to all household attributes
+        control_hh = controls["hh"]
         if control_hh is not None:
             scale_hh_pct = control_hh / pums_df["pop_hh_head"].sum()
             for k, v in hh_attributes.items():
@@ -97,12 +97,16 @@ def get_hh_characteristic_rates(
         # Apply household characteristics scaling factors and calculate crude rates
         # Assumed that control totals are consistent with total households control
         for k, v in hh_attributes.items():
-            if k != "total":
+            if k != "hh":
                 if v["control"] is not None:
                     control = controls[k]
                     if control is not None:
                         scale_pct = control / pums_df[v["col"]].sum()
                         pums_df[v["col"]] = pums_df[v["col"]] * scale_pct
+                        # Distribute excess if any characteristic exceeds total households
+                        pums_df[v["col"]] = distribute_excess(
+                            df=pums_df, subset=v["col"], total="pop_hh_head"
+                        )
                     else:
                         warnings.warn(
                             "No household control total provided for: " + k, UserWarning
@@ -111,6 +115,7 @@ def get_hh_characteristic_rates(
                     pums_df[v["rate"]] = pums_df[v["col"]] / pums_df["pop_hh_head"]
 
         # Calculate rates within age groups to apply when households are < 20 (including 0s)
+        # Note maximum age of 110
         age_groups = pd.concat(
             [
                 pd.DataFrame(data={"age_group": 1, "age": list(range(0, 16))}),
@@ -120,9 +125,7 @@ def get_hh_characteristic_rates(
                 pd.DataFrame(data={"age_group": 5, "age": list(range(35, 50))}),
                 pd.DataFrame(data={"age_group": 6, "age": list(range(50, 60))}),
                 pd.DataFrame(data={"age_group": 7, "age": list(range(60, 71))}),
-                pd.DataFrame(
-                    data={"age_group": 8, "age": list(range(71, pums_df.age.max() + 1))}
-                ),
+                pd.DataFrame(data={"age_group": 8, "age": list(range(71, 111))}),
             ],
             ignore_index=True,
         )
@@ -134,7 +137,7 @@ def get_hh_characteristic_rates(
         )
 
         for k, v in hh_attributes.items():
-            if k != "total":
+            if k != "hh":
                 age_rates[v["rate"] + "_age"] = (
                     age_rates[v["col"]] / age_rates["pop_hh_head"]
                 )
@@ -146,7 +149,7 @@ def get_hh_characteristic_rates(
 
         # Set Rate to Age Group Rate if households < 20 (including 0s)
         for k, v in hh_attributes.items():
-            if k != "total":
+            if k != "hh":
                 if v["rate"] is not None:
                     pums_df[v["rate"]] = np.where(
                         pums_df["pop_hh_head"] < 20,
@@ -156,12 +159,12 @@ def get_hh_characteristic_rates(
 
         # Ensure rates do not sum > 1 within logical groupings (size and workers)
         groupings = [
-            ["rate_size1", "rate_size2", "rate_size3+"],
-            ["rate_workers0", "rate_workers1", "rate_workers2", "rate_workers3+"],
+            ["rate_size1", "rate_size2", "rate_size3"],
+            ["rate_workers0", "rate_workers1", "rate_workers2", "rate_workers3"],
         ]
 
         for group in groupings:
-            pums_df[group] = adjust_sum(df=pums_df, cols=group, sum=1)
+            pums_df[group] = adjust_sum(df=pums_df, cols=group, sum=1, option="equals")
 
         # Return crude household characteristics rates
         rates = []
