@@ -115,7 +115,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
                 acs5yr_pums_persons=acs5yr_pums_persons,
-                dof_estimates=dof_estimates,
                 sandag_estimates=sandag_estimates,
             ),
             # Household Characteristics Rates

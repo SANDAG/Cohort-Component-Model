@@ -115,4 +115,4 @@ def get_active_duty_military(
 
     # Active-duty military population held constant past the launch year
     else:
-        return pop_df
+        return pop_df[["race", "sex", "age", "pop", "pop_mil"]]
