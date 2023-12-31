@@ -1,0 +1,188 @@
+"""Methods for calculating household/population datasets."""
+
+from iteround import saferound
+import pandas as pd
+from python.utilities import reallocate_group_integers, reallocate_integers
+import warnings
+
+
+# Create mapping of columns to SANDAG Estimates Controls
+# Order matters, the totals (pop, hh) within groups (population, households)
+# Must occur prior to any other group members for scaling and integerization
+FIELD_MAP = {
+    "Population ": {"col": "pop", "control": "pop", "group": "population"},
+    "Military": {"col": "pop_mil", "control": None, "group": "population"},
+    "Group Quarters": {"col": "gq", "control": "gq", "group": "population"},
+    "Household": {"col": "hh", "control": "hh", "group": "households"},
+    "HH Head LF": {"col": "hh_head_lf", "control": None, "group": "households"},
+    "HH Size 1": {"col": "size1", "control": "size1", "group": "households"},
+    "HH Size 2": {"col": "size2", "control": "size2", "group": "households"},
+    "HH Size 3+": {"col": "size3", "control": "size3", "group": "households"},
+    "HH <18 1+": {"col": "child1", "control": "child1", "group": "households"},
+    "HH 65+ 1+": {"col": "senior1", "control": None, "group": "households"},
+    "HH Workers 0": {"col": "workers0", "control": "workers0", "group": "households"},
+    "HH Workers 1": {"col": "workers1", "control": "workers1", "group": "households"},
+    "HH Workers 2": {"col": "workers2", "control": "workers2", "group": "households"},
+    "HH Workers 3+": {"col": "workers3", "control": "workers3", "group": "households"},
+}
+
+
+def apply_controls(
+    yr: int,
+    launch_yr: int,
+    pop_df: pd.DataFrame,
+    sandag_estimates: dict,
+) -> pd.DataFrame:
+    if yr <= launch_yr:
+        # Control column totals to SANDAG Estimates Controls
+        control_values = sandag_estimates[str(launch_yr)][str(yr)]
+        # For each household/population field
+        for k, v in FIELD_MAP.items():
+            # If the field is controlled get the control value
+            if v["control"] is not None:
+                control_value = control_values[v["group"]][v["control"]]
+                # If the control value was provided scale the field to match the control
+                if control_value is not None:
+                    scale_pct = control_value / pop_df[v["col"]].sum()
+                    # Pass total households scaling to all related fields regardless if they are controlled or not
+                    if v["control"] == "hh":
+                        for sub_k, sub_v in FIELD_MAP.items():
+                            if sub_v["group"] == "households":
+                                pop_df[sub_v["col"]] = pop_df[sub_v["col"]] * scale_pct
+                    # Pass total population scaling to all related fields regardless if they are controlled or not
+                    elif v["control"] == "pop":
+                        for sub_k, sub_v in FIELD_MAP.items():
+                            # Do not pass total population scaling to Military
+                            if sub_k != "Military":
+                                if sub_v["group"] == "population":
+                                    pop_df[sub_v["col"]] = (
+                                        pop_df[sub_v["col"]] * scale_pct
+                                    )
+                    else:
+                        pop_df[v["col"]] = pop_df[v["col"]] * scale_pct
+                else:
+                    warnings.warn(
+                        "No household control total provided for: " + k, UserWarning
+                    )
+
+        # Return controlled population
+        return pop_df
+
+    # No controls are applied after the launch year
+    else:
+        raise ValueError("Controls not applied past launch year")
+
+
+def calculate_population(
+    pop_df: pd.DataFrame,
+    rates: dict,
+) -> pd.DataFrame:
+    # Apply GQ and HH Rates to get GQ and HHs
+    # Then apply HH characteristics to created HHs
+    df = (
+        pop_df.merge(
+            right=rates["formation_gq_hh"],
+            how="left",
+            on=["race", "sex", "age"],
+        )
+        .assign(
+            gq=lambda x: x["pop"] * x["rate_gq"],
+            hh=lambda x: (x["pop"] - x["pop_mil"]) * x["rate_hh"],
+        )
+        .merge(
+            right=rates["hh_characteristics"],
+            how="left",
+            on=["race", "sex", "age"],
+        )
+        .assign(
+            hh_head_lf=lambda x: x["hh"] * x["rate_hh_head_lf"],
+            size1=lambda x: x["hh"] * x["rate_size1"],
+            size2=lambda x: x["hh"] * x["rate_size2"],
+            size3=lambda x: x["hh"] * x["rate_size3"],
+            child1=lambda x: x["hh"] * x["rate_child1"],
+            senior1=lambda x: x["hh"] * x["rate_senior1"],
+            workers0=lambda x: x["hh"] * x["rate_workers0"],
+            workers1=lambda x: x["hh"] * x["rate_workers1"],
+            workers2=lambda x: x["hh"] * x["rate_workers2"],
+            workers3=lambda x: x["hh"] * x["rate_workers3"],
+        )
+        .fillna(0)
+    )
+
+    return df[
+        [
+            "race",
+            "sex",
+            "age",
+            "pop",
+            "pop_mil",
+            "gq",
+            "hh",
+            "hh_head_lf",
+            "child1",
+            "senior1",
+            "size1",
+            "size2",
+            "size3",
+            "workers0",
+            "workers1",
+            "workers2",
+            "workers3",
+        ]
+    ]
+
+
+def integerize_population(
+    pop_df: pd.DataFrame,
+) -> pd.DataFrame:
+    for k, v in FIELD_MAP.items():
+        # Round fields to integer preserving sum
+        if pop_df[v["col"]].dtype.kind != "i":
+            pop_df[v["col"]] = saferound(pop_df[v["col"]], 0)
+            pop_df[v["col"]] = pop_df[v["col"]].astype(int)
+
+        # Reallocate integers if values exceed totals
+        if v["group"] == "households":
+            # For total households the total population is the maximum
+            if v["col"] == "hh":
+                pop_df[v["col"]] = reallocate_integers(
+                    df=pop_df, subset=v["col"], total="pop"
+                )
+            # For all household related fields the total households is the maximum
+            else:
+                pop_df[v["col"]] = reallocate_integers(
+                    df=pop_df, subset=v["col"], total="hh"
+                )
+        # For all population related fields the total population is the maximum
+        elif v["group"] == "population" and v["col"] != "pop":
+            pop_df[v["col"]] = reallocate_integers(
+                df=pop_df, subset=v["col"], total="pop"
+            )
+        else:
+            pass
+
+    # Although not identified as related in the field mapping
+    # Do not allow GQs + HHs > Total Population
+    pop_df["pop_minus_hh"] = pop_df["pop"] - pop_df["hh"]
+
+    pop_df["gq"] = reallocate_integers(df=pop_df, subset="gq", total="pop_minus_hh")
+
+    pop_df.drop(labels="pop_minus_hh", axis=1, inplace=True)
+
+    # Adjust groupings of HH fields with complete coverage of total households
+    # Such that their summation matches the total households
+    hh_field_groups = {
+        "HH Size": {"cols": ["size1", "size2", "size3"], "total": "hh"},
+        "HH Workers": {
+            "cols": ["workers0", "workers1", "workers2", "workers3"],
+            "total": "hh",
+        },
+    }
+
+    for k, v in hh_field_groups.items():
+        pop_df[v["cols"]] = reallocate_group_integers(
+            df=pop_df, cols=v["cols"], total=v["total"]
+        )
+
+    # Return integerized population
+    return pop_df
