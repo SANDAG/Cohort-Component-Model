@@ -151,7 +151,7 @@ def get_birth_rates(
         else:
             pass
 
-        return rates
+        return rates.rename(columns={"rate": "rate_birth"})
 
     # Birth rates are not calcualted after the launch year
     # TODO: (7-feature) Adjustments to birth rates would be made post-launch year through horizon

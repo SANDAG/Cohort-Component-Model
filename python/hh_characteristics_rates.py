@@ -107,15 +107,10 @@ def get_hh_characteristic_rates(
                         pums_df[v["col"]] = distribute_excess(
                             df=pums_df, subset=v["col"], total="pop_hh_head"
                         )
-                    else:
-                        warnings.warn(
-                            "No household control total provided for: " + k, UserWarning
-                        )
                 if v["rate"] is not None:
                     pums_df[v["rate"]] = pums_df[v["col"]] / pums_df["pop_hh_head"]
 
-        # Calculate rates within age groups to apply when households are < 20 (including 0s)
-        # Note maximum age of 110
+        # Calculate rates within age groups to apply when households are < 20 (excluding 0s)
         age_groups = pd.concat(
             [
                 pd.DataFrame(data={"age_group": 1, "age": list(range(0, 16))}),
@@ -125,6 +120,7 @@ def get_hh_characteristic_rates(
                 pd.DataFrame(data={"age_group": 5, "age": list(range(35, 50))}),
                 pd.DataFrame(data={"age_group": 6, "age": list(range(50, 60))}),
                 pd.DataFrame(data={"age_group": 7, "age": list(range(60, 71))}),
+                # Note maximum age of 110 in defining age groups
                 pd.DataFrame(data={"age_group": 8, "age": list(range(71, 111))}),
             ],
             ignore_index=True,
@@ -147,12 +143,12 @@ def get_hh_characteristic_rates(
             right=age_rates, on=["race", "sex", "age_group"], suffixes=["", "_y"]
         )
 
-        # Set Rate to Age Group Rate if households < 20 (including 0s)
+        # Set Rate to Age Group Rate if households < 20 (excluding 0s)
         for k, v in hh_attributes.items():
             if k != "hh":
                 if v["rate"] is not None:
                     pums_df[v["rate"]] = np.where(
-                        pums_df["pop_hh_head"] < 20,
+                        (pums_df["pop_hh_head"] > 0) & (pums_df["pop_hh_head"] < 20),
                         pums_df[v["rate"] + "_age"],
                         pums_df[v["rate"]],
                     )

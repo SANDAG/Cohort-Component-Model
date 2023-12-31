@@ -100,9 +100,14 @@ def get_death_rates(
                 pd.read_csv(
                     fp,
                     delimiter="\t",
-                    usecols=["Gender", "Single-Year Ages Code", "Deaths", "Population"],
+                    usecols=[
+                        "Gender Code",
+                        "Single-Year Ages Code",
+                        "Deaths",
+                        "Population",
+                    ],
                     dtype={
-                        "Gender": str,
+                        "Gender Code": str,
                         "Single-Year Ages Code": str,
                         "Deaths": str,
                         "Population": str,
@@ -110,7 +115,7 @@ def get_death_rates(
                 )
                 .rename(
                     columns={
-                        "Gender": "sex",
+                        "Gender Code": "sex",
                         "Single-Year Ages Code": "age",
                         "Deaths": "deaths",
                         "Population": "pop",
@@ -136,7 +141,7 @@ def get_death_rates(
 
             rates = pd.concat([rates, wonder_rates, ss_rates])
 
-        return rates
+        return rates.rename(columns={"rate": "rate_death"})
 
     # Death rates are not calculated after the launch year
     # TODO: (6-feature) Adjustments to death rates would be made post-launch year through horizon
