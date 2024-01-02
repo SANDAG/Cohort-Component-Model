@@ -33,6 +33,21 @@ def apply_controls(
     pop_df: pd.DataFrame,
     sandag_estimates: dict,
 ) -> pd.DataFrame:
+    """Control the calculated population, group quarters, households, and
+    household characteristics totals for each increment from the base year
+    up to the launch year.
+
+    Args:
+        yr: Increment year
+        launch_yr: Launch year
+        pop_df (pd.DataFrame): Household/Population data by race, sex, and
+            single year of age, output from the calculate_population method
+        sandag_estimates (dict): loaded JSON control totals from historical
+            SANDAG Estimates programs
+
+    Returns:
+        pd.DataFrame: The controlled household/population data
+    """
     if yr <= launch_yr:
         # Control column totals to SANDAG Estimates Controls
         control_values = sandag_estimates[str(launch_yr)][str(yr)]
@@ -77,6 +92,26 @@ def calculate_population(
     pop_df: pd.DataFrame,
     rates: dict,
 ) -> pd.DataFrame:
+    """Calculate the group quarters, households, and household characteristics
+    by race, sex, and single year of age.
+
+    Takes the population and applies the group quarters formation rate to the
+    total population, including the military population. Takes the population
+    and applies the household formation rate to the total civilian
+    (non-military) population. Finally, applies the household characteristics
+    rates to the formed households.
+
+    Args:
+        pop_df (pd.DataFrame): Population data broken down by race, sex, and
+            single year of age with the military population broken out from
+            the total population
+        rates (dict): Dictionary containing formation rates and household
+            characteristics rates by race, sex, and single year of age
+
+    Returns:
+        pd.DataFrame: Population with group quarters, households, and
+            household characteristics by race, sex, and single year of age.
+    """
     # Apply GQ and HH Rates to get GQ and HHs
     # Then apply HH characteristics to created HHs
     df = (
@@ -135,6 +170,20 @@ def calculate_population(
 def integerize_population(
     pop_df: pd.DataFrame,
 ) -> pd.DataFrame:
+    """Integerize the calculated population, group quarters, households, and
+    household characteristics totals for each increment from the base year up
+    to the horizon year.
+
+    Note that after integerization, fields are reallocated, preserving the
+    integer data type and sum, such that all constraints are respected.
+
+    Args:
+        pop_df (pd.DataFrame): Household/Population data by race, sex, and
+            single year of age, output from the calculate_population method
+
+    Returns:
+        pd.DataFrame: The integerized calculated population
+    """
     for k, v in FIELD_MAP.items():
         # Round fields to integer preserving sum
         if pop_df[v["col"]].dtype.kind != "i":
