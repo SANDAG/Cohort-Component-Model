@@ -30,7 +30,7 @@ CROSS JOIN (
 		('Black or African American alone'),
 		('American Indian or Alaska Native alone'),
 		('Asian alone'),
-		('Native Hawaiian and Other Pacific Islander alone'),
+		('Native Hawaiian or Other Pacific Islander alone'),
 		('Two or More Races')
 ) [race]([race])
 CROSS JOIN (
@@ -106,7 +106,7 @@ WITH
              WHEN [rac1p] = '2' THEN 'Black or African American alone'
              WHEN [rac1p] IN ('3','4','5') THEN 'American Indian or Alaska Native alone'
              WHEN [rac1p] = '6' THEN 'Asian alone'
-             WHEN [rac1p] = '7' THEN 'Native Hawaiian and Other Pacific Islander alone'
+             WHEN [rac1p] = '7' THEN 'Native Hawaiian or Other Pacific Islander alone'
              WHEN [rac1p] = '9' THEN 'Two or More Races'
              ELSE NULL END AS [race],
 			[mil],

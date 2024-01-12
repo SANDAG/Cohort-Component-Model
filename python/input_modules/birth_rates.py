@@ -146,7 +146,7 @@ def get_birth_rates(
             avg_rates["race"] = "More than one race"
             birth_rates = pd.concat([birth_rates, avg_rates])
 
-            avg_rates["race"] = "Native Hawaiian and Other Pacific Islander alone"
+            avg_rates["race"] = "Native Hawaiian or Other Pacific Islander alone"
             birth_rates = pd.concat([birth_rates, avg_rates])
         else:
             pass

@@ -44,7 +44,7 @@ UNION ALL
     SELECT 'Asian alone' AS [race], [P0020008] AS [pop]
     FROM [tt]
 UNION ALL
-    SELECT 'Native Hawaiian and Other Pacific Islander alone' AS [race], [P0020009] AS [pop]
+    SELECT 'Native Hawaiian or Other Pacific Islander alone' AS [race], [P0020009] AS [pop]
     FROM [tt]
 UNION ALL
     SELECT 'Two or More Races' AS [race], [P0020011] AS [pop]

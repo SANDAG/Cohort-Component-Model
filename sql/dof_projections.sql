@@ -10,7 +10,7 @@ FROM (
 				WHEN [race_code] = 2  then 'Black or African American alone'
 				WHEN [race_code] = 3  then 'American Indian or Alaska Native alone'
 				WHEN [race_code] = 4  then 'Asian alone'
-				WHEN [race_code] = 5  then 'Native Hawaiian and Other Pacific Islander alone'
+				WHEN [race_code] = 5  then 'Native Hawaiian or Other Pacific Islander alone'
 				WHEN [race_code] = 6  then 'Two or More Races'
 				WHEN [race_code] = 7  then 'Hispanic'
 		END AS [race],
