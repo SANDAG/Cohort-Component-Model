@@ -6,7 +6,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2008-2010; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2008-2010; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2008-2010; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2008-2010; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2008-2010; San Diego County.txt",
@@ -18,7 +18,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2009-2011; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2009-2011; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2009-2011; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2009-2011; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2009-2011; San Diego County.txt",
@@ -30,7 +30,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2010-2012; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2010-2012; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2010-2012; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2010-2012; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2010-2012; San Diego County.txt",
@@ -42,7 +42,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2011-2013; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2011-2013; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2011-2013; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2011-2013; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2011-2013; San Diego County.txt",
@@ -54,7 +54,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2012-2014; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2012-2014; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2012-2014; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2012-2014; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2012-2014; San Diego County.txt",
@@ -66,7 +66,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2013-2015; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2013-2015; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2013-2015; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2013-2015; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2013-2015; San Diego County.txt",
@@ -78,7 +78,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2014-2016; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2014-2016; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2014-2016; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2014-2016; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2014-2016; San Diego County.txt",
@@ -90,7 +90,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-current; 2015-2017; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-current; 2015-2017; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; natality-current; 2015-2017; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": false,
+            "Native Hawaiian or Other Pacific Islander alone": false,
             "Two or More Races": false,
             "Ineligible Ages": "All (Under 15 and 45+); natality-current; 2015-2017; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-current; 2015-2017; San Diego County.txt",
@@ -102,7 +102,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-expanded-current; 2016-2018; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-expanded-current; 2016-2018; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian; natality-expanded-current; 2016-2018; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2016-2018; San Diego County.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2016-2018; San Diego County.txt",
             "Two or More Races": "Non-Hispanic More than one race; natality-expanded-current; 2016-2018; San Diego County.txt",
             "Ineligible Ages": "All (Under 15 and 45+); natality-expanded-current; 2016-2018; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-expanded-current; 2016-2018; San Diego County.txt",
@@ -114,7 +114,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-expanded-current; 2017-2019; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-expanded-current; 2017-2019; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian; natality-expanded-current; 2017-2019; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2017-2019; San Diego County.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2017-2019; San Diego County.txt",
             "Two or More Races": "Non-Hispanic More than one race; natality-expanded-current; 2017-2019; San Diego County.txt",
             "Ineligible Ages": "All (Under 15 and 45+); natality-expanded-current; 2017-2019; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-expanded-current; 2017-2019; San Diego County.txt",
@@ -126,7 +126,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-expanded-current; 2018-2020; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-expanded-current; 2018-2020; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian; natality-expanded-current; 2018-2020; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2018-2020; San Diego County.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2018-2020; San Diego County.txt",
             "Two or More Races": "Non-Hispanic More than one race; natality-expanded-current; 2018-2020; San Diego County.txt",
             "Ineligible Ages": "All (Under 15 and 45+); natality-expanded-current; 2018-2020; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-expanded-current; 2018-2020; San Diego County.txt",
@@ -138,7 +138,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-expanded-current; 2019-2021; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-expanded-current; 2019-2021; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian; natality-expanded-current; 2019-2021; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2019-2021; San Diego County.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2019-2021; San Diego County.txt",
             "Two or More Races": "Non-Hispanic More than one race; natality-expanded-current; 2019-2021; San Diego County.txt",
             "Ineligible Ages": "All (Under 15 and 45+); natality-expanded-current; 2019-2021; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-expanded-current; 2019-2021; San Diego County.txt",
@@ -150,7 +150,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; natality-expanded-current; 2020-2022; San Diego County.txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; natality-expanded-current; 2020-2022; San Diego County.txt",
             "Asian alone": "Non-Hispanic Asian; natality-expanded-current; 2020-2022; San Diego County.txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2020-2022; San Diego County.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; natality-expanded-current; 2020-2022; San Diego County.txt",
             "Two or More Races": "Non-Hispanic More than one race; natality-expanded-current; 2020-2022; San Diego County.txt",
             "Ineligible Ages": "All (Under 15 and 45+); natality-expanded-current; 2020-2022; San Diego County.txt",
             "Missing Ethnicity": "Missing Ethnicity All Race; natality-expanded-current; 2020-2022; San Diego County.txt",
@@ -164,7 +164,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2006-2010; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2006-2010; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2006-2010; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2006-2010; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2006-2010; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2006-2010; California (06).txt"
         },
         "2011": {
@@ -173,7 +173,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2007-2011; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2007-2011; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2007-2011; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2007-2011; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2007-2011; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2007-2011; California (06).txt"
         },
         "2012": {
@@ -182,7 +182,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2008-2012; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2008-2012; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2008-2012; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2008-2012; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2008-2012; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2008-2012; California (06).txt"
         },
         "2013": {
@@ -191,7 +191,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2009-2013; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2009-2013; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2009-2013; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2009-2013; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2009-2013; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2009-2013; California (06).txt"
         },
         "2014": {
@@ -200,7 +200,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2010-2014; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2010-2014; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2010-2014; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2010-2014; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2010-2014; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2010-2014; California (06).txt"
         },
         "2015": {
@@ -209,7 +209,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2011-2015; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2011-2015; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2011-2015; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2011-2015; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2011-2015; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2011-2015; California (06).txt"
         },
         "2016": {
@@ -218,7 +218,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2012-2016; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2012-2016; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2012-2016; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2012-2016; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2012-2016; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2012-2016; California (06).txt"
         },
         "2017": {
@@ -227,7 +227,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2013-2017; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2013-2017; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2013-2017; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2013-2017; California (06).txt",
+            "Native Hawaiian or Other Pacific Islander alone": "All Origins and Races; ucd-icd10; 2013-2017; California (06).txt",
             "Two or More Races": "All Origins and Races; ucd-icd10; 2013-2017; California (06).txt"
         },
         "2018": {
@@ -236,7 +236,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2014-2018; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2014-2018; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2014-2018; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018; National.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018; National.txt",
             "Two or More Races": "Non-Hispanic More than one race; ucd-icd10-expanded; 2018; National.txt"
         },
         "2019": {
@@ -245,7 +245,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2015-2019; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2015-2019; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2015-2019; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2019; National.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2019; National.txt",
             "Two or More Races": "Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2019; National.txt"
         },
         "2020": {
@@ -254,7 +254,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2016-2020; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2020; National.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2020; National.txt",
             "Two or More Races": "Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2020; National.txt"
         },
         "2021": {
@@ -263,7 +263,7 @@
             "Black or African American alone": "Non-Hispanic Black or African American; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt",
             "American Indian or Alaska Native alone": "Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2016-2020; National.txt",
             "Asian alone": "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt",
-            "Native Hawaiian and Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2019, 2021; National.txt",
+            "Native Hawaiian or Other Pacific Islander alone": "Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2019, 2021; National.txt",
             "Two or More Races": "Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2019, 2021; National.txt"
         }
     }
