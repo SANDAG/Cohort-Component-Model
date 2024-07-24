@@ -1,4 +1,5 @@
 """Generate base year population by race, sex, and single year of age."""
+
 # TODO: Add 2010 base year generation using 2010 decennial Census.
 
 import numpy as np
@@ -18,16 +19,17 @@ def get_base_yr_2020(
     Census.
 
     Calculate the average of 5-year ACS PUMS persons and CA DOF Population
-    Projections for 2020. Scale the resulting population within race
-    categories using the Census Redistricting file for 2020. Finally, control
-    the total population by the CA DOF Population Estimates for 2020 using the
-    CA DOF Population Estimates vintage from the chosen launch year.
+    Projections for 2020 using the vintage from the chosen launch year. Scale
+    the resulting population within race categories using the Census
+    Redistricting file for 2020. Finally, control the total population by the
+    CA DOF Population Estimates for 2020 using the CA DOF Population Estimates
+    vintage from the chosen launch year.
 
     Args:
         launch_yr (int): Launch year
         acs5yr_pums_persons (pd.DataFrame): 5-year ACS PUMS persons 2016-2020
         dof_estimates (pd.DataFrame): CA DOF Population Estimates
-        dof_projections (pd.DataFrame): CA DOF Population Projections for 2020
+        dof_projections (pd.DataFrame): CA DOF Population Projections
         census_redistricting (pd.DataFrame): Census Redistricting File
             (Public Law 94-171) Dataset for California for 2020
 
@@ -39,18 +41,24 @@ def get_base_yr_2020(
     if 2020 not in acs5yr_pums_persons["year"].unique():
         raise ValueError("2020 not in ACS 5-year PUMS")
 
-    if launch_yr not in dof_estimates["vintage"].unique():
+    if launch_yr not in dof_estimates["vintage"].astype(int).unique():
         raise ValueError("Launch year not in DOF Estimates")
 
     if 2020 not in dof_projections["year"].unique():
         raise ValueError("2020 not in DOF Projections")
+
+    if launch_yr not in dof_projections["vintage"].astype(int).unique():
+        raise ValueError("Launch year not in DOF Projections")
 
     # Create a blended estimate of the total population distribution for 2020
     # From the 5-year ACS PUMS persons file and the CA DOF population projections
     # The blended estimate uses the average of the PUMS and DOF population for age <= 90
     # And uses solely DOF population for age > 90 or where no PUMS data is available
     df = pd.merge(
-        dof_projections[dof_projections["year"] == 2020],
+        dof_projections[
+            (dof_projections["vintage"].astype(int) == launch_yr)
+            & (dof_projections["year"] == 2020)
+        ],
         acs5yr_pums_persons[acs5yr_pums_persons["year"] == 2020],
         how="left",
         on=["race", "sex", "age"],
@@ -81,11 +89,13 @@ def get_base_yr_2020(
     # From the vintage associated with the chosen launch year
     scale_pop_pct = (
         dof_estimates[
-            (dof_estimates["vintage"] == launch_yr) & (dof_estimates["year"] == 2020)
+            (dof_estimates["vintage"].astype(int) == launch_yr)
+            & (dof_estimates["year"] == 2020)
         ]["pop"].iloc[0]
         / df["pop_blended"].sum()
     )
 
     # Return blended estimate of population by race/sex/age
     df["pop"] = df["pop_blended"] * scale_pop_pct
+
     return df[["race", "sex", "age", "pop"]]

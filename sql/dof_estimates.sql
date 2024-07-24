@@ -3,14 +3,18 @@
 -- E-5 Population and Housing Estimates for Cities, Counties, and the State
 -- Temporal resolution is January 1st population
 SELECT
-    [vintage_yr] AS [vintage], -- version goes back to 2013
-    [est_yr] AS [year],
-    [total_pop] AS [pop],
+    REPLACE([estimates].[name], 'E-5: Vintage ', '') AS [vintage], -- vintage goes back to 2023
+    [estimates_e5].[year],
+    [total_population] AS [pop],
     [group_quarters] AS [gq]
-FROM
-    [socioec_data].[ca_dof].[population_housing_estimates]
+FROM [socioec_data].[ca_dof].[estimates_e5]
+    INNER JOIN [socioec_data].[ca_dof].[estimates]
+    ON [estimates_e5].[estimates_id] = [estimates].[estimates_id]
+    INNER JOIN [socioec_data].[ca_dof].[fips]
+    ON [estimates_e5].[fips] = [fips].[fips]
 WHERE
-    [vintage_yr] IS NOT NULL -- data exists without version
-    AND [area_type] = 'County'
-    AND [area_name] = 'San Diego'
-    AND [summary_type] = 'Total'
+	[fips].[name] = 'San Diego County'
+    AND [estimates_e5].[area_name] = 'County Total'
+ORDER BY
+	REPLACE([estimates].[name], 'E-5: Vintage ', ''),
+	[estimates_e5].[year]
