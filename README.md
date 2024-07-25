@@ -27,7 +27,6 @@ output:  # output files
     population: "output/population.csv"
     rates: "output/rates.csv"
 sql:  # SQL server options
-  server: ""  # SQL instance
   datasets:  # SQL queries to be used as datasets
     acs5yr_pums_ca_mil: "sql/acs5yr_pums_ca_mil.sql"  # State of California total military population
     acs5yr_pums_migrants: "sql/acs5yr_pums_migrants.sql"  # San Diego County in/out migration
@@ -35,4 +34,14 @@ sql:  # SQL server options
     census_redistricting: "sql/census_redistricting.sql"  # 2020 Census Redistricting file
     dof_estimates: "sql/dof_estimates.sql"  # California Department of Finance Estimates
     dof_projections: "sql/dof_projections.sql"  # California Department of Finance Projections
+```
+
+### Configuration of Private Data in secrets.yml
+In order to avoid exposing certain data to the public this repository uses a secrets file to store sensitive configurations in addition to a standard configuration file. This file is stored in the root directory of the repository as `secrets.yml` and is included in the `.gitignore` intentionally to avoid it ever being committed to the repository.
+
+The `secrets.yml` should mirror the following structure.
+
+```yaml
+sql:
+  server: "<SqlInstanceName>"
 ```

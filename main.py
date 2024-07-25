@@ -24,6 +24,10 @@ from python.output_data import write_df, write_rates
 
 
 # Set up configurations and datasets -----------------------------------------
+# Load secrets file ----
+with open("secrets.yml") as f:
+    secrets = yaml.safe_load(f)
+
 # Load configuration files ----
 with open("config.yml") as f:
     config = yaml.safe_load(f)
@@ -47,7 +51,7 @@ for k, v in config["csv"].items():
         config["csv"][k] = pd.read_csv(v)
 
 # Load SQL data sources ----
-engine = sql.create_engine("mssql+pymssql://" + config["sql"]["server"] + "/")
+engine = sql.create_engine("mssql+pymssql://" + secrets["sql"]["server"] + "/")
 with engine.connect() as connection:
     for k, v in config["sql"]["datasets"].items():
         with open(v, "r") as query:

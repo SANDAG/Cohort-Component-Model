@@ -15,7 +15,6 @@ output:
     population: "output/population.csv"
     rates: "output/rates.csv"
 sql:
-  server: ""
   datasets:
     acs5yr_pums_ca_mil: "sql/acs5yr_pums_ca_mil.sql"
     acs5yr_pums_migrants: "sql/acs5yr_pums_migrants.sql"
