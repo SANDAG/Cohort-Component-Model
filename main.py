@@ -1,6 +1,5 @@
 """Entry point for running the Regional Cohort Component Model."""
 
-import json
 import os
 import pandas as pd
 import sqlalchemy as sql
@@ -33,7 +32,7 @@ with open("config.yml") as f:
     config = yaml.safe_load(f)
 for k, v in config["configurations"].items():
     with open(v) as f:
-        config["configurations"][k] = json.load(f)
+        config["configurations"][k] = yaml.safe_load(f)
 
 # Check if output files already exist ----
 for k, v in config["output"]["files"].items():

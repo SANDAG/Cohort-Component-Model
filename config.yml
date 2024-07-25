@@ -1,6 +1,6 @@
 configurations:
-  rates_map: "rates_map.JSON"
-  controls: "sandag_estimates.JSON"
+  rates_map: "rates_map.yml"
+  controls: "sandag_estimates.yml"
 csv:
   dmdc_location_report: "data/DMDC Website Location Report.csv"
   sdmac_report: "data/SDMAC Report.csv"
