@@ -11,8 +11,8 @@ Set the configuration file **config.JSON** parameters specific to the model run 
 *Note that the configuration file contains datasets stored on a SQL server instance accessed at runtime through queries. It is possible to provide query results as local datasets and migrate the SQL datasets to the **csv** section of the configuration file to remove the dependency on the SQL instance.*
 ```yaml
 configurations:  # other configuration files
-  rates_map: "rates_map.JSON"  # local birth/death rate files mapping
-  controls: "sandag_estimates.JSON"  # SANDAG Estimates Control totals
+  rates_map: "rates_map.yml"  # local birth/death rate files mapping
+  controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
 csv:  # locally stored datasets (manually entered)
   dmdc_location_report: "data/DMDC Website Location Report.csv"  # Department of Defense DMDC Report data
   sdmac_report: "data/SDMAC Report.csv"  # Military SDMAC Report data
