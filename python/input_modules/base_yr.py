@@ -1,17 +1,21 @@
 """Generate base year population by race, sex, and single year of age."""
 
 # TODO: Add 2010 base year generation using 2010 decennial Census.
+# TODO: Update 2020 base year methodology with 2020 decennial Census release.
 
 import numpy as np
 import pandas as pd
+import sqlalchemy as sql
+import warnings
 
 
 def get_base_yr_2020(
     launch_yr: int,
-    acs5yr_pums_persons: pd.DataFrame,
-    dof_estimates: pd.DataFrame,
-    dof_projections: pd.DataFrame,
-    census_redistricting: pd.DataFrame,
+    pums_persons: str,
+    dof_estimates: str,
+    dof_projections: str,
+    census_redistricting: str,
+    engine: sql.engine,
 ) -> pd.DataFrame:
     """Generate base year 2020 population data broken down by race, sex, and
     single year of age for launch years from 2020-2029. Due to issues with the
@@ -27,39 +31,60 @@ def get_base_yr_2020(
 
     Args:
         launch_yr (int): Launch year
-        acs5yr_pums_persons (pd.DataFrame): 5-year ACS PUMS persons 2016-2020
-        dof_estimates (pd.DataFrame): CA DOF Population Estimates
-        dof_projections (pd.DataFrame): CA DOF Population Projections
-        census_redistricting (pd.DataFrame): Census Redistricting File
-            (Public Law 94-171) Dataset for California for 2020
+        pums_persons (str): 5-year ACS PUMS persons 2016-2020 query file
+        dof_estimates (str): CA DOF Population Estimates query file
+        dof_projections (str): CA DOF Population Projections query file
+        census_redistricting (str): Census Redistricting File
+            (Public Law 94-171) Dataset for California for 2020 query file
+        engine (sql.engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.Dataframe: Base year 2020 population data broken down by race,
             sex, and single year of age
     """
-
-    if 2020 not in acs5yr_pums_persons["year"].unique():
-        raise ValueError("2020 not in ACS 5-year PUMS")
-
-    if launch_yr not in dof_estimates["vintage"].astype(int).unique():
-        raise ValueError("Launch year not in DOF Estimates")
-
-    if 2020 not in dof_projections["year"].unique():
-        raise ValueError("2020 not in DOF Projections")
-
-    if launch_yr not in dof_projections["vintage"].astype(int).unique():
-        raise ValueError("Launch year not in DOF Projections")
+    # Load SQL queries and apply checks to datasets
+    with engine.connect() as connection:
+        # Load ACS PUMS persons
+        with open(pums_persons, "r") as query:
+            pums_persons_df = pd.read_sql_query(
+                query.read().format(yr=2020), connection
+            )
+            if len(pums_persons_df.index) == 0:
+                raise ValueError("2020: not in ACS 5-year PUMS")
+        # Load DOF Estimates
+        with open(dof_estimates, "r") as query:
+            dof_estimates_df = pd.read_sql_query(query.read(), connection)
+            if launch_yr not in dof_estimates_df["vintage"].astype(int).unique():
+                raise ValueError("Launch year not in DOF Estimates")
+        # Load DOF Projections
+        with open(dof_projections, "r") as query:
+            dof_projections_df = pd.read_sql_query(query.read(), connection)
+            dof_projections_yr = launch_yr
+            if 2020 not in dof_projections_df["year"].unique():
+                raise ValueError("2020: not in DOF Projections")
+            # If projections have not been released for the launch year
+            # Use the most recent projection from the DOF and warn the user
+            elif launch_yr not in dof_projections_df["vintage"].astype(int).unique():
+                dof_projections_yr = max(dof_projections_df["vintage"].astype(int))
+                warnings.warn(
+                    """DOF projection unavailable for launch year. Default to most recent
+                    DOF projection vintage year: """
+                    + str(dof_projections_yr)
+                )
+        # Load 2020 Census Redistricting File
+        with open(census_redistricting, "r") as query:
+            census_redistricting_df = pd.read_sql_query(query.read(), connection)
 
     # Create a blended estimate of the total population distribution for 2020
     # From the 5-year ACS PUMS persons file and the CA DOF population projections
     # The blended estimate uses the average of the PUMS and DOF population for age <= 90
     # And uses solely DOF population for age > 90 or where no PUMS data is available
     df = pd.merge(
-        dof_projections[
-            (dof_projections["vintage"].astype(int) == launch_yr)
-            & (dof_projections["year"] == 2020)
+        dof_projections_df[
+            (dof_projections_df["vintage"].astype(int) == dof_projections_yr)
+            & (dof_projections_df["year"] == 2020)
         ],
-        acs5yr_pums_persons[acs5yr_pums_persons["year"] == 2020],
+        pums_persons_df,
         how="left",
         on=["race", "sex", "age"],
         suffixes=("_dof", "_pums"),
@@ -77,7 +102,7 @@ def get_base_yr_2020(
         df[["race", "pop_blended"]]
         .groupby(by=["race"])
         .sum()
-        .merge(right=census_redistricting, how="left", on="race")
+        .merge(right=census_redistricting_df, how="left", on="race")
         .assign(pct_race=lambda x: x["pop"] / x["pop_blended"])
     )
 
@@ -88,9 +113,9 @@ def get_base_yr_2020(
     # Matching the 2020 DOF Estimates value for total population
     # From the vintage associated with the chosen launch year
     scale_pop_pct = (
-        dof_estimates[
-            (dof_estimates["vintage"].astype(int) == launch_yr)
-            & (dof_estimates["year"] == 2020)
+        dof_estimates_df[
+            (dof_estimates_df["vintage"].astype(int) == launch_yr)
+            & (dof_estimates_df["year"] == 2020)
         ]["pop"].iloc[0]
         / df["pop_blended"].sum()
     )

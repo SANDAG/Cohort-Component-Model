@@ -1,16 +1,19 @@
 """Get group quarters and household formation rates by race, sex, and single year of age."""
+
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import pandas as pd
 from python.utilities import adjust_sum, distribute_excess
+import sqlalchemy as sql
 import warnings
 
 
 def get_formation_rates(
     yr: int,
     launch_yr: int,
-    acs5yr_pums_persons: pd.DataFrame,
+    pums_persons: str,
     sandag_estimates: dict,
+    engine: sql.engine,
 ) -> pd.DataFrame:
     """Generate group quarters and household formation rates broken
     down by race, sex, and single year of age.
@@ -30,20 +33,25 @@ def get_formation_rates(
     Args:
         yr: Increment year
         launch_yr: Launch year
-        acs5yr_pums_persons (pd.DataFrame): 5-year ACS PUMS persons
+        pums_persons (str): 5-year ACS PUMS persons query file
         sandag_estimates (dict): loaded JSON control totals from historical
             SANDAG Estimates programs
+        engine (sql.engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Group quarters and household formation rates broken down
             by race, sex, and single year of age
     """
     if yr <= launch_yr:
-        if yr not in acs5yr_pums_persons["year"].unique():
+        # Load SQL queries and apply checks to datasets
+        with engine.connect() as connection:
+            # Load ACS PUMS persons
+            with open(pums_persons, "r") as query:
+                pums_persons_df = pd.read_sql_query(
+                    query.read().format(yr=yr), connection
+                )
+        if len(pums_persons_df.index) == 0:
             raise ValueError(str(yr) + ": not in ACS 5-year PUMS")
-
-        # Select the 5-year ACS PUMS data
-        pums_df = acs5yr_pums_persons[(acs5yr_pums_persons["year"] == yr)].copy()
 
         # Take total households/group quarters/population and apply scaling factor
         # Matching the SANDAG Estimates Program for the increment year
@@ -57,8 +65,8 @@ def get_formation_rates(
         for k, v in control_map.items():
             control = sandag_estimates[str(launch_yr)][str(yr)][k][v["control"]]
             if control is not None:
-                scale_pct = control / pums_df[v["col"]].sum()
-                pums_df[v["col"]] = pums_df[v["col"]] * scale_pct
+                scale_pct = control / pums_persons_df[v["col"]].sum()
+                pums_persons_df[v["col"]] = pums_persons_df[v["col"]] * scale_pct
             else:
                 warnings.warn(
                     "No " + v["control"] + " control total provided.", UserWarning
@@ -66,14 +74,16 @@ def get_formation_rates(
 
         # Distribute excess head of household and group quarters population
         # This is done to avoid formation rates > 1
-        pums_df["pop_gq"] = distribute_excess(df=pums_df, subset="pop_gq", total="pop")
-        pums_df["pop_hh_head"] = distribute_excess(
-            df=pums_df, subset="pop_hh_head", total="pop_hh"
+        pums_persons_df["pop_gq"] = distribute_excess(
+            df=pums_persons_df, subset="pop_gq", total="pop"
+        )
+        pums_persons_df["pop_hh_head"] = distribute_excess(
+            df=pums_persons_df, subset="pop_hh_head", total="pop_hh"
         )
 
         # Calculate the over 70 Group Quarters Formation Rate by Sex
         rates_70plus_gq = (
-            pums_df[pums_df["age"] > 70]
+            pums_persons_df[pums_persons_df["age"] > 70]
             .groupby(["sex"])[["pop_gq", "pop"]]
             .sum()
             .reset_index()
@@ -82,7 +92,7 @@ def get_formation_rates(
 
         # Calculate the over 70 Household Formation Rate by Race and Sex
         rates_70plus_hh_head = (
-            pums_df[pums_df["age"] > 70]
+            pums_persons_df[pums_persons_df["age"] > 70]
             .groupby(["race", "sex"])[["pop_hh_head", "pop_hh"]]
             .sum()
             .reset_index()
@@ -94,7 +104,7 @@ def get_formation_rates(
         # For age categories over 70, assign all over 70 Formation rates
         # To all race, sex, and single year of age categories
         rates_70plus = (
-            pums_df[pums_df["age"] > 70]
+            pums_persons_df[pums_persons_df["age"] > 70]
             .merge(right=rates_70plus_gq, how="left", on="sex")
             .merge(right=rates_70plus_hh_head, how="left", on=["race", "sex"])
             .fillna(0)[["race", "sex", "age", "rate_gq", "rate_hh"]]
@@ -102,7 +112,7 @@ def get_formation_rates(
 
         # Calculate the <=70 Group Quarters and Household Formation Rates
         rates_70under = (
-            pums_df[pums_df["age"] <= 70]
+            pums_persons_df[pums_persons_df["age"] <= 70]
             .assign(rate_gq=lambda x: x["pop_gq"] / x["pop"])
             .assign(rate_hh=lambda x: x["pop_hh_head"] / x["pop_hh"])
             .fillna(0)[["race", "sex", "age", "rate_gq", "rate_hh"]]

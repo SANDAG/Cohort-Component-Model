@@ -1,13 +1,19 @@
 """Get migration rates by race, sex, and single year of age."""
+
 # TODO: (10-feature) Add function to allow for control totals at each increment for in/out migration.
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import pandas as pd
 import numpy as np
+import sqlalchemy as sql
 
 
 def get_migration_rates(
-    yr: int, launch_yr: int, pop_df: pd.DataFrame, acs5yr_pums_migrants: pd.DataFrame
+    yr: int,
+    launch_yr: int,
+    pop_df: pd.DataFrame,
+    pums_migrants: str,
+    engine: sql.engine,
 ) -> pd.DataFrame:
     """Create migration rates broken down by race, sex, and single year of age.
 
@@ -21,8 +27,9 @@ def get_migration_rates(
         launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
-        acs5yr_pums_migrants (pd.DataFrame): 5-year ACS PUMS in/out migrants
-            for San Diego County
+        pums_migrants (str): query to get 5-year ACS PUMS in/out
+            migrants for San Diego County
+        engine (sql.engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Migration rates broken down by race, sex, and single
@@ -30,14 +37,21 @@ def get_migration_rates(
     """
     # Migration rates calculated from base year up to the launch year
     if yr <= launch_yr:
-        if yr not in acs5yr_pums_migrants["year"].unique():
-            raise ValueError(str(yr) + ": not in ACS 5-year PUMS Migrants")
+        # Load SQL queries and apply checks to datasets
+        with engine.connect() as connection:
+            # Load ACS PUMS persons
+            with open(pums_migrants, "r") as query:
+                pums_migrants_df = pd.read_sql_query(
+                    query.read().format(yr=yr), connection
+                )
+            if len(pums_migrants_df.index) == 0:
+                raise ValueError(str(yr) + ": not in ACS PUMS in/out migrants")
 
         # Merge base year and migrant datasets calculating crude migration rates
         # Removing active-duty military population from the calculation
         df = (
             pop_df.merge(
-                right=acs5yr_pums_migrants[acs5yr_pums_migrants["year"] == yr],
+                right=pums_migrants_df,
                 how="left",
                 on=["race", "sex", "age"],
             )
