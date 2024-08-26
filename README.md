@@ -28,7 +28,7 @@ output:  # output files
     rates: "output/rates.csv"
 sql:  # SQL server options
   queries:  # SQL queries to be used as datasets
-    census_redistricting: "sql/census_redistricting.sql"  # 2020 Census Redistricting file
+    census_p5: "sql/census_p5.sql"  # 2020 Census P5 table
     dof_estimates: "sql/dof_estimates.sql"  # California Department of Finance Estimates
     dof_projections: "sql/dof_projections.sql"  # California Department of Finance Projections
     pums_ca_mil: "sql/pums_ca_mil.sql"  # State of California total military population

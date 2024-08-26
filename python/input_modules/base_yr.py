@@ -14,7 +14,7 @@ def get_base_yr_2020(
     pums_persons: str,
     dof_estimates: str,
     dof_projections: str,
-    census_redistricting: str,
+    census_p5: str,
     engine: sql.engine,
 ) -> pd.DataFrame:
     """Generate base year 2020 population data broken down by race, sex, and
@@ -24,18 +24,17 @@ def get_base_yr_2020(
 
     Calculate the average of 5-year ACS PUMS persons and CA DOF Population
     Projections for 2020 using the vintage from the chosen launch year. Scale
-    the resulting population within race categories using the Census
-    Redistricting file for 2020. Finally, control the total population by the
-    CA DOF Population Estimates for 2020 using the CA DOF Population Estimates
-    vintage from the chosen launch year.
+    the resulting population within race categories using the Census P5 table
+    for 2020. Finally, control the total population by the CA DOF Population
+    Estimates for 2020 using the CA DOF Population Estimates vintage from the
+    chosen launch year.
 
     Args:
         launch_yr (int): Launch year
         pums_persons (str): 5-year ACS PUMS persons 2016-2020 query file
         dof_estimates (str): CA DOF Population Estimates query file
         dof_projections (str): CA DOF Population Projections query file
-        census_redistricting (str): Census Redistricting File
-            (Public Law 94-171) Dataset for California for 2020 query file
+        census_p5 (str): Census P5 table for 2020 query file
         engine (sql.engine): SQLAlchemy MSSQL connection engine
 
     Returns:
@@ -71,9 +70,9 @@ def get_base_yr_2020(
                     DOF projection vintage year: """
                     + str(dof_projections_yr)
                 )
-        # Load 2020 Census Redistricting File
-        with open(census_redistricting, "r") as query:
-            census_redistricting_df = pd.read_sql_query(query.read(), connection)
+        # Load 2020 Census P5 table
+        with open(census_p5, "r") as query:
+            census_p5_df = pd.read_sql_query(query.read(), connection)
 
     # Create a blended estimate of the total population distribution for 2020
     # From the 5-year ACS PUMS persons file and the CA DOF population projections
@@ -97,12 +96,12 @@ def get_base_yr_2020(
     )
 
     # Take the blended estimate and apply race-level scaling factors
-    # Using the census redistricting file population by race
+    # Using the Census P5 table population by race
     scale_race = (
         df[["race", "pop_blended"]]
         .groupby(by=["race"])
         .sum()
-        .merge(right=census_redistricting_df, how="left", on="race")
+        .merge(right=census_p5_df, how="left", on="race")
         .assign(pct_race=lambda x: x["pop"] / x["pop_blended"])
     )
 

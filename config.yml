@@ -16,7 +16,7 @@ output:
     rates: "output/rates.csv"
 sql:
   queries:
-    census_redistricting: "sql/census_redistricting.sql"
+    census_p5: "sql/census_p5.sql"
     dof_estimates: "sql/dof_estimates.sql"
     dof_projections: "sql/dof_projections.sql"
     pums_ca_mil: "sql/pums_ca_mil.sql"

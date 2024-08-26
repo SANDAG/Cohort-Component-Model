@@ -62,7 +62,7 @@ if 2020 <= config["interval"]["launch"] < 2030:
         pums_persons=config["sql"]["queries"]["pums_persons"],
         dof_estimates=config["sql"]["queries"]["dof_estimates"],
         dof_projections=config["sql"]["queries"]["dof_projections"],
-        census_redistricting=config["sql"]["queries"]["census_redistricting"],
+        census_p5=config["sql"]["queries"]["census_p5"],
         engine=engine,
     )
 
