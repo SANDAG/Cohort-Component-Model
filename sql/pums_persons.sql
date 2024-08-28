@@ -1,10 +1,13 @@
--- Create shell table of required race, sex, and ages in result table
--- Age: 0-110, Sex: F, M, Race: 7 Options
+-- Get persons and household characteristics for San Diego County by age, sex, ethnicity.
+-- Household characteristics assigned to head of household record
+
+
+-- Create shell table of required race, sex, and age variables with necessary categoires: Age: 0-110; Sex: F, M; Race: 7 Options
 DROP TABLE IF EXISTS [tt_shell];
 WITH [age] AS (
-    SELECT 0 AS [age]
+    SELECT 0 AS [age]  -- Begin with zero
         UNION ALL
-    SELECT [age] + 1 FROM [age] WHERE [age] < 110
+    SELECT [age] + 1 FROM [age] WHERE [age] < 110  -- Add each age category up to 110
 ),
 [sex] AS (
     SELECT [sex] FROM (VALUES ('F'), ('M')) AS [tt] ([sex])
@@ -26,124 +29,103 @@ INTO [tt_shell]
 FROM [age]
 CROSS JOIN [sex]
 CROSS JOIN [race]
-OPTION (MAXRECURSION 111);
+OPTION (MAXRECURSION 111);  -- Stop at 110
 
 
--- Create temporary table of Census 2010 San Diego County PUMAs
--- 5yr ACS PUMS from 2012-2016 to 2017-2021 use 2010 Census PUMAs
-DROP TABLE IF EXISTS [tt_sd_pumas_2010];
-DECLARE @tt_sd_pumas_2010 TABLE ([PUMA] varchar(5))
-INSERT INTO @tt_sd_pumas_2010
-	([puma])
-VALUES
-	('07301'),
-	('07302'),
-	('07303'),
-	('07304'),
-	('07305'),
-	('07306'),
-	('07307'),
-	('07308'),
-	('07309'),
-	('07310'),
-	('07311'),
-	('07312'),
-	('07313'),
-	('07314'),
-	('07315'),
-	('07316'),
-	('07317'),
-	('07318'),
-	('07319'),
-	('07320'),
-	('07321'),
-	('07322');
-
-
--- Select ACS PUMS data based on input survey year this is done to lower runtime
+-- Select ACS PUMS data based on input survey year (this is done to lower runtime)
 DECLARE @year integer = {yr};
 DECLARE @pums_qry nvarchar(max) =
-    CASE WHEN @year = 2020 THEN 'SELECT [SERIALNO], [ST], [PUMA], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[5y_2016_2020_persons]'
-         WHEN @year = 2021 THEN 'SELECT [SERIALNO], [ST], [PUMA], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[5y_2017_2021_persons]'
-    ELSE NULL END;
+	CASE WHEN @year = 2010 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2006_2010_persons_sd]'
+		 WHEN @year = 2011 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2007_2011_persons_sd]'
+		 WHEN @year = 2012 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2008_2012_persons_sd]'
+		 WHEN @year = 2013 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2009_2013_persons_sd]'
+		 WHEN @year = 2014 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2010_2014_persons_sd]'		
+		 WHEN @year = 2015 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2011_2015_persons_sd]'
+		 WHEN @year = 2016 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2012_2016_persons_sd]'
+		 WHEN @year = 2017 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2013_2017_persons_sd]'
+		 WHEN @year = 2018 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2014_2018_persons_sd]'
+		 WHEN @year = 2019 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], NULL AS [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2015_2019_persons_sd]'
+		 WHEN @year = 2020 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], NULL AS [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2016_2020_persons_sd]'
+         WHEN @year = 2021 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], NULL AS [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2017_2021_persons_sd]'
+		 WHEN @year = 2022 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [RELSHIPP], NULL AS [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2018_2022_persons_sd]'
+	ELSE NULL END;
 
--- Declare temporary table to insert results of ACS PUMS query
+-- Declare temporary table to receive results of ACS PUMS query (@pums_qry)
 DROP TABLE IF EXISTS #pums_tbl
 CREATE TABLE #pums_tbl (
     [SERIALNO] varchar(13) NOT NULL,
     [ST] varchar(2) NOT NULL,
-    [PUMA] varchar(5) NULL,
     [AGEP] int NOT NULL,
     [SEX] varchar(1) NOT NULL,
     [HISP] varchar(2) NOT NULL,
     [RAC1P] varchar(1) NOT NULL,
     [MIL] varchar(1) NULL,
-    [RELSHIPP] varchar(2) NOT NULL,
+	[RELSHIPP] varchar(2) NULL, 
+    [RELP] varchar(2) NULL,  
     [SPORDER] float NOT NULL,
     [ESR] varchar(1) NULL,
     [PWGTP] float NOT NULL
 );
 
--- Insert ACS PUMS query results into temporary table
+-- Insert ACS PUMS query results into table
 INSERT INTO #pums_tbl
 EXECUTE sp_executesql @pums_qry;
 
-
--- Get San Diego County single year of age, sex, race population from ACS PUMs
+-- Get San Diego County single year of age, sex, race population
 WITH [persons] AS (
     SELECT
-        [serialno],
-        CASE WHEN [agep] > 110 THEN 110 ELSE [agep] END AS [age], -- maximum age is 110
-        CASE WHEN [sex] = '1' THEN 'M' WHEN [sex] = '2' THEN 'F' ELSE NULL END AS [sex],
-        CASE WHEN [hisp] != '01' THEN 'Hispanic' -- Hispanic takes precendence over Race
-             WHEN [rac1p] IN ('1', '8') THEN 'White alone' -- both White and Other
-             WHEN [rac1p] = '2' THEN 'Black or African American alone'
-             WHEN [rac1p] IN ('3','4','5') THEN 'American Indian or Alaska Native alone'
-             WHEN [rac1p] = '6' THEN 'Asian alone'
-             WHEN [rac1p] = '7' THEN 'Native Hawaiian or Other Pacific Islander alone'
-             WHEN [rac1p] = '9' THEN 'Two or More Races'
+        [SERIALNO], -- Count persons by their serial number
+        CASE WHEN [AGEP] > 110 THEN 110 ELSE [agep] END AS [age], -- Group oldest ages into one category: if over 110, as 110; otherwise keep single year of age
+        CASE WHEN [SEX] = '1' THEN 'M' WHEN [sex] = '2' THEN 'F' ELSE NULL END AS [sex], -- Change numeric codes into standard M and F text codes
+		CASE WHEN [HISP] NOT IN ('01', '1') THEN 'Hispanic' -- Exclude non-Hispanic which is 01 or 1.  Hispanic takes precendence over Race
+             WHEN [RAC1P] IN ('1', '8') THEN 'White alone' -- Combine Some other race with White
+             WHEN [RAC1P] = '2' THEN 'Black or African American alone'
+             WHEN [RAC1P] IN ('3', '4', '5') THEN 'American Indian or Alaska Native alone'  -- Group various codes for AI and AN together
+             WHEN [RAC1P] = '6' THEN 'Asian alone'
+             WHEN [RAC1P] = '7' THEN 'Native Hawaiian or Other Pacific Islander alone'
+             WHEN [RAC1P] = '9' THEN 'Two or More Races'
              ELSE NULL END AS [race],
-        [mil],
-        [relshipp],
-        [sporder],
-        [esr],
-        [pwgtp]
+        [MIL],
+        -- Survey year dependent indicator if person is in Group Quarters (1/0)
+        CASE WHEN @year BETWEEN 2019 AND 2022 AND [RELSHIPP] IN ('37','38') THEN 1
+			 WHEN @year BETWEEN 2012 AND 2018 AND [RELP] IN ('16','17') THEN 1
+			 WHEN @year = 2011 AND [RELP] IN ('13','14') THEN 1
+			 WHEN @year = 2010 AND [RELP] IN ('14','15') THEN 1
+             ELSE 0 END AS [gq],
+        [SPORDER],
+        [ESR],
+        [PWGTP]
     FROM #pums_tbl
-    WHERE
-        -- Note the [ST] and [PUMA] fields are specific to certain years of ACS
-       -- 5yr ACS PUMS from 2012-2016 to 2017-2021 use 2010 Census PUMAS
-       (@year BETWEEN 2016 AND 2021 AND [st] = '06' AND [puma] IN (SELECT [puma] FROM @tt_sd_pumas_2010))
 ),
+-- Aggregate persons data to household level to get household size, number of workers, presence of children, presence of seniors
 [hh_info] AS (
     SELECT
-        [serialno],
-        COUNT([serialno]) AS [size],
-        SUM(CASE WHEN [esr] IN (1,2,4,5) THEN 1 ELSE 0 END) AS [workers],
-        MAX(CASE WHEN [age] < 18 THEN 1 ELSE 0 END) AS [children],
-        MAX(CASE WHEN [age] >= 65 THEN 1 ELSE 0 END) AS [seniors]
+        [SERIALNO],
+        COUNT([SERIALNO]) AS [size],
+        SUM(CASE WHEN [ESR] IN (1,2,4,5) THEN 1 ELSE 0 END) AS [workers],  -- Exclude unemployed (3) or not in labor force (6)
+        MAX(CASE WHEN [AGE] < 18 THEN 1 ELSE 0 END) AS [children],
+        MAX(CASE WHEN [AGE] >= 65 THEN 1 ELSE 0 END) AS [seniors]
     FROM [persons]
-    GROUP BY [serialno]
+    GROUP BY [SERIALNO]
 )
 SELECT
     [tt_shell].[age],
     [tt_shell].[sex],
     [tt_shell].[race],
-    ISNULL(SUM([pwgtp]), 0) AS [pop],
-    SUM(CASE WHEN [mil] = '1' THEN [pwgtp] ELSE 0 END) AS [pop_mil],
-    SUM(CASE WHEN [relshipp] IN ('37','38') THEN [pwgtp] ELSE 0 END) AS [pop_gq],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') THEN [pwgtp] ELSE 0 END) AS [pop_hh],
-    -- households and household attributes
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 THEN [pwgtp] ELSE 0 END) AS [pop_hh_head],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [esr] IN (1,2,3,4,5) THEN [pwgtp] ELSE 0 END) AS [hh_head_lf],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [size] = 1 THEN [pwgtp] ELSE 0 END) AS [size1],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [size] = 2 THEN [pwgtp] ELSE 0 END) AS [size2],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [size] >= 3 THEN [pwgtp] ELSE 0 END ) AS [size3],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [workers] = 0 THEN [pwgtp] ELSE 0 END) AS [workers0],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [workers] = 1 THEN [pwgtp] ELSE 0 END) AS [workers1],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [workers] = 2 THEN [pwgtp] ELSE 0 END) AS [workers2],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [workers] >= 3 THEN [pwgtp] ELSE 0 END) AS [workers3],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [children] = 1 THEN [pwgtp] ELSE 0 END) AS [child1],
-    SUM(CASE WHEN [relshipp] NOT IN ('37','38') AND [sporder] = 1 AND [seniors] = 1 THEN [pwgtp] ELSE 0 END) AS [senior1]
+    ISNULL(SUM([PWGTP]), 0) AS [pop],  -- Total population
+    SUM(CASE WHEN [MIL] = '1' THEN [PWGTP] ELSE 0 END) AS [pop_mil],  -- Active-duty military 
+    SUM(CASE WHEN [gq] = 1 THEN [PWGTP] ELSE 0 END) AS [pop_gq],  -- Group quarters population 
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 THEN [PWGTP] ELSE 0 END) AS [pop_hh_head],  -- Head of household population
+    SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [ESR] IN (1,2,3,4,5) THEN [PWGTP] ELSE 0 END) AS [hh_head_lf],  -- Head of household in labor force population
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] = 1 THEN [PWGTP] ELSE 0 END) AS [size1],  -- Household size one
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] = 2 THEN [PWGTP] ELSE 0 END) AS [size2],  -- Household size two
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] >= 3 THEN [PWGTP] ELSE 0 END) AS [size3],  -- Household size three
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [workers] = 0 THEN [PWGTP] ELSE 0 END) AS [workers0],  -- Household workers 0
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [workers] = 1 THEN [PWGTP] ELSE 0 END) AS [workers1],  -- Household workers 1
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [workers] = 2 THEN [PWGTP] ELSE 0 END) AS [workers2],  -- Household workers 2
+    SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [workers] >= 3 THEN [PWGTP] ELSE 0 END) AS [workers3],  -- Household workers 3+
+    SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [children] = 1  THEN [PWGTP] ELSE 0 END) AS [child1],  -- Household children 1+
+    SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [seniors] = 1  THEN [PWGTP] ELSE 0 END) AS [senior1]  -- Household seniors 1+
 FROM [persons]
 INNER JOIN [hh_info]
     ON [persons].[serialno] = [hh_info].[serialno]
