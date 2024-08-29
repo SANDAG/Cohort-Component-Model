@@ -2,7 +2,7 @@
 -- Household characteristics assigned to head of household record
 
 
--- Create shell table of required race, sex, and age variables with necessary categoires: Age: 0-110; Sex: F, M; Race: 7 Options
+-- Create shell table of required race, sex, and age variables with necessary categories: Age: 0-110; Sex: F, M; Race: 7 Options
 DROP TABLE IF EXISTS [tt_shell];
 WITH [age] AS (
     SELECT 0 AS [age]  -- Begin with zero
@@ -119,7 +119,7 @@ SELECT
     SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [ESR] IN (1,2,3,4,5) THEN [PWGTP] ELSE 0 END) AS [hh_head_lf],  -- Head of household in labor force population
 	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] = 1 THEN [PWGTP] ELSE 0 END) AS [size1],  -- Household size one
 	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] = 2 THEN [PWGTP] ELSE 0 END) AS [size2],  -- Household size two
-	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] >= 3 THEN [PWGTP] ELSE 0 END) AS [size3],  -- Household size three
+	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] >= 3 THEN [PWGTP] ELSE 0 END) AS [size3],  -- Household size three+
 	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [workers] = 0 THEN [PWGTP] ELSE 0 END) AS [workers0],  -- Household workers 0
 	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [workers] = 1 THEN [PWGTP] ELSE 0 END) AS [workers1],  -- Household workers 1
 	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [workers] = 2 THEN [PWGTP] ELSE 0 END) AS [workers2],  -- Household workers 2
