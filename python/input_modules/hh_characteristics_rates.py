@@ -1,17 +1,20 @@
 """Get household characteristics rates by race, sex, and single year of age."""
+
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import numpy as np
 import pandas as pd
 from python.utilities import adjust_sum, distribute_excess
+import sqlalchemy as sql
 import warnings
 
 
 def get_hh_characteristic_rates(
     yr: int,
     launch_yr: int,
-    acs5yr_pums_persons: pd.DataFrame,
+    pums_persons: str,
     sandag_estimates: dict,
+    engine: sql.engine,
 ) -> pd.DataFrame:
     """Generate household characteristics rates broken down by race, sex, and
     single year of age.
@@ -30,7 +33,7 @@ def get_hh_characteristic_rates(
     Args:
         yr: Increment year
         launch_yr: Launch year
-        acs5yr_pums_persons (pd.DataFrame): 5-year ACS PUMS persons
+        pums_persons (str): 5-year ACS PUMS persons
         sandag_estimates (dict): loaded JSON control totals from historical
             SANDAG Estimates programs
 
@@ -39,11 +42,15 @@ def get_hh_characteristic_rates(
             sex, and single year of age
     """
     if yr <= launch_yr:
-        if yr not in acs5yr_pums_persons["year"].unique():
+        # Load SQL queries and apply checks to datasets
+        with engine.connect() as connection:
+            # Load ACS PUMS persons
+            with open(pums_persons, "r") as query:
+                pums_persons_df = pd.read_sql_query(
+                    query.read().format(yr=yr), connection
+                )
+        if len(pums_persons_df.index) == 0:
             raise ValueError(str(yr) + ": not in ACS 5-year PUMS")
-
-        # Select the 5-year ACS PUMS data
-        pums_df = acs5yr_pums_persons[(acs5yr_pums_persons["year"] == yr)].copy()
 
         # Get SANDAG Estimates household controls for the increment
         # Year from the vintage associated with the launch year
@@ -88,9 +95,9 @@ def get_hh_characteristic_rates(
         # Apply total households scaling factor to all household attributes
         control_hh = controls["hh"]
         if control_hh is not None:
-            scale_hh_pct = control_hh / pums_df["pop_hh_head"].sum()
+            scale_hh_pct = control_hh / pums_persons_df["pop_hh_head"].sum()
             for k, v in hh_attributes.items():
-                pums_df[v["col"]] = pums_df[v["col"]] * scale_hh_pct
+                pums_persons_df[v["col"]] = pums_persons_df[v["col"]] * scale_hh_pct
         else:
             warnings.warn("No household control total provided.", UserWarning)
 
@@ -101,14 +108,18 @@ def get_hh_characteristic_rates(
                 if v["control"] is not None:
                     control = controls[k]
                     if control is not None:
-                        scale_pct = control / pums_df[v["col"]].sum()
-                        pums_df[v["col"]] = pums_df[v["col"]] * scale_pct
+                        scale_pct = control / pums_persons_df[v["col"]].sum()
+                        pums_persons_df[v["col"]] = (
+                            pums_persons_df[v["col"]] * scale_pct
+                        )
                         # Distribute excess if any characteristic exceeds total households
-                        pums_df[v["col"]] = distribute_excess(
-                            df=pums_df, subset=v["col"], total="pop_hh_head"
+                        pums_persons_df[v["col"]] = distribute_excess(
+                            df=pums_persons_df, subset=v["col"], total="pop_hh_head"
                         )
                 if v["rate"] is not None:
-                    pums_df[v["rate"]] = pums_df[v["col"]] / pums_df["pop_hh_head"]
+                    pums_persons_df[v["rate"]] = (
+                        pums_persons_df[v["col"]] / pums_persons_df["pop_hh_head"]
+                    )
 
         # Calculate rates within age groups to apply when households are < 20 (excluding 0s)
         age_groups = pd.concat(
@@ -127,7 +138,7 @@ def get_hh_characteristic_rates(
         )
 
         age_rates = (
-            pums_df.merge(right=age_groups, how="left", on="age")
+            pums_persons_df.merge(right=age_groups, how="left", on="age")
             .groupby(["race", "sex", "age_group"])
             .sum()
         )
@@ -139,18 +150,19 @@ def get_hh_characteristic_rates(
                 )
 
         # Merge Age Group Rates into the Rate DataFrame
-        pums_df = pums_df.merge(right=age_groups, how="left", on="age").merge(
-            right=age_rates, on=["race", "sex", "age_group"], suffixes=["", "_y"]
-        )
+        pums_persons_df = pums_persons_df.merge(
+            right=age_groups, how="left", on="age"
+        ).merge(right=age_rates, on=["race", "sex", "age_group"], suffixes=["", "_y"])
 
         # Set Rate to Age Group Rate if households < 20 (excluding 0s)
         for k, v in hh_attributes.items():
             if k != "hh":
                 if v["rate"] is not None:
-                    pums_df[v["rate"]] = np.where(
-                        (pums_df["pop_hh_head"] > 0) & (pums_df["pop_hh_head"] < 20),
-                        pums_df[v["rate"] + "_age"],
-                        pums_df[v["rate"]],
+                    pums_persons_df[v["rate"]] = np.where(
+                        (pums_persons_df["pop_hh_head"] > 0)
+                        & (pums_persons_df["pop_hh_head"] < 20),
+                        pums_persons_df[v["rate"] + "_age"],
+                        pums_persons_df[v["rate"]],
                     )
 
         # Ensure rates do not sum > 1 within logical groupings (size and workers)
@@ -160,7 +172,9 @@ def get_hh_characteristic_rates(
         ]
 
         for group in groupings:
-            pums_df[group] = adjust_sum(df=pums_df, cols=group, sum=1, option="equals")
+            pums_persons_df[group] = adjust_sum(
+                df=pums_persons_df, cols=group, sum=1, option="equals"
+            )
 
         # Return crude household characteristics rates
         rates = []
@@ -168,7 +182,7 @@ def get_hh_characteristic_rates(
             if v["rate"] is not None:
                 rates.append(v["rate"])
 
-        return pums_df[["race", "sex", "age", *rates]]
+        return pums_persons_df[["race", "sex", "age", *rates]]
 
     # Household characteristics rates are not calculated after the launch year
     else:

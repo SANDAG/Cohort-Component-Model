@@ -2,16 +2,19 @@
 
 import pandas as pd
 from python.utilities import distribute_excess
+import sqlalchemy as sql
+import warnings
 
 
 def get_active_duty_military(
     yr: int,
     launch_yr: int,
     pop_df: pd.DataFrame,
-    acs5yr_pums_persons: pd.DataFrame,
-    acs5yr_pums_ca_mil: pd.DataFrame,
+    pums_persons: str,
+    pums_ca_mil: str,
     dmdc_location_report: pd.DataFrame,
     sdmac_report: pd.DataFrame,
+    engine: sql.engine,
 ) -> pd.DataFrame:
     """Get active-duty military population broken down by race, sex, and
     single year of age for the increment year. Note the active duty military
@@ -30,13 +33,14 @@ def get_active_duty_military(
         launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
-        acs5yr_pums_persons (pd.DataFrame): 5-year ACS PUMS persons
-        acs5yr_pums_ca_mil (pd.DataFrame): Total active-duty military
-            population for the State of CA from 5-year ACS PUMS persons
+        pums_persons (str): 5-year ACS PUMS persons query file
+        pums_ca_mil (str): Total active-duty military population for the State
+            of CA from 5-year ACS PUMS persons query file
         dmdc_location_report (pd.DataFrame): DMDC website location report
             https://dwp.dmdc.osd.mil/dwp/app/dod-data-reports/workforce-reports
         sdmac_report (pd.DataFrame): SDMAC Annual EIR data
             https://sdmac.org/reports/past-sdmac-economic-impact-reports
+        engine (sql.engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: The total population data with active-duty military
@@ -44,18 +48,22 @@ def get_active_duty_military(
     """
     # Active-duty military population set and controlled up to the launch year
     if yr <= launch_yr:
-        # Must have 5-year ACS for the increment year
-        if yr not in acs5yr_pums_persons["year"].unique():
-            raise ValueError("Increment year not in ACS 5-year PUMS")
+        # Load SQL queries and apply checks to datasets
+        with engine.connect() as connection:
+            # Load ACS PUMS persons
+            with open(pums_persons, "r") as query:
+                pums_persons_df = pd.read_sql_query(
+                    query.read().format(yr=yr), connection
+                )
+        if len(pums_persons_df.index) == 0:
+            raise ValueError(str(yr) + ": not in ACS 5-year PUMS")
 
         # Merge the population dataset with the 5-year ACS PUMS
         # For the increment year to add active-duty military population
         df = (
             pop_df[["race", "sex", "age", "pop"]]
             .merge(
-                right=acs5yr_pums_persons[acs5yr_pums_persons["year"] == yr][
-                    ["race", "sex", "age", "pop_mil"]
-                ],
+                right=pums_persons_df[["race", "sex", "age", "pop_mil"]],
                 how="left",
                 on=["race", "sex", "age"],
             )
@@ -65,11 +73,17 @@ def get_active_duty_military(
         # Scale the active-duty ACS PUMS population by external control total
         # If increment year is prior to 2018 use DMDC Location Report
         if 2010 <= yr < 2018:
+            # Load SQL queries and apply checks to datasets
+            with engine.connect() as connection:
+                # Load ACS Active-duty military for CA
+                with open(pums_ca_mil, "r") as query:
+                    pums_ca_mil_df = pd.read_sql_query(query.read(), connection)
+                    if yr not in pums_ca_mil_df["year"].unique():
+                        raise ValueError("Increment year not in ACS 5-year PUMS")
+
             # Must have DMDC Location report for the increment year
             if yr not in dmdc_location_report["year"].unique():
                 raise ValueError("Increment year not in DMDC Location Report")
-            elif yr not in acs5yr_pums_ca_mil["year"].unique():
-                raise ValueError("Increment year not in ACS 5-year PUMS")
             else:
                 # Scale the active-duty ACS PUMS population such that the total for the
                 # State of California matches the active-duty total control from the
@@ -78,9 +92,7 @@ def get_active_duty_military(
                     dmdc_location_report[dmdc_location_report["year"] == yr][
                         "active duty - total"
                     ].iloc[0]
-                    / acs5yr_pums_ca_mil[acs5yr_pums_ca_mil["year"] == yr][
-                        "pop_ca_mil"
-                    ].iloc[0]
+                    / pums_ca_mil_df[pums_ca_mil_df["year"] == yr]["pop_ca_mil"].iloc[0]
                 )
         # If increment year is >= 2018
         elif 2018 <= yr:

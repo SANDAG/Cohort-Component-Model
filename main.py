@@ -49,25 +49,21 @@ for k, v in config["csv"].items():
     else:
         config["csv"][k] = pd.read_csv(v)
 
-# Load SQL data sources ----
+# Create SQL engine ----
 engine = sql.create_engine("mssql+pymssql://" + secrets["sql"]["server"] + "/")
-with engine.connect() as connection:
-    for k, v in config["sql"]["datasets"].items():
-        with open(v, "r") as query:
-            config["sql"]["datasets"][k] = pd.read_sql_query(query.read(), connection)
 
 
 # Initialize base year dataset -----------------------------------------------
 # For launch years >= 2020 use the blended base year approach ----
 if 2020 <= config["interval"]["launch"] < 2030:
     base_yr = 2020
-
     pop_df = get_base_yr_2020(
         launch_yr=config["interval"]["launch"],
-        acs5yr_pums_persons=config["sql"]["datasets"]["acs5yr_pums_persons"],
-        dof_estimates=config["sql"]["datasets"]["dof_estimates"],
-        dof_projections=config["sql"]["datasets"]["dof_projections"],
-        census_redistricting=config["sql"]["datasets"]["census_redistricting"],
+        pums_persons=config["sql"]["queries"]["pums_persons"],
+        dof_estimates=config["sql"]["queries"]["dof_estimates"],
+        dof_projections=config["sql"]["queries"]["dof_projections"],
+        census_p5=config["sql"]["queries"]["census_p5"],
+        engine=engine,
     )
 
     print("Initialized: Base Year 2020")
@@ -89,10 +85,11 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         yr=increment,
         launch_yr=config["interval"]["launch"],
         pop_df=pop_df,
-        acs5yr_pums_persons=config["sql"]["datasets"]["acs5yr_pums_persons"],
-        acs5yr_pums_ca_mil=config["sql"]["datasets"]["acs5yr_pums_ca_mil"],
+        pums_persons=config["sql"]["queries"]["pums_persons"],
+        pums_ca_mil=config["sql"]["queries"]["pums_ca_mil"],
         dmdc_location_report=config["csv"]["dmdc_location_report"],
         sdmac_report=config["csv"]["sdmac_report"],
+        engine=engine,
     )
 
     # Calculate rates (rates calculated up to the launch year) ----
@@ -117,21 +114,24 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
                 pop_df=pop_df,
-                acs5yr_pums_migrants=config["sql"]["datasets"]["acs5yr_pums_migrants"],
+                pums_migrants=config["sql"]["queries"]["pums_migrants"],
+                engine=engine,
             ),
             # Crude Group Quarters and Household Formation Rates
             "formation_gq_hh": get_formation_rates(
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
-                acs5yr_pums_persons=config["sql"]["datasets"]["acs5yr_pums_persons"],
+                pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
+                engine=engine,
             ),
             # Household Characteristics Rates
             "hh_characteristics": get_hh_characteristic_rates(
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
-                acs5yr_pums_persons=config["sql"]["datasets"]["acs5yr_pums_persons"],
+                pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
+                engine=engine,
             ),
         }
 

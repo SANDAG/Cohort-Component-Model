@@ -27,13 +27,13 @@ output:  # output files
     population: "output/population.csv"
     rates: "output/rates.csv"
 sql:  # SQL server options
-  datasets:  # SQL queries to be used as datasets
-    acs5yr_pums_ca_mil: "sql/acs5yr_pums_ca_mil.sql"  # State of California total military population
-    acs5yr_pums_migrants: "sql/acs5yr_pums_migrants.sql"  # San Diego County in/out migration
-    acs5yr_pums_persons: "sql/acs5yr_pums_persons.sql"  # San Diego county population
-    census_redistricting: "sql/census_redistricting.sql"  # 2020 Census Redistricting file
+  queries:  # SQL queries to be used as datasets
+    census_p5: "sql/census_p5.sql"  # 2020 Census P5 table
     dof_estimates: "sql/dof_estimates.sql"  # California Department of Finance Estimates
     dof_projections: "sql/dof_projections.sql"  # California Department of Finance Projections
+    pums_ca_mil: "sql/pums_ca_mil.sql"  # State of California total military population
+    pums_migrants: "sql/pums_migrants.sql"  # San Diego County in/out migration
+    pums_persons: "sql/pums_persons.sql"  # San Diego county population
 ```
 
 ### Configuration of Private Data in secrets.yml
