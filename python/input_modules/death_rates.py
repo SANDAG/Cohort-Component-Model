@@ -4,6 +4,7 @@
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import pandas as pd
+import warnings
 
 
 def deaths_recode(deaths: str, pop: str) -> float:
@@ -56,42 +57,37 @@ def get_death_rates(
     """
     # Death rates calculated from base year up to the launch year
     if yr <= launch_yr:
+        # For the Social Security Actuarial Life Table dataset
+        # If current year is not available grab the most recent available year
         if yr not in ss_life_tbl["year"].unique():
-            if yr in [2020, 2021] and 2019 in ss_life_tbl["year"].unique():
-                pass  # 2019 and 2020 use 2019 data
-            if yr == 2018 and 2017 in ss_life_tbl["year"].unique():
-                pass  # 2018 uses 2017 data
-            elif yr == 2012 and 2011 in ss_life_tbl["year"].unique():
-                pass  # 2012 uses 2011 data
-            else:
-                raise ValueError(
-                    str(yr) + ": Not in Social Security Actuarial Life Table"
-                )
+            ss_yr = ss_life_tbl["year"][ss_life_tbl["year"] <= yr].max()
+
+            warnings.warn(
+                "Social Security Actuarial Life Table dataset unavailable for: "
+                + str(yr)
+                + ". Default to most recent dataset: "
+                + str(ss_yr)
+            )
+        else:
+            ss_yr = yr
+
+        # Social Security Actuarial Life Table dataset
+        # Years 2020 and 2021 not used due to COVID-19 impact on geriatric death rates
+        # Default to 2019 data
+        if ss_yr in [2020, 2021]:
+            ss_yr = 2019
+            warnings.warn(
+                "Social Security Actuarial Life Table dataset not used for 2020/2021. Default to 2019 data."
+            )
 
         if str(yr) not in rates_map["deaths"].keys():
             raise ValueError("No death rate mapping for: " + str(yr))
 
-        # Filter the Social Security Actuarial Life Table to the chosen base year
-        # Note that 2020, 2021 data is not used to COVID-19 adverse impact on geriatric death rates
-        # Note that there was no 2018 published data so default to using 2017
-        # Note that there was no 2012 published data so default to using 2011
+        # Filter the Social Security Actuarial Life Table to the chosen year
         # Remove records where age < 85
-        if yr in [2020, 2021]:
-            ss_life_tbl = ss_life_tbl[
-                (ss_life_tbl["year"] == 2019) & (ss_life_tbl["age"] >= 85)
-            ]
-        elif yr == 2018:
-            ss_life_tbl = ss_life_tbl[
-                (ss_life_tbl["year"] == 2017) & (ss_life_tbl["age"] >= 85)
-            ]
-        elif yr == 2012:
-            ss_life_tbl = ss_life_tbl[
-                (ss_life_tbl["year"] == 2011) & (ss_life_tbl["age"] >= 85)
-            ]
-        else:
-            ss_life_tbl = ss_life_tbl[
-                (ss_life_tbl["year"] == yr) & (ss_life_tbl["age"] >= 85)
-            ]
+        ss_life_tbl = ss_life_tbl[
+            (ss_life_tbl["year"] == ss_yr) & (ss_life_tbl["age"] >= 85)
+        ]
 
         rates = pd.DataFrame()
         # For each WONDER death rate file path in the chosen base year
