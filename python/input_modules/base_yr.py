@@ -50,11 +50,13 @@ def get_base_yr_2020(
             )
             if len(pums_persons_df.index) == 0:
                 raise ValueError("2020: not in ACS 5-year PUMS")
+
         # Load DOF Estimates
         with open(dof_estimates, "r") as query:
             dof_estimates_df = pd.read_sql_query(query.read(), connection)
             if launch_yr not in dof_estimates_df["vintage"].astype(int).unique():
                 raise ValueError("Launch year not in DOF Estimates")
+
         # Load DOF Projections
         with open(dof_projections, "r") as query:
             dof_projections_df = pd.read_sql_query(query.read(), connection)
@@ -64,12 +66,19 @@ def get_base_yr_2020(
             # If projections have not been released for the launch year
             # Use the most recent projection from the DOF and warn the user
             elif launch_yr not in dof_projections_df["vintage"].astype(int).unique():
-                dof_projections_yr = max(dof_projections_df["vintage"].astype(int))
+
+                dof_projections_yr = max(
+                    dof_projections_df["vintage"][
+                        dof_projections_df["vintage"] <= launch_yr
+                    ].astype(int)
+                )
+
                 warnings.warn(
                     """DOF projection unavailable for launch year. Default to most recent
                     DOF projection vintage year: """
                     + str(dof_projections_yr)
                 )
+
         # Load 2020 Census P5 table
         with open(census_p5, "r") as query:
             census_p5_df = pd.read_sql_query(query.read(), connection)
