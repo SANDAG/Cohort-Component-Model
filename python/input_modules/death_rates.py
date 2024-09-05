@@ -1,4 +1,5 @@
 """Get crude death rates by race, sex, and single year of age."""
+
 # TODO: (6-feature) Add function to allow for input % adjustments to death rates.
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
@@ -56,10 +57,12 @@ def get_death_rates(
     # Death rates calculated from base year up to the launch year
     if yr <= launch_yr:
         if yr not in ss_life_tbl["year"].unique():
+            if yr in [2020, 2021] and 2019 in ss_life_tbl["year"].unique():
+                pass  # 2019 and 2020 use 2019 data
             if yr == 2018 and 2017 in ss_life_tbl["year"].unique():
-                pass  # 2018 base year uses 2017 data
+                pass  # 2018 uses 2017 data
             elif yr == 2012 and 2011 in ss_life_tbl["year"].unique():
-                pass  # 2012 base year uses 2011 data
+                pass  # 2012 uses 2011 data
             else:
                 raise ValueError(
                     str(yr) + ": Not in Social Security Actuarial Life Table"
