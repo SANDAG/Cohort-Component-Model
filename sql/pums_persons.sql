@@ -115,6 +115,7 @@ SELECT
     ISNULL(SUM([PWGTP]), 0) AS [pop],  -- Total population
     SUM(CASE WHEN [MIL] = '1' THEN [PWGTP] ELSE 0 END) AS [pop_mil],  -- Active-duty military 
     SUM(CASE WHEN [gq] = 1 THEN [PWGTP] ELSE 0 END) AS [pop_gq],  -- Group quarters population 
+    SUM(CASE WHEN [gq] = 0 THEN [PWGTP] ELSE 0 END) AS [pop_hh],  -- Household population 
 	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 THEN [PWGTP] ELSE 0 END) AS [pop_hh_head],  -- Head of household population
     SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [ESR] IN (1,2,3,4,5) THEN [PWGTP] ELSE 0 END) AS [hh_head_lf],  -- Head of household in labor force population
 	SUM(CASE WHEN [gq] = 0 AND [SPORDER] = 1 AND [size] = 1 THEN [PWGTP] ELSE 0 END) AS [size1],  -- Household size one
