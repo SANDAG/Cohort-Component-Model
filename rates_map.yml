@@ -389,3 +389,16 @@ deaths:
       or Other Pacific Islander; ucd-icd10-expanded; 2018-2019, 2021; National.txt"
     Two or More Races: "Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2019,
       2021; National.txt"
+  "2022":
+    Hispanic: "Hispanic or Latino; ucd-icd10; 2016-2020; Five Counties.txt"
+    White alone: "Non-Hispanic White; ucd-icd10; 2016-2020; California (06).txt"
+    Black or African American alone: "Non-Hispanic Black or African American; ucd-icd10;
+      2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt"
+    American Indian or Alaska Native alone: "Non-Hispanic American Indian or Alaska
+      Native; ucd-icd10; 2016-2020; National.txt"
+    Asian alone: "Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2016-2020; Arizona
+      (04), California (06), Oregon (41), Washington (53).txt"
+    Native Hawaiian or Other Pacific Islander alone: "Non-Hispanic Native Hawaiian
+      or Other Pacific Islander; ucd-icd10-expanded; 2018-2019, 2021-2022; National.txt"
+    Two or More Races: "Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2019,
+      2021-2022; National.txt"
