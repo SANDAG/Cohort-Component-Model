@@ -5,6 +5,66 @@ import pandas as pd
 from typing import List
 
 
+def _adjust_weights(x: List[float | int], w: list[float | int]) -> List[list]:
+    """Adjust weighted moving average weights.
+
+    This function adjusts a single set of weighted moving average weights
+    to account for time series boundaries that interfere with the moving
+    average window. Weights that are unable to be used are added to the
+    closest weight that is able to be used. This results in a set of weights
+    that are specific to each time series record.
+
+    Note, the window is assumed to be symmetric. Users can input weights of
+    0 within the window to create asymmetric windows.
+        w = [0, 1, 0] - No average is taken of the original record
+        w = [0.25, 0.5, 0.25] - Take 25% of previous, 50% original, 25% subsequent
+        w = [0.25, 0.75, 0] - Take 25% of previous, 75% original
+
+    Args:
+        x (List[float|int]): The time series records to take a moving average of
+        w (List[float|int]): The weighted moving average window and weights
+
+    Returns:
+        List[List[float|int]]: Weighted moving average windows and weights for
+            each time series record that will have a weighted moving average taken
+    """
+    # Weights are assumed to be symmetric
+    # Users can input 0 values for asymmetric weights
+    if len(w) % 2 != 1:
+        raise ValueError("Weights must be symmetric.")
+
+    # For each record that will have a weighted moving average applied to it
+    weights = []
+    for i in range(len(x)):
+        weight = []
+        adjustment = 0
+
+        # Look backwards and adjust weights such that backward-looking weights
+        # That cannot be used are added to the next weight that is able to be used
+        for j in range(len(w)):
+            if i + j - len(w) // 2 < 0:
+                weight.append(0)
+                adjustment += w[j]
+            else:
+                weight.append(w[j] + adjustment)
+                adjustment = 0
+
+        # Look forwards and adjust weights such that forward-looking weights
+        # That cannot be used are added to the prior weight that is able to be used
+        for j in range(len(w) - 1, -1, -1):
+            if i + j - len(w) // 2 >= len(x):
+                weight[j] = 0
+                adjustment += w[j]
+            else:
+                weight[j] = w[j] + adjustment
+                break  # stop once weight can be used
+
+        # Weights are now record-specific
+        weights.append(weight)
+
+    return weights
+
+
 def adjust_sum(
     df: pd.DataFrame, cols: List[str], sum: float, option: str
 ) -> pd.DataFrame:
@@ -276,3 +336,35 @@ def reallocate_group_integers(
 
         # Return adjusted subset columns
         return df[cols]
+
+
+def weighted_moving_average(
+    x: List[float | int], w: List[float | int]
+) -> List[float | int]:
+    """Take the weighted moving average of time series records.
+
+    Args:
+        x (List[float|int]): The time series records to take a moving average of
+        w (List[float|int]): The weighted moving average window and weights
+
+    Returns:
+        List[float|int]: The time series records adjusted via the weighted
+            moving average
+    """
+    result = []
+
+    # Adjust weights for records at time series boundary
+    w = _adjust_weights(x=x, w=w)
+
+    # For each record and associated adjusted weights
+    for i in range(len(x)):
+        # Take the weighted moving average
+        cumsum = 0
+        for j in range(len(w[i])):
+            if w[i][j] == 0:
+                pass  # 0s may indicate out of time series boundary
+            else:
+                cumsum += x[i + j - (len(w[i]) // 2)] * w[i][j]
+        result.append(cumsum)
+
+    return result
