@@ -2,11 +2,13 @@
 
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
+import logging
 import numpy as np
 import pandas as pd
 from python.utilities import adjust_sum, distribute_excess
 import sqlalchemy as sql
-import warnings
+
+logger = logging.getLogger(__name__)
 
 
 def get_hh_characteristic_rates(
@@ -99,7 +101,7 @@ def get_hh_characteristic_rates(
             for k, v in hh_attributes.items():
                 pums_persons_df[v["col"]] = pums_persons_df[v["col"]] * scale_hh_pct
         else:
-            warnings.warn("No household control total provided.", UserWarning)
+            logger.warning("No household control total provided.")
 
         # Apply household characteristics scaling factors and calculate crude rates
         # Assumed that control totals are consistent with total households control

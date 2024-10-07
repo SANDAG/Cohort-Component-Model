@@ -3,8 +3,10 @@
 # TODO: (6-feature) Add function to allow for input % adjustments to death rates.
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
+import logging
 import pandas as pd
-import warnings
+
+logger = logging.getLogger(__name__)
 
 
 def deaths_recode(deaths: str, pop: str) -> float:
@@ -62,7 +64,7 @@ def get_death_rates(
         if yr not in ss_life_tbl["year"].unique():
             ss_yr = ss_life_tbl["year"][ss_life_tbl["year"] <= yr].max()
 
-            warnings.warn(
+            logger.warning(
                 "Social Security Actuarial Life Table dataset unavailable for: "
                 + str(yr)
                 + ". Default to most recent dataset: "
@@ -76,7 +78,7 @@ def get_death_rates(
         # Default to 2019 data
         if ss_yr in [2020, 2021]:
             ss_yr = 2019
-            warnings.warn(
+            logger.warning(
                 "Social Security Actuarial Life Table dataset not used for 2020/2021. Default to 2019 data."
             )
 

@@ -1,9 +1,11 @@
 """Methods for calculating household/population datasets."""
 
 from iteround import saferound
+import logging
 import pandas as pd
 from python.utilities import reallocate_group_integers, reallocate_integers
-import warnings
+
+logger = logging.getLogger(__name__)
 
 
 # Create mapping of columns to SANDAG Estimates Controls
@@ -76,9 +78,7 @@ def apply_controls(
                     else:
                         pop_df[v["col"]] = pop_df[v["col"]] * scale_pct
                 else:
-                    warnings.warn(
-                        "No household control total provided for: " + k, UserWarning
-                    )
+                    logger.warning("No household control total provided for: " + k)
 
         # Return controlled population
         return pop_df

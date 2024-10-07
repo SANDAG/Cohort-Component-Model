@@ -3,7 +3,6 @@
 import pandas as pd
 from python.utilities import distribute_excess
 import sqlalchemy as sql
-import warnings
 
 
 def get_active_duty_military(

@@ -2,10 +2,12 @@
 
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
+import logging
 import pandas as pd
 from python.utilities import adjust_sum, distribute_excess
 import sqlalchemy as sql
-import warnings
+
+logger = logging.getLogger(__name__)
 
 
 def get_formation_rates(
@@ -68,7 +70,7 @@ def get_formation_rates(
                 scale_pct = control / pums_persons_df[v["col"]].sum()
                 pums_persons_df[v["col"]] = pums_persons_df[v["col"]] * scale_pct
             else:
-                warnings.warn(
+                logger.warning(
                     "No " + v["control"] + " control total provided.", UserWarning
                 )
 

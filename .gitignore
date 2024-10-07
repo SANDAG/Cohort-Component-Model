@@ -7,6 +7,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Log file
+log.txt
+
 # Secrets file
 secrets.yml
 
