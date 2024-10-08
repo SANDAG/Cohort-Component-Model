@@ -3,10 +3,13 @@
 # TODO: Add 2010 base year generation using 2010 decennial Census.
 # TODO: Update 2020 base year methodology with 2020 decennial Census release.
 
+import logging
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
-import warnings
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_base_yr_2020(
@@ -73,7 +76,7 @@ def get_base_yr_2020(
                     ].astype(int)
                 )
 
-                warnings.warn(
+                logger.warning(
                     """DOF projection unavailable for launch year. Default to most recent
                     DOF projection vintage year: """
                     + str(dof_projections_yr)

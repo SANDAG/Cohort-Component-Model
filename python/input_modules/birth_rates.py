@@ -1,10 +1,13 @@
 """Get birth rates by race and single year of age."""
+
 # TODO: (7-feature) Add function to allow for input % adjustments to birth rates.
 # TODO: (5-feature) Potentially implement smoothing function within race categories.
 
+import logging
 import pandas as pd
 import numpy as np
-import warnings
+
+logger = logging.getLogger(__name__)
 
 
 def get_birth_rates(
@@ -65,7 +68,7 @@ def get_birth_rates(
 
                 births = pd.concat([births, wonder_births])
             else:
-                warnings.warn("No birth data available for: " + v, UserWarning)
+                logger.warning("No birth data available for: " + v)
 
         # Create lower/upper boundaries for the 5-year age groups
         age_bounds = {

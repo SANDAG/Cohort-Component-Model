@@ -1,5 +1,6 @@
 """Entry point for running the Regional Cohort Component Model."""
 
+import logging
 import os
 import pandas as pd
 import sqlalchemy as sql
@@ -23,6 +24,12 @@ from python.output_data import write_df, write_rates
 
 
 # Set up configurations and datasets -----------------------------------------
+# Create log file ----
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    filename="log.txt", filemode="w", encoding="utf-8", level=logging.INFO
+)
+
 # Load secrets file ----
 with open("secrets.yml") as f:
     secrets = yaml.safe_load(f)
@@ -54,6 +61,8 @@ engine = sql.create_engine("mssql+pymssql://" + secrets["sql"]["server"] + "/")
 
 
 # Initialize base year dataset -----------------------------------------------
+logger.info("Initializing base year")
+
 # For launch years >= 2020 use the blended base year approach ----
 if 2020 <= config["interval"]["launch"] < 2030:
     base_yr = 2020
@@ -66,7 +75,7 @@ if 2020 <= config["interval"]["launch"] < 2030:
         engine=engine,
     )
 
-    print("Initialized: Base Year 2020")
+    logger.info("Initialized: Base Year 2020")
 # For launch years >= 2010 (and < 2020) use the 2010 decennial Census ----
 elif 2010 <= config["interval"]["launch"] < 2020:
     raise ValueError("Launch years prior to 2020 not available.")
@@ -78,7 +87,7 @@ else:
 # Begin Annual Cycle ---------------------------------------------------------
 # Loop increment years from base year to horizon year
 for increment in range(base_yr, config["interval"]["horizon"] + 1):
-    print("Starting Increment: ", str(increment))
+    logger.info("Starting Increment: " + str(increment))
 
     # Break out active-duty military population from total population ----
     pop_df = get_active_duty_military(
@@ -171,4 +180,4 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
     # Set population for next increment and finish annual cycle ----
     pop_df = increment_data["population"].copy()
 
-print("Completed")
+logger.info("Completed")
