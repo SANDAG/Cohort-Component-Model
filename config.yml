@@ -1,3 +1,5 @@
+version: "v1.0.0"
+comments: "No Comments"
 configurations:
   rates_map: "rates_map.yml"
   controls: "sandag_estimates.yml"
@@ -22,3 +24,4 @@ sql:
     pums_ca_mil: "sql/pums_ca_mil.sql"
     pums_migrants: "sql/pums_migrants.sql"
     pums_persons: "sql/pums_persons.sql"
+  load_to_database: True
