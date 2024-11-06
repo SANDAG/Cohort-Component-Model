@@ -45,6 +45,5 @@ The `secrets.yml` should mirror the following structure.
 
 ```yaml
 sql:
-  server: "<SqlInstanceName>"
-  output_database: "<DatabaseName>"
+  server: "<SqlInstanceName>
 ```

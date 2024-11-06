@@ -58,8 +58,8 @@ for k, v in config["csv"].items():
         config["csv"][k] = pd.read_csv(v)
 
 # Create SQL engine ----
-engine = sql.create_engine("mssql+pymssql://" + secrets["sql"]["server"] + "/" +
-                           secrets["sql"]["output_database"])
+# Create SQL engine ----
+engine = sql.create_engine("mssql+pymssql://" + secrets["sql"]["server"] + "/")
 
 
 # Initialize base year dataset -----------------------------------------------
