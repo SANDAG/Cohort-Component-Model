@@ -47,6 +47,7 @@ GO
 
 -- Create Table 'outputs.ccm_population'
 CREATE TABLE outputs.ccm_population (
+	run_id INT,
     year INT NOT NULL,
     race NVARCHAR(150),
     sex NVARCHAR(3),
@@ -70,6 +71,7 @@ GO
 
 -- Create Table 'outputs.rates'
 CREATE TABLE outputs.ccm_rates (
+	run_id INT,
     year INT NOT NULL,
     race NVARCHAR(150),
     sex NVARCHAR(3),

@@ -18,7 +18,7 @@ def load_config(file_path: str) -> dict:
 def get_next_run_id(engine: sqlalchemy.engine.base.Engine, schema: str) -> int:
     """Retrieves the  run_id from the database."""
     query = sql.text(
-        f"SELECT MAX(run_id) as max_run_id FROM {schema}.[ccm_run]"
+        f"SELECT COALESCE(MAX(run_id), 0) as max_run_id FROM {schema}.[ccm_run]"
     )
     with engine.connect() as connection:
         result = connection.execute(query).scalar()
@@ -46,7 +46,7 @@ def load_to_sql(
         session.commit()
 
 def run_metadata(run_id: int, version: str, comments: str, engine: sqlalchemy.engine.base.Engine) -> None:
-    """Adds run metadata to the [metadata].[run] table."""
+    """Adds run metadata to the [metadata].[ccm_run] table."""
     with engine.connect() as conn:
         result = conn.execute(sql.text("SELECT USER_NAME() as username"))
         user = result.first()[0].split("\\")[1]
@@ -65,7 +65,7 @@ def run_metadata(run_id: int, version: str, comments: str, engine: sqlalchemy.en
     print(f"Metadata is loaded.")
 
 def load_components_data(run_id: int, engine: sqlalchemy.engine.base.Engine) -> None:
-    """Loads components data into the outputs.components table from output folder"""
+    """Loads components data into the outputs.ccm_components table from output folder"""
     csv_path = f"output/components.csv"  # Adjust the path as needed
     df = pd.read_csv(csv_path)
     df['run_id'] = run_id
@@ -73,16 +73,18 @@ def load_components_data(run_id: int, engine: sqlalchemy.engine.base.Engine) -> 
     print(f"Components data loaded.")
 
 def load_population_data(run_id: int, engine: sqlalchemy.engine.base.Engine) -> None:
-    """Loads population data into the outputs.population table from output folder"""
+    """Loads population data into the outputs.ccm_population table from output folder"""
     csv_path = f"output/population.csv"  # Adjust the path as needed
     df = pd.read_csv(csv_path)
+    df['run_id'] = run_id
     load_to_sql(df=df, name="ccm_population", con=engine, schema="outputs")
     print(f"Population data loaded.")
 
 def load_rates_data(run_id: int, engine: sqlalchemy.engine.base.Engine) -> None:
-    """Loads rates data into the outputs.rates table from output folder"""
+    """Loads rates data into the outputs.ccm_rates table from output folder"""
     csv_path = f"output/rates.csv"  # Adjust the path as needed
     df = pd.read_csv(csv_path)
+    df['run_id'] = run_id
     load_to_sql(df=df, name="ccm_rates", con=engine, schema="outputs")
     print(f"Rates data loaded.")
 
