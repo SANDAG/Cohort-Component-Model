@@ -1,4 +1,4 @@
-version: "v1.0.0"
+version: "v0.0.1"
 comments: "No Comments"
 configurations:
   rates_map: "rates_map.yml"
@@ -23,5 +23,4 @@ sql:
     dof_projections: "sql/dof_projections.sql"
     pums_ca_mil: "sql/pums_ca_mil.sql"
     pums_migrants: "sql/pums_migrants.sql"
-    pums_persons: "sql/pums_persons.sql"
-  load_to_database: True
+    pums_persons: "sql/pums_persons.sql" 
