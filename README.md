@@ -10,6 +10,8 @@ Set the configuration file **config.JSON** parameters specific to the model run 
 ## Configuration File Settings
 *Note that the configuration file contains datasets stored on a SQL server instance accessed at runtime through queries. It is possible to provide query results as local datasets and migrate the SQL datasets to the **csv** section of the configuration file to remove the dependency on the SQL instance.*
 ```yaml
+version: "v0.0.1"
+comments: "No Comments" # Add comments pertaining to the run
 configurations:  # other configuration files
   rates_map: "rates_map.yml"  # local birth/death rate files mapping
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
@@ -43,5 +45,5 @@ The `secrets.yml` should mirror the following structure.
 
 ```yaml
 sql:
-  server: "<SqlInstanceName>"
+  server: "<SqlInstanceName>
 ```

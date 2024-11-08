@@ -23,6 +23,7 @@ from python.input_modules.migration_rates import get_migration_rates
 from python.output_data import write_df, write_rates
 
 
+
 # Set up configurations and datasets -----------------------------------------
 # Create log file ----
 logger = logging.getLogger(__name__)
@@ -56,6 +57,7 @@ for k, v in config["csv"].items():
     else:
         config["csv"][k] = pd.read_csv(v)
 
+# Create SQL engine ----
 # Create SQL engine ----
 engine = sql.create_engine("mssql+pymssql://" + secrets["sql"]["server"] + "/")
 
@@ -179,5 +181,4 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
 
     # Set population for next increment and finish annual cycle ----
     pop_df = increment_data["population"].copy()
-
 logger.info("Completed")
