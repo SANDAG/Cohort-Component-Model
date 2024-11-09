@@ -23,7 +23,6 @@ from python.input_modules.migration_rates import get_migration_rates
 from python.output_data import write_df, write_rates
 
 
-
 # Set up configurations and datasets -----------------------------------------
 # Create log file ----
 logger = logging.getLogger(__name__)
@@ -58,8 +57,9 @@ for k, v in config["csv"].items():
         config["csv"][k] = pd.read_csv(v)
 
 # Create SQL engine ----
-# Create SQL engine ----
-engine = sql.create_engine("mssql+pymssql://" + secrets["sql"]["server"] + "/")
+engine = sql.create_engine(
+    "mssql+pymssql://" + secrets["sql"]["server"] + "/" + secrets["sql"]["database"]
+)
 
 
 # Initialize base year dataset -----------------------------------------------
