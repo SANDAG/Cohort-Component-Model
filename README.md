@@ -48,3 +48,5 @@ sql:
   server: "<SqlInstanceName>"
   database: "<SqlDatabaseName>"
 ```
+### Production Database Schema
+![input](./documentation/Database%20Diagram.png)
