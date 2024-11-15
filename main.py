@@ -21,6 +21,7 @@ from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
 from python.input_modules.migration_rates import get_migration_rates
 from python.output_data import write_df, write_rates
+from python.etl import run_etl
 
 
 # Set up configurations and datasets -----------------------------------------
@@ -182,3 +183,10 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
     # Set population for next increment and finish annual cycle ----
     pop_df = increment_data["population"].copy()
 logger.info("Completed")
+
+if config["sql"]["load_to_database"]:
+    # Run the ETL process
+    run_id = run_etl(
+        config=config,
+        engine=engine
+    )
