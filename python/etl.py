@@ -1,98 +1,88 @@
 """ This module runs the ETL process for cohort component model."""
 
-from typing import Dict, Callable
+import getpass
+import logging
 import pandas as pd
 import sqlalchemy as sql
-from sqlalchemy.orm import Session
-from sqlalchemy import insert
-import sqlalchemy.engine.base
-import yaml
-import csv
 
-def load_config(file_path: str) -> dict:
-    """Loads configuration from a YAML file."""
-    with open(file_path, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
+logger = logging.getLogger(__name__)
 
-def get_next_run_id(engine: sqlalchemy.engine.base.Engine, schema: str) -> int:
-    """Retrieves the  run_id from the database."""
-    query = sql.text(
-        f"SELECT COALESCE(MAX(run_id), 0) as max_run_id FROM {schema}.[ccm_run]"
-    )
+
+def get_run_id(engine: sql.Engine) -> int:
+    """Get the next available run identifier from the database."""
     with engine.connect() as connection:
-        result = connection.execute(query).scalar()
+        result = connection.execute(
+            sql.text("SELECT COALESCE(MAX([run_id]), 0) AS [id] FROM [metadata].[run]")
+        ).scalar()
+
         return result + 1 if result else 1
 
-def load_to_sql(
-    df: pd.DataFrame, name: str, con: sqlalchemy.engine.base.Engine, schema: str
+
+def insert_csv(engine: sql.Engine, run_id: int, fp: str, tbl: str) -> None:
+    """Insert output csv files into database."""
+    df = pd.read_csv(fp)
+    df["run_id"] = run_id
+
+    with engine.connect() as connection:
+        with connection.begin():
+            df.to_sql(
+                name=tbl,
+                con=connection,
+                schema="outputs",
+                if_exists="append",
+                index=False,
+            )
+
+
+def insert_metadata(
+    engine: sql.Engine,
+    run_id: int,
+    version: str,
+    comments: str,
 ) -> None:
-    """Bulk Loads a DataFrame to a SQL table, handling NULL values."""
-    insert_blocks = df.to_dict("records")
-    for block in insert_blocks:
-        for key, value in block.items():
-            if pd.isna(value):
-                block[key] = None
-
-    table = sql.Table(
-        name,
-        sql.MetaData(),
-        schema=schema,
-        autoload_with=con,
-    )
-
-    with Session(con) as session:
-        session.execute(insert(table), insert_blocks)
-        session.commit()
-
-def run_metadata(run_id: int, version: str, comments: str, engine: sqlalchemy.engine.base.Engine) -> None:
-    """Adds run metadata to the [metadata].[ccm_run] table."""
-    with engine.connect() as conn:
-        result = conn.execute(sql.text("SELECT USER_NAME() as username"))
-        user = result.first()[0].split("\\")[1]
-
-    run_metadata = {
-        "run_id": run_id,
-        "user": user,
-        "date": pd.Timestamp.now(),
-        "version": version,
-        "comments": comments,
-        "loaded": 0,
-    }
-    load_to_sql(
-        df=pd.DataFrame([run_metadata]), name="ccm_run", con=engine, schema="metadata"
-    )
-    print(f"Metadata is loaded.")
-
-def load_data_from_csv(run_id: int, file_path: str, table_name: str, engine: sql.engine.base.Engine) -> None:
-    """Loads data from CSV file to SQL"""
-    df = pd.read_csv(file_path)
-    df['run_id'] = run_id
-    load_to_sql(df, table_name, engine, "outputs")
-
-def run_etl(
-    config: dict,
-    engine: sqlalchemy.engine.base.Engine
-) -> None:
-    """Runs the ETL process for loading data into SQL"""
-    version = config.get('version')
-    comments = config.get('comments', None)
-
-    run_id = get_next_run_id(engine, 'metadata')
-    run_metadata(run_id, version, comments, engine)
-
-    # Load data for components, population, and rates
-    load_data_from_csv(run_id, "output/components.csv", "components", engine)
-    print(f"Components data loaded.")
-    load_data_from_csv(run_id, "output/population.csv", "population", engine)
-    print(f"Population data loaded.")
-    load_data_from_csv(run_id, "output/rates.csv", "rates", engine)
-    print(f"Rates data loaded.")
-
-    # Update the 'loaded' status to 1 after all ETL tasks are complete
-    with engine.connect() as conn:
-        sql_command = sql.text(
-            f"UPDATE metadata.ccm_run SET loaded = 1 WHERE run_id = {run_id}"
+    """Inserts run metadata to the database."""
+    with engine.connect() as connection:
+        pd.DataFrame(
+            {
+                "run_id": run_id,
+                "user": getpass.getuser(),
+                "date": pd.Timestamp.now(),
+                "version": version,
+                "comments": comments,
+                "loaded": 0,
+            },
+            index=[0],
+        ).to_sql(
+            name="run",
+            con=connection,
+            schema="metadata",
+            if_exists="append",
+            index=False,
         )
-        conn.execute(sql_command)
-        conn.commit()
+
+
+def run_etl(engine: sql.Engine, version: str, comments: str) -> None:
+    """Runs the ETL process loading data into the database."""
+
+    run_id = get_run_id(engine=engine)
+
+    logger.info("Loading output files to database as [run_id]: " + str(run_id))
+    insert_metadata(engine=engine, run_id=run_id, version=version, comments=comments)
+
+    output_files = {
+        "components": "output/components.csv",
+        "population": "output/population.csv",
+        "rates": "output/rates.csv",
+    }
+
+    for k, v in output_files.items():
+        insert_csv(engine=engine, run_id=run_id, fp=v, tbl=k)
+
+    with engine.connect() as connection:
+        with connection.begin():
+            connection.execute(
+                sql.text(f"UPDATE metadata.run SET loaded = 1 WHERE run_id = {run_id}")
+            )
+            connection.commit()
+
+    logger.info("Output data loaded to database.")
