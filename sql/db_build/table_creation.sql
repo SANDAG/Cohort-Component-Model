@@ -37,9 +37,9 @@ CREATE TABLE [outputs].[components]
     [births] INT,
     [ins] INT,
     [outs] INT,
-    INDEX ccsi_components CLUSTERED COLUMNSTORE,
-    CONSTRAINT ixuq_components UNIQUE ([run_id], [year], [race], [sex], [age]) WITH (DATA_COMPRESSION = PAGE),
-    CONSTRAINT fk_components_run FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+    INDEX [ccsi_components] CLUSTERED COLUMNSTORE,
+    CONSTRAINT [ixuq_components] UNIQUE ([run_id], [year], [race], [sex], [age]) WITH (DATA_COMPRESSION = PAGE),
+    CONSTRAINT [fk_components_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
 )
 GO
 
@@ -66,9 +66,9 @@ CREATE TABLE [outputs].[population]
     [workers1] INT,
     [workers2] INT,
     [workers3] INT,
-    INDEX ccsi_population CLUSTERED COLUMNSTORE,
-    CONSTRAINT ixuq_population UNIQUE ([run_id], [year], [race], [sex], [age]) WITH (DATA_COMPRESSION = PAGE),
-    CONSTRAINT fk_population_run FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+    INDEX [ccsi_population] CLUSTERED COLUMNSTORE,
+    CONSTRAINT [ixuq_population] UNIQUE ([run_id], [year], [race], [sex], [age]) WITH (DATA_COMPRESSION = PAGE),
+    CONSTRAINT [fk_population_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
 )
 GO
 
@@ -91,12 +91,14 @@ CREATE TABLE [outputs].[rates]
     [rate_size1] FLOAT,
     [rate_size2] FLOAT,
     [rate_size3] FLOAT,
+	[rate_child1] FLOAT,
+    [rate_senior1] FLOAT,
     [rate_workers0] FLOAT,
     [rate_workers1] FLOAT,
     [rate_workers2] FLOAT,
     [rate_workers3] FLOAT,
-    INDEX ccsi_rates CLUSTERED COLUMNSTORE,
-    CONSTRAINT ixuq_rates UNIQUE ([run_id], [year], [race], [sex], [age]) WITH (DATA_COMPRESSION = PAGE),
-    CONSTRAINT fk_rates_run FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+    INDEX [ccsi_rates] CLUSTERED COLUMNSTORE,
+    CONSTRAINT [ixuq_rates] UNIQUE ([run_id], [year], [race], [sex], [age]) WITH (DATA_COMPRESSION = PAGE),
+    CONSTRAINT [fk_rates_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
 )
 GO
