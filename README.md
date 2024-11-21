@@ -42,7 +42,7 @@ sql:  # SQL server options
 ### Configuration of Private Data in secrets.yml
 In order to avoid exposing certain data to the public this repository uses a secrets file to store sensitive configurations in addition to a standard configuration file. This file is stored in the root directory of the repository as `secrets.yml` and is included in the `.gitignore` intentionally to avoid it ever being committed to the repository.
 
-The `secrets.yml` should mirror the following structure where the is a production SQL instance <SQLInstanceName\> containing all necessary objects required by queries contained in the `sql` folder and there is a database <SqlDatabaseName\> in the production instance where the user has permission to create temporary tables and contains the SQL objects built by `sql/db_build` necessary to load output into the SQL database.
+The `secrets.yml` should mirror the following structure where the <SqlInstanceName> is a production SQL instance containing all necessary objects required by queries contained in the `sql` folder and there is a database <SqlDatabaseName> in the production instance where the user has permission to create temporary tables and contains the SQL objects built by `sql/db_build` necessary to load output into the SQL database.
 
 ```yaml
 sql:
