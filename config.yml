@@ -24,3 +24,4 @@ sql:
     pums_ca_mil: "sql/pums_ca_mil.sql"
     pums_migrants: "sql/pums_migrants.sql"
     pums_persons: "sql/pums_persons.sql" 
+  load_to_database: False

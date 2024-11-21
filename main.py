@@ -13,6 +13,7 @@ from python.calculate_population import (
     calculate_population,
     integerize_population,
 )
+from python.etl import run_etl
 from python.input_modules.active_duty_military import get_active_duty_military
 from python.input_modules.base_yr import get_base_yr_2020
 from python.input_modules.birth_rates import get_birth_rates
@@ -182,3 +183,11 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
     # Set population for next increment and finish annual cycle ----
     pop_df = increment_data["population"].copy()
 logger.info("Completed")
+
+if config["sql"]["load_to_database"]:
+    # Run the ETL process
+    run_etl(
+        engine=engine,
+        version=config["version"],
+        comments=config["comments"],
+    )
