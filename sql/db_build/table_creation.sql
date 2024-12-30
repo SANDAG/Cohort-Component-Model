@@ -20,7 +20,9 @@ CREATE TABLE [metadata].[run]
     [date] DATETIME NOT NULL,
     [version] NVARCHAR(50) NOT NULL,
     [comments] NVARCHAR(200),  -- Allows NULL by default
-    [loaded] BIT NOT NULL
+    [loaded] BIT NOT NULL,
+	[launch] INT NOT NULL,
+	[horizon] INT NOT NULL
 ) WITH (DATA_COMPRESSION = PAGE);
 GO
 
