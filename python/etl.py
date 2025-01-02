@@ -4,15 +4,8 @@ import getpass
 import logging
 import pandas as pd
 import sqlalchemy as sql
-import yaml
 
 logger = logging.getLogger(__name__)
-
-def load_config(file_path: str) -> dict:
-    """Loads configuration from a YAML file."""
-    with open(file_path, 'r') as file:
-        config = yaml.safe_load(file)
-    return config
     
 def get_run_id(engine: sql.Engine) -> int:
     """Get the next available run identifier from the database."""
@@ -71,14 +64,11 @@ def insert_metadata(
         )
 
 
-def run_etl(engine: sql.Engine, version: str, comments: str) -> None:
+def run_etl(engine: sql.Engine, launch: int, horizon: int, version: str, comments: str) -> None:
     """Runs the ETL process loading data into the database."""
     
     # Load the configuration to get the launch and horizon values
-    file_path = "config.yml" 
-    config = load_config(file_path)  
-    launch = config['interval']['launch']
-    horizon = config['interval']['horizon']
+
     run_id = get_run_id(engine=engine)
 
     logger.info("Loading output files to database as [run_id]: " + str(run_id))
