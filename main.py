@@ -188,6 +188,8 @@ if config["sql"]["load_to_database"]:
     # Run the ETL process
     run_etl(
         engine=engine,
+        launch=config['interval']['launch'],
+        horizon=config['interval']['horizon'],
         version=config["version"],
-        comments=config["comments"],
+        comments=config["comments"]
     )

@@ -8,7 +8,7 @@ csv:
   sdmac_report: "data/SDMAC Report.csv"
   ss_life_table: "data/Social Security Actuarial Life Table.csv"
 interval:
-  launch: 2020
+  launch: 2022
   horizon: 2050
 output:
   overwrite: true
