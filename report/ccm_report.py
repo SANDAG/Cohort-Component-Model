@@ -104,13 +104,11 @@ with tab2:
 
 
 # Function to calculate Life Expectancy at Age 0 (birth) by cohort
-# Inputs df -> dataframe with death rate by cohort
-#        rate_col -> string identifying the deathrate column
 def calculate_life_expectancy_age_0_by_cohort(df, rate_col):
     # Initialize an empty list to store life expectancy for each cohort
     life_expectancy_list = []
 
-    # Loop through each sex in the dataset (e.g., 'Male' and 'Female')
+    
     for sex in df['sex'].unique():
         for race in df['race'].unique():
             for year in df['year'].unique():
@@ -134,13 +132,13 @@ def calculate_life_expectancy_age_0_by_cohort(df, rate_col):
                     # Calculate survivors at age x
                     l_x.append( survives + 0.5 * deaths)
                     
-                    # Add total years lived (survivors at each age * 1 year of life expectancy)
+                    # Add total years lived
                     total_persons_years_lived += l_x[-1]
                 
                 # Calculate Life Expectancy at Age 0 (e_0)
                 life_expectancy_age_0 = total_persons_years_lived / l_x[0]
                 
-                # Append the result to the life expectancy list
+                # Append the result to the life expectancy
                 life_expectancy_list.append({
                     'year': year,
                     'sex': sex,
@@ -154,17 +152,16 @@ def calculate_life_expectancy_age_0_by_cohort(df, rate_col):
 
 
 def calculate_life_expectancy_age_0_by_sex(df, rate_col):
-    # Initialize an empty list to store life expectancy for each cohort
     life_expectancy_list = []
 
-    # Loop through each sex in the dataset (e.g., 'Male' and 'Female')
+    
     for sex in df['sex'].unique():
         for year in df['year'].unique():
             # Filter data for race and sex
             df_cohort = df[(df['sex'] == sex) & (df['year'] == year)].copy()
             df_cohort = df_cohort.sort_values(by='age')
             
-            # Initialize survivors at age 0 (starting cohort of 100,000)
+            
             l_x = [100000]
             total_persons_years_lived = 0
             
@@ -186,7 +183,7 @@ def calculate_life_expectancy_age_0_by_sex(df, rate_col):
             # Calculate Life Expectancy at Age 0 (e_0)
             life_expectancy_age_0 = total_persons_years_lived / l_x[0]
             
-            # Append the result to the life expectancy list
+            # Append the result to the life expectancy
             life_expectancy_list.append({
                 'year': year,
                 'sex': sex,
@@ -203,7 +200,6 @@ with tab3:
     st.title("Life Expectancy and TFR Analysis")
 
     # Dropdown to select the category
-    # Define available categories for analysis
     categories = ["Total Fertility Rate (TFR)", "Life Expectancy M1", "Life Expectancy M2"]
     category = st.selectbox("Pick a category to analyze", categories)
 
@@ -214,11 +210,8 @@ with tab3:
 
     # Based on the selected category, display the corresponding analysis
     if category == "Total Fertility Rate (TFR)":
-        # Calculate and plot Total Fertility Rate (TFR)
-        # Function to calculate Total Fertility Rate (TFR) by year and race/ethnicity
         
         def calculate_tfr_by_race(df):
-            # Group by year and race, and calculate TFR by summing the birth rates across all age groups
             tfr_df_race = df.groupby(['year', 'race'])['rate_birth'].sum().reset_index()
             return tfr_df_race
 
