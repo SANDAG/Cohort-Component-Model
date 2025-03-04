@@ -200,7 +200,7 @@ with tab3:
     st.title("Life Expectancy and TFR Analysis")
 
     # Dropdown to select the category
-    categories = ["Total Fertility Rate (TFR)", "Life Expectancy M1", "Life Expectancy M2"]
+    categories = ["Total Fertility Rate (TFR)", "Life Expectancy - Population Projections and Deaths method", "Life Expectancy - Mortality Rate method"]
     category = st.selectbox("Pick a category to analyze", categories)
 
     # Reading data
@@ -232,7 +232,7 @@ with tab3:
             'year': lambda x: f"{x:.0f}",
             'rate_birth': lambda x: f"{x:.3f}"}), hide_index=True)
 
-    elif category == "Life Expectancy -- Population projections and deaths output by the model":
+    elif category == "Life Expectancy - Population Projections and Deaths method":
         # Merging population and death data for method 1
         population_df = pd.read_csv("../output/population.csv")
         component_df = pd.read_csv("../output/components.csv")
@@ -264,7 +264,7 @@ with tab3:
             ), hide_index=True)
 
 
-    elif category == "Life Expectancy - Mortality Rates":
+    elif category == "Life Expectancy - Mortality Rate method":
 
         # Calculate Life Expectancy for Mortality Rates method
         life_expectancy_df = calculate_life_expectancy_age_0_by_cohort(rates_df, 'rate_death')
@@ -273,7 +273,7 @@ with tab3:
         sex = st.radio("Sex", life_expectancy_df['sex'].unique(), key='M2')
         lifeExp_filter = life_expectancy_df[(life_expectancy_df['sex'] == sex)]
         fig1 = px.line(lifeExp_filter, x='year', y='life_expectancy_at_birth', color='race',
-                    title="Life Expectancy at Birth by Cohort (M2)",
+                    title="Life Expectancy at Birth by Cohort - Mortality Rate",
                     labels={"life_expectancy_at_birth": "Life Expectancy at Birth", "year": "Year"},
                     markers=True)
         st.plotly_chart(fig1, use_container_width=True)
@@ -283,7 +283,7 @@ with tab3:
         df = life_expectancy_df[life_expectancy_df['year'] == y_m2].copy()
         df['year'] = df['year'].astype('object')
         
-        st.write("Life Expectancy by Mortality Rates")
+        st.write("Life Expectancy by Mortality Rate")
         st.dataframe(df.style.format({
             'year': lambda x: f"{x:.0f}",
             'life_expectancy_at_birth': lambda x: f"{x:.2f}"}
