@@ -31,7 +31,7 @@ with tab1:
 
     # Show the plot
     st.plotly_chart(fig)
-    st.write(df_grouped)
+    st.dataframe(df_grouped, hide_index=True)
 
 
 with tab2:
@@ -150,7 +150,7 @@ def calculate_life_expectancy_age_0_by_cohort(df, rate_col):
     life_expectancy_df = pd.DataFrame(life_expectancy_list)
     return life_expectancy_df
 
-
+# Function to calculate Life Expectancy at Age 0 (birth) by sex
 def calculate_life_expectancy_age_0_by_sex(df, rate_col):
     life_expectancy_list = []
 
@@ -223,7 +223,7 @@ with tab3:
         st.plotly_chart(fig4, use_container_width=True)
         
 
-        # Display the firtility rates per year
+        # Display the fertility rates per year
         y_tfr = st.slider("Pick a year", 2020, 2050, key='tab3_tfr')
         df = tfr_df_race[tfr_df_race['year'] == y_tfr].copy()
         df['year'] = df['year'].astype('object')
@@ -233,7 +233,7 @@ with tab3:
             'rate_birth': lambda x: f"{x:.3f}"}), hide_index=True)
 
     elif category == "Life Expectancy - Population Projections and Deaths method":
-        # Merging population and death data for method 1
+        # Merging population and death data for Population Projections and Deaths method
         population_df = pd.read_csv("../output/population.csv")
         component_df = pd.read_csv("../output/components.csv")
         merged_df = pd.merge(population_df, component_df, on=['year', 'sex', 'race', 'age'])
@@ -246,7 +246,7 @@ with tab3:
         final_df['death_pop_ratio'] = np.where(final_df['pop'] == 0, 0, final_df['deaths'] / final_df['pop'])
         life_expectancy_df = calculate_life_expectancy_age_0_by_sex(final_df, 'death_pop_ratio')
 
-        # Plot the Life Expectancy Population Projections and Deaths
+        # Plot the Life Expectancy by Population Projections and Deaths
         fig1 = px.line(life_expectancy_df, x='year', y='life_expectancy_at_birth', color='sex',
                     title="Life Expectancy at Birth by Cohort",
                     labels={"life_expectancy_at_birth": "Life Expectancy at Birth", "year": "Year"},
@@ -266,10 +266,10 @@ with tab3:
 
     elif category == "Life Expectancy - Mortality Rate method":
 
-        # Calculate Life Expectancy for Mortality Rates method
+        # Calculate Life Expectancy by  Mortality Rates method
         life_expectancy_df = calculate_life_expectancy_age_0_by_cohort(rates_df, 'rate_death')
 
-        # Plot the Life Expectancy Mortality Rates method
+        # Plot the Life Expectancy by Mortality Rates method
         sex = st.radio("Sex", life_expectancy_df['sex'].unique(), key='M2')
         lifeExp_filter = life_expectancy_df[(life_expectancy_df['sex'] == sex)]
         fig1 = px.line(lifeExp_filter, x='year', y='life_expectancy_at_birth', color='race',
