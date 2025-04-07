@@ -51,3 +51,15 @@ sql:
 ```
 ### Production Database Schema
 ![input](./documentation/Database%20Diagram.png)
+
+### Streamlit Report App
+This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/.
+
+#### Prerequisites
+Before generating the report, ensure that you have the following:
+- Are running in a Python virtual environment with all required dependencies listed in the `environment.yml`.
+
+#### Generate validation reports
+Run the Streamlit app in the base project directory with the following command.
+```yaml
+streamlit run report/report.py
