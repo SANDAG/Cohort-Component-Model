@@ -242,6 +242,7 @@ with tab1:
                 "Category",
                 "Value",
             ],
+            column_config={"Value": st.column_config.NumberColumn(format="localized")},
         )
 
 # Households
@@ -336,6 +337,7 @@ with tab2:
             "Category",
             "Value",
         ],
+        column_config={"Value": st.column_config.NumberColumn(format="localized")},
     )
 
 # Rates
@@ -373,9 +375,9 @@ with tab3:
             range_y=[0, fertility["rate_birth"].max() + 0.01],
             color="Race/Ethnicity",
             title="San Diego Region: Fertility Rates",
-            labels={"Age": "", "rate_birth": "", "Race/Ethnicity": ""},
+            labels={"rate_birth": "", "Race/Ethnicity": ""},
             line_shape="spline",
-        ).update_layout(legend=dict(orientation="h"))
+        ).update_layout(legend=dict(orientation="h", y=1.15))
 
         st.plotly_chart(fig)
 
@@ -417,6 +419,11 @@ with tab3:
                 ignore_index=True,
             ),
             hide_index=True,
+            column_config={
+                "Total Fertility Rate": st.column_config.NumberColumn(
+                    format="localized"
+                )
+            },
         )
 
     # Mortality Rates
@@ -435,15 +442,15 @@ with tab3:
         )
 
         # Create sex selector and filter line chart
-        tab_3_2_sex = st.pills(
+        tab3_2_sex = st.pills(
             label="**Sex:**",
             options=["M", "F"],
             selection_mode="single",
             default="M",
-            key="tab_3_2_sex",
+            key="tab3_2_sex",
         )
 
-        mortality = mortality.query("Year == @tab3_2_year & sex == @tab_3_2_sex")
+        mortality = mortality.query("Year == @tab3_2_year & sex == @tab3_2_sex")
 
         # Show mortality rates in a line chart
         fig = px.line(
@@ -454,9 +461,9 @@ with tab3:
             range_y=[0, mortality["rate_death"].max() + 0.01],
             color="Race/Ethnicity",
             title="San Diego Region: Mortality Rates",
-            labels={"Age": "", "rate_death": "", "Race/Ethnicity": ""},
+            labels={"rate_death": "", "Race/Ethnicity": ""},
             line_shape="spline",
-        ).update_layout(legend=dict(orientation="h"))
+        ).update_layout(legend=dict(orientation="h", y=1.15))
 
         st.plotly_chart(fig)
 
@@ -471,7 +478,7 @@ with tab3:
         lfe_sd = utils.life_expectancy(
             q_x=(
                 pd.read_csv("output/components.csv")
-                .query("year == @tab3_2_year & sex == @tab_3_2_sex")
+                .query("year == @tab3_2_year & sex == @tab3_2_sex")
                 .merge(
                     right=pd.read_csv("output/population.csv"),
                     on=["year", "race", "sex", "age"],
@@ -479,11 +486,12 @@ with tab3:
                 .groupby("age")[["deaths", "pop"]]
                 .sum()
                 .assign(rate_death=lambda x: x["deaths"] / x["pop"])["rate_death"]
+                .fillna(0)  # implied mortality rates for 0 population categories
             ).tolist(),
             age=0,
         )
 
-        # Display total fertiliy rates
+        # Display life expectancy
         st.dataframe(
             pd.concat(
                 [
@@ -499,6 +507,9 @@ with tab3:
                 ignore_index=True,
             ),
             hide_index=True,
+            column_config={
+                "Life Expectancy": st.column_config.NumberColumn(format="localized")
+            },
         )
 
     # Migration Rates
@@ -543,9 +554,9 @@ with tab3:
             ],
             color="Race/Ethnicity",
             title="San Diego Region: Net Migration Rates",
-            labels={"Age": "", "rate": "", "Race/Ethnicity": ""},
+            labels={"rate_net": "", "Race/Ethnicity": ""},
             line_shape="spline",
-        ).update_layout(legend=dict(orientation="h"))
+        ).update_layout(legend=dict(orientation="h", y=1.15))
 
         st.plotly_chart(fig)
 
@@ -556,6 +567,7 @@ with tab3:
             .groupby("race")[["ins", "outs"]]
             .sum()
             .assign(net=lambda x: x["ins"] - x["outs"])
+            .reset_index()
             .rename(
                 columns={
                     "race": "Race/Ethnicity",
@@ -568,7 +580,7 @@ with tab3:
 
         st.dataframe(
             migrants,
-            hide_index=False,
+            hide_index=True,
             column_order=[
                 "Race/Ethnicity",
                 "Net Migrants",
