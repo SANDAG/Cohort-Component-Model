@@ -1,7 +1,9 @@
 """This module contains utility functions used in report generation."""
 
 import pandas as pd
-from typing import List
+from typing import List, Union, Optional
+import plotly.express as px
+from plotly.graph_objects import Figure
 
 # Define mapping of 5-year age groups
 MAP_5Y_AGE_GROUPS = {
