@@ -5,25 +5,16 @@ import utils
 import plotly.graph_objs as go
 import numpy as np
 
-# Cached data loaders
-@st.cache_data
-def load_population() -> pd.DataFrame:
-    return pd.read_csv("output/population.csv")
-
-@st.cache_data
-def load_components() -> pd.DataFrame:
-    return pd.read_csv("output/components.csv")
-
 # Load data
-population_data = load_population()
-components_data = load_components()
+population_data = pd.read_csv("output/population.csv")
+components_data = pd.read_csv("output/components.csv")
 
 # Population
 # Sub-tabs for population, components of change, and demographics
-tab1_1, tab1_2, tab1_3 = st.tabs(["Total", "Components", "Demographics"])
+tab1, tab2, tab3 = st.tabs(["Total", "Components", "Demographics"])
 
 # Total Population
-with tab1_1:
+with tab1:
     # Load total population output and summarize by year
     total = (
         population_data
@@ -77,7 +68,7 @@ with tab1_1:
     )
 
 # Components of Change
-with tab1_2:
+with tab2:
     # Load components of change output and summarize by year
     components = (
         components_data
@@ -145,7 +136,7 @@ with tab1_2:
     )
 
 # Demographics
-with tab1_3:
+with tab3:
     # Load population pyramid output and summarize by year
     pyramid = (
         population_data
@@ -164,14 +155,14 @@ with tab1_3:
     )
 
     # Create year slider and filter dataset
-    tab1_3_year = st.slider(
+    tab3_year = st.slider(
         label="**Forecast Year:**",
         min_value=pyramid["Year"].min(),
         max_value=pyramid["Year"].max(),
-        key="tab1_3_year",
+        key="tab3_year",
     )
 
-    pyramid_year = pyramid[pyramid["Year"] == tab1_3_year]
+    pyramid_year = pyramid[pyramid["Year"] == tab3_year]
 
     # Create population pyramid chart
     layout = go.Layout(
@@ -210,7 +201,7 @@ with tab1_3:
     st.plotly_chart(fig)
 
     # Create and show detailed demographic data in a table
-    demographics = population_data.query("year == @tab1_3_year")
+    demographics = population_data.query("year == @tab3_year")
 
     tbl = []
     for field in ["age", "sex", "race"]:

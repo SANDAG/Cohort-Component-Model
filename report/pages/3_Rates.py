@@ -3,30 +3,17 @@ import pandas as pd
 import plotly.express as px
 import utils
 
-# Cached data loaders
-@st.cache_data
-def load_population() -> pd.DataFrame:
-    return pd.read_csv("output/population.csv")
-
-@st.cache_data
-def load_components() -> pd.DataFrame:
-    return pd.read_csv("output/components.csv")
-
-@st.cache_data
-def load_rates() -> pd.DataFrame:
-    return pd.read_csv("output/rates.csv")
-
 # Load data
-population_data = load_population()
-components_data = load_components()
-rates_data = load_rates()
+population_data = pd.read_csv("output/population.csv")
+components_data = pd.read_csv("output/components.csv")
+rates_data = pd.read_csv("output/rates.csv")
 
 # Rates
 # Sub-tabs for fertility, mortality, and migration rates
-tab3_1, tab3_2, tab3_3 = st.tabs(["Fertility", "Mortality", "Migration"])
+tab1, tab2, tab3 = st.tabs(["Fertility", "Mortality", "Migration"])
 
 # Fertility Rates
-with tab3_1:
+with tab1:
     # Load fertility rate data
     fertility = (
         rates_data[
@@ -37,25 +24,27 @@ with tab3_1:
     )
 
     # Create year slider and filter dataset
-    tab3_1_year = st.slider(
+    tab1_year = st.slider(
         label="**Forecast Year:**",
         min_value=fertility["Year"].min(),
         max_value=fertility["Year"].max(),
-        key="tab3_1_year",
+        key="tab1_year",
     )
 
-    fertility = fertility.query("Year == @tab3_1_year")
+    fertility = fertility.query("Year == @tab1_year")
 
     # Show fertility rates in a line chart
-    fig = utils.plot_line_chart(
-        fertility,
-        x="Age",
-        y="rate_birth",
-        x_range=[15, 45],
-        y_range=[0, fertility["rate_birth"].max() + 0.01],
-        color="Race/Ethnicity",
-        title="San Diego Region: Fertility Rates"
-    )
+    fig = px.line(
+            fertility,
+            x="Age",
+            y="rate_birth",
+            range_x=[15, 45],
+            range_y=[0, fertility["rate_birth"].max() + 0.01],
+            color="Race/Ethnicity",
+            title="San Diego Region: Fertility Rates",
+            labels={"rate_birth": "", "Race/Ethnicity": ""},
+            line_shape="spline",
+        ).update_layout(legend=dict(orientation="h", y=1.15))
 
     st.plotly_chart(fig)
 
@@ -70,7 +59,7 @@ with tab3_1:
     # Calculate implied TFR for San Diego County using the components of change
     tfr_sd = (
         components_data
-        .query("year == @tab3_1_year & sex == 'F'")
+        .query("year == @tab1_year & sex == 'F'")
         .merge(
             right=population_data,
             on=["year", "race", "sex", "age"],
@@ -105,41 +94,43 @@ with tab3_1:
     )
 
 # Mortality Rates
-with tab3_2:
+with tab2:
     # Load mortality rate data
     mortality = rates_data[
         ["year", "race", "sex", "age", "rate_death"]
     ].rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
 
     # Create year slider to filter dataset
-    tab3_2_year = st.slider(
+    tab2_year = st.slider(
         label="**Forecast Year:**",
         min_value=mortality["Year"].min(),
         max_value=mortality["Year"].max(),
-        key="tab3_2_year",
+        key="tab2_year",
     )
 
     # Create sex selector and filter line chart
-    tab3_2_sex = st.pills(
+    tab2_sex = st.pills(
         label="**Sex:**",
         options=["M", "F"],
         selection_mode="single",
         default="M",
-        key="tab3_2_sex",
+        key="tab2_sex",
     )
 
-    mortality = mortality.query("Year == @tab3_2_year & sex == @tab3_2_sex")
+    mortality = mortality.query("Year == @tab2_year & sex == @tab2_sex")
 
     # Show mortality rates in a line chart
-    fig = utils.plot_line_chart(
-        mortality,
-        x="Age",
-        y="rate_death",
-        x_range=[0, 110],
-        y_range=[0, mortality["rate_death"].max() + 0.01],
-        color="Race/Ethnicity",
-        title="San Diego Region: Mortality Rates"
-    )
+    fig = px.line(
+            mortality,
+            x="Age",
+            y="rate_death",
+            range_x=[0, 110],
+            range_y=[0, mortality["rate_death"].max() + 0.01],
+            color="Race/Ethnicity",
+            title="San Diego Region: Mortality Rates",
+            labels={"rate_death": "", "Race/Ethnicity": ""},
+            line_shape="spline",
+        ).update_layout(legend=dict(orientation="h", y=1.15))
 
     st.plotly_chart(fig)
 
@@ -154,7 +145,7 @@ with tab3_2:
     lfe_sd = utils.life_expectancy(
         q_x=(
             components_data
-            .query("year == @tab3_2_year & sex == @tab3_2_sex")
+            .query("year == @tab2_year & sex == @tab2_sex")
             .merge(
                 right=population_data,
                 on=["year", "race", "sex", "age"],
@@ -189,7 +180,7 @@ with tab3_2:
     )
 
 # Migration Rates
-with tab3_3:
+with tab3:
     # Load migration rate data
     migration = (
         rates_data[
@@ -200,44 +191,46 @@ with tab3_3:
     )
 
     # Create year slider to filter dataset
-    tab3_3_year = st.slider(
+    tab3_year = st.slider(
         label="**Forecast Year:**",
         min_value=migration["Year"].min(),
         max_value=migration["Year"].max(),
-        key="tab3_3_year",
+        key="tab3_year",
     )
 
     # Create sex selector and filter line chart
-    tab_3_3_sex = st.pills(
+    tab3_sex = st.pills(
         label="**Sex:**",
         options=["M", "F"],
         selection_mode="single",
         default="M",
-        key="tab_3_3_sex",
+        key="tab3_sex",
     )
 
-    migration = migration.query("Year == @tab3_3_year & sex == @tab_3_3_sex")
+    migration = migration.query("Year == @tab3_year & sex == @tab3_sex")
 
     # Show net migration rates in a line chart
-    fig = utils.plot_line_chart(
-        migration,
-        x="Age",
-        y="rate_net",
-        x_range=[0, 110],
-        y_range=[
-            -abs(migration["rate_net"]).max() - 0.01,
-            abs(migration["rate_net"]).max() + 0.01,
-        ],
-        color="Race/Ethnicity",
-        title="San Diego Region: Net Migration Rates"
-    )
-
+    fig = px.line(
+            migration,
+            x="Age",
+            y="rate_net",
+            range_x=[0, 110],
+            range_y=[
+                -abs(migration["rate_net"]).max() - 0.01,
+                abs(migration["rate_net"]).max() + 0.01,
+            ],
+            color="Race/Ethnicity",
+            title="San Diego Region: Net Migration Rates",
+            labels={"rate_net": "", "Race/Ethnicity": ""},
+            line_shape="spline",
+        ).update_layout(legend=dict(orientation="h", y=1.15))
+    
     st.plotly_chart(fig)
 
     # Display the Race/Ethnicity composition of migrants in a table
     migrants = (
         components_data
-        .query("year == @tab3_3_year & sex == @tab_3_3_sex")
+        .query("year == @tab3_year & sex == @tab3_sex")
         .groupby("race")[["ins", "outs"]]
         .sum()
         .assign(net=lambda x: x["ins"] - x["outs"])

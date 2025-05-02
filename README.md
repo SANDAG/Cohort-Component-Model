@@ -62,4 +62,4 @@ Before generating the report, ensure that you have the following:
 #### Generate validation reports
 Run the Streamlit app in the base project directory with the following command.
 ```yaml
-streamlit run report/report.py
+streamlit run report/CCM_Validation_Report.py

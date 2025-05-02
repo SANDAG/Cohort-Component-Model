@@ -3,13 +3,8 @@ import pandas as pd
 import plotly.express as px
 import utils
 
-# Cached data loaders
-@st.cache_data
-def load_population() -> pd.DataFrame:
-    return pd.read_csv("output/population.csv")
-
 # Load data
-population_data = load_population()
+population_data = pd.read_csv("output/population.csv")
 
 # Households
 # Load household output and summarize by year
@@ -79,16 +74,16 @@ st.plotly_chart(fig)
 
 # Show detailed household data in a table
 # Create year slider to filter dataset
-tab2_year = st.slider(
+year = st.slider(
     label="**Forecast Year:**",
     min_value=households["Year"].min(),
     max_value=households["Year"].max(),
-    key="tab2_year",
+    key="year",
 )
 
 # Filter and transform dataset for display
 households = (
-    (households[households["Year"] == tab2_year])
+    (households[households["Year"] == year])
     .drop(columns=["Year", "pop", "gq"])
     .melt(var_name="Category", value_name="Value")
     .assign(Metric=lambda x: x["Category"].apply(utils.hh_metrics))
