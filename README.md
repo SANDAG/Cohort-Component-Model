@@ -53,7 +53,7 @@ sql:
 ![input](./documentation/Database%20Diagram.png)
 
 ### Streamlit Report App
-This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/.
+This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder or from the SQL database in `sectrets.yml`. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/.
 
 #### Prerequisites
 Before generating the report, ensure that you have the following:
