@@ -3,13 +3,10 @@ import pandas as pd
 import plotly.express as px
 import utils
 
-# Load data
-population_data = pd.read_csv("output/population.csv")
-
 # Households
 # Load household output and summarize by year
 households = (
-    population_data
+    st.session_state.population_data
     .groupby("year")[
         [
             "pop",

@@ -5,10 +5,6 @@ import utils
 import plotly.graph_objs as go
 import numpy as np
 
-# Load data
-population_data = pd.read_csv("output/population.csv")
-components_data = pd.read_csv("output/components.csv")
-
 # Population
 # Sub-tabs for population, components of change, and demographics
 tab1, tab2, tab3 = st.tabs(["Total", "Components", "Demographics"])
@@ -17,7 +13,7 @@ tab1, tab2, tab3 = st.tabs(["Total", "Components", "Demographics"])
 with tab1:
     # Load total population output and summarize by year
     total = (
-        population_data
+        st.session_state.population_data
         .groupby("year")[["pop", "pop_mil", "gq"]]
         .sum()
         .reset_index()
@@ -71,7 +67,7 @@ with tab1:
 with tab2:
     # Load components of change output and summarize by year
     components = (
-        components_data
+        st.session_state.components_data
         .groupby("year")[["births", "deaths", "ins", "outs"]]
         .sum()
         .reset_index()
@@ -139,7 +135,7 @@ with tab2:
 with tab3:
     # Load population pyramid output and summarize by year
     pyramid = (
-        population_data
+        st.session_state.population_data
         .assign(age_grp=lambda x: x["age"].apply(utils.age_5y))
         .groupby(["year", "sex", "age_grp"])["pop"]
         .sum()
@@ -201,7 +197,7 @@ with tab3:
     st.plotly_chart(fig)
 
     # Create and show detailed demographic data in a table
-    demographics = population_data.query("year == @tab3_year")
+    demographics = st.session_state.population_data.query("year == @tab3_year")
 
     tbl = []
     for field in ["age", "sex", "race"]:
