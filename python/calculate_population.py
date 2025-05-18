@@ -3,7 +3,7 @@
 from iteround import saferound
 import logging
 import pandas as pd
-from python.utilities import reallocate_group_integers, reallocate_integers
+from python.utils import reallocate_group_integers, reallocate_integers
 
 logger = logging.getLogger(__name__)
 

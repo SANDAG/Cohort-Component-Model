@@ -5,7 +5,7 @@
 import logging
 import numpy as np
 import pandas as pd
-from python.utilities import adjust_sum, distribute_excess
+from python.utils import adjust_sum, distribute_excess
 import sqlalchemy as sql
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ def get_hh_characteristic_rates(
     launch_yr: int,
     pums_persons: str,
     sandag_estimates: dict,
-    engine: sql.engine,
+    engine: sql.Engine,
 ) -> pd.DataFrame:
     """Generate household characteristics rates broken down by race, sex, and
     single year of age.
@@ -38,6 +38,7 @@ def get_hh_characteristic_rates(
         pums_persons (str): 5-year ACS PUMS persons
         sandag_estimates (dict): loaded JSON control totals from historical
             SANDAG Estimates programs
+        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Household characteristics rates broken down by race,

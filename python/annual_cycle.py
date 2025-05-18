@@ -1,11 +1,12 @@
 """Methods to increment through the annual cycle."""
+
 # TODO: (10-feature) Add function to allow for control totals at each increment for in/out migration.
 
 from iteround import saferound
 import numpy as np
 import pandas as pd
 from typing import Dict
-from python.utilities import reallocate_integers
+from python.utils import reallocate_integers
 
 
 def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:

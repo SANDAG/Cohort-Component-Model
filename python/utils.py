@@ -1,11 +1,30 @@
 """This module contains generic utilities."""
 
+import pathlib
+
 import numpy as np
 import pandas as pd
-from typing import List
+import sqlalchemy as sql
+import yaml
 
 
-def _adjust_weights(x: List[float | int], w: list[float | int]) -> List[list]:
+# Store project root folder
+ROOT_FOLDER = pathlib.Path(__file__).parent.resolve().parent
+
+# Load secrets YAML file
+try:
+    with open(ROOT_FOLDER / "secrets.yml", "r") as file:
+        _secrets = yaml.safe_load(file)
+except IOError:
+    raise IOError("secrets.yml does not exist, see README.md")
+
+# Create SQLAlchemy engine(s)
+SQL_ENGINE = sql.create_engine(
+    "mssql+pymssql://" + _secrets["sql"]["server"] + "/" + _secrets["sql"]["database"]
+)
+
+
+def _adjust_weights(x: list[float | int], w: list[float | int]) -> list[list]:
     """Adjust weighted moving average weights.
 
     This function adjusts a single set of weighted moving average weights
@@ -21,11 +40,11 @@ def _adjust_weights(x: List[float | int], w: list[float | int]) -> List[list]:
         w = [0.25, 0.75, 0] - Take 25% of previous, 75% original
 
     Args:
-        x (List[float|int]): The time series records to take a moving average of
-        w (List[float|int]): The weighted moving average window and weights
+        x (list[float|int]): The time series records to take a moving average of
+        w (list[float|int]): The weighted moving average window and weights
 
     Returns:
-        List[List[float|int]]: Weighted moving average windows and weights for
+        list[list[float|int]]: Weighted moving average windows and weights for
             each time series record that will have a weighted moving average taken
     """
     # Weights are assumed to be symmetric
@@ -66,14 +85,14 @@ def _adjust_weights(x: List[float | int], w: list[float | int]) -> List[list]:
 
 
 def adjust_sum(
-    df: pd.DataFrame, cols: List[str], sum: float, option: str
+    df: pd.DataFrame, cols: list[str], sum: float, option: str
 ) -> pd.DataFrame:
     """Adjust row values for columns such that sum equals or does not exceed
     specified value. Use for positive values only.
 
     Args:
         df (pd.DataFrame): Input DataFrame
-        cols (List[str]): List of column names
+        cols (list[str]): List of column names
         sum (float): Asserted value
         option (str): Set to 'equals' or 'exceeds'
 
@@ -90,12 +109,12 @@ def adjust_sum(
             if option == "equals":
                 return df[cols].apply(
                     lambda x: x * (sum / x.sum()) if x.sum() > 0 else x, axis=1
-                )
+                )  # type: ignore
             elif option == "exceeds":
                 return df[cols].apply(
                     lambda x: x * (sum / x.sum()) if x.sum() > sum else x,
                     axis=1,
-                )
+                )  # type: ignore
             else:
                 raise ValueError(
                     "Parameter 'option': must be one of 'equals' or 'exceeds'."
@@ -218,9 +237,9 @@ def reallocate_integers(df: pd.DataFrame, subset: str, total: str) -> pd.Series:
 
                 balancer = (
                     balancer.sort_values(by="give", ascending=False)
-                    .assign(subtract=minuses)
+                    .assign(subtract=minuses)  # type: ignore
                     .sort_values(by=["receive", "diff"], ascending=False)
-                    .assign(add=pluses)
+                    .assign(add=pluses)  # type: ignore
                 )
 
                 df = df.join(balancer[["subtract", "add"]])
@@ -238,7 +257,7 @@ def reallocate_integers(df: pd.DataFrame, subset: str, total: str) -> pd.Series:
 
 
 def reallocate_group_integers(
-    df: pd.DataFrame, cols: List[str], total: str
+    df: pd.DataFrame, cols: list[str], total: str
 ) -> pd.Series:
     """Adjust group of subset columns such that the row-wise values of the
     columns equal the value of the column identified as the total numerical
@@ -249,7 +268,7 @@ def reallocate_group_integers(
 
     Args:
         df (pd.DataFrame): Input DataFrame
-        cols (List[str]): List of column names
+        cols (list[str]): List of column names
         total (str): Column name containing total numerical value
 
     Returns:
@@ -303,9 +322,9 @@ def reallocate_group_integers(
 
             balancer = (
                 balancer.sort_values(by="give", ascending=False)
-                .assign(subtract=minuses)
+                .assign(subtract=minuses)  # type: ignore
                 .sort_values(by="receive", ascending=False)
-                .assign(add=pluses)
+                .assign(add=pluses)  # type: ignore
             )
 
             # If there are adjustable rows then
@@ -335,36 +354,36 @@ def reallocate_group_integers(
             condition = (df[cols].sum(axis=1) != df[total]).any()
 
         # Return adjusted subset columns
-        return df[cols]
+        return df[cols]  # type: ignore
 
 
 def weighted_moving_average(
-    x: List[float | int], w: List[float | int]
-) -> List[float | int]:
+    x: list[float | int], w: list[float | int]
+) -> list[float | int]:
     """Take the weighted moving average of time series records.
 
     Args:
-        x (List[float|int]): The time series records to take a moving average of
-        w (List[float|int]): The weighted moving average window and weights
+        x (list[float|int]): The time series records to take a moving average of
+        w (list[float|int]): The weighted moving average window and weights
 
     Returns:
-        List[float|int]: The time series records adjusted via the weighted
+        list[float|int]: The time series records adjusted via the weighted
             moving average
     """
     result = []
 
     # Adjust weights for records at time series boundary
-    w = _adjust_weights(x=x, w=w)
+    w = _adjust_weights(x=x, w=w)  # type: ignore
 
     # For each record and associated adjusted weights
     for i in range(len(x)):
         # Take the weighted moving average
         cumsum = 0
-        for j in range(len(w[i])):
-            if w[i][j] == 0:
+        for j in range(len(w[i])):  # type: ignore
+            if w[i][j] == 0:  # type: ignore
                 pass  # 0s may indicate out of time series boundary
             else:
-                cumsum += x[i + j - (len(w[i]) // 2)] * w[i][j]
+                cumsum += x[i + j - (len(w[i]) // 2)] * w[i][j]  # type: ignore
         result.append(cumsum)
 
     return result

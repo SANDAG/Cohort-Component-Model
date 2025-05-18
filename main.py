@@ -2,9 +2,9 @@
 
 import logging
 import os
-import pandas as pd
-import sqlalchemy as sql
 import yaml
+
+import pandas as pd
 
 # User-defined modules
 from python.annual_cycle import increment_population
@@ -22,6 +22,7 @@ from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
 from python.input_modules.migration_rates import get_migration_rates
 from python.output_data import write_df, write_rates
+from python.utils import SQL_ENGINE
 
 
 # Set up configurations and datasets -----------------------------------------
@@ -30,10 +31,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(
     filename="log.txt", filemode="w", encoding="utf-8", level=logging.INFO
 )
-
-# Load secrets file ----
-with open("secrets.yml") as f:
-    secrets = yaml.safe_load(f)
 
 # Load configuration files ----
 with open("config.yml") as f:
@@ -57,11 +54,6 @@ for k, v in config["csv"].items():
     else:
         config["csv"][k] = pd.read_csv(v)
 
-# Create SQL engine ----
-engine = sql.create_engine(
-    "mssql+pymssql://" + secrets["sql"]["server"] + "/" + secrets["sql"]["database"]
-)
-
 
 # Initialize base year dataset -----------------------------------------------
 logger.info("Initializing base year")
@@ -75,7 +67,7 @@ if 2020 <= config["interval"]["launch"] < 2030:
         dof_estimates=config["sql"]["queries"]["dof_estimates"],
         dof_projections=config["sql"]["queries"]["dof_projections"],
         census_p5=config["sql"]["queries"]["census_p5"],
-        engine=engine,
+        engine=SQL_ENGINE,  # type: ignore
     )
 
     logger.info("Initialized: Base Year 2020")
@@ -101,7 +93,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         pums_ca_mil=config["sql"]["queries"]["pums_ca_mil"],
         dmdc_location_report=config["csv"]["dmdc_location_report"],
         sdmac_report=config["csv"]["sdmac_report"],
-        engine=engine,
+        engine=SQL_ENGINE,  # type: ignore
     )
 
     # Calculate rates (rates calculated up to the launch year) ----
@@ -127,7 +119,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 pop_df=pop_df,
                 pums_migrants=config["sql"]["queries"]["pums_migrants"],
-                engine=engine,
+                engine=SQL_ENGINE,  # type: ignore
             ),
             # Crude Group Quarters and Household Formation Rates
             "formation_gq_hh": get_formation_rates(
@@ -135,7 +127,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
-                engine=engine,
+                engine=SQL_ENGINE,  # type: ignore
             ),
             # Household Characteristics Rates
             "hh_characteristics": get_hh_characteristic_rates(
@@ -143,7 +135,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
-                engine=engine,
+                engine=SQL_ENGINE,  # type: ignore
             ),
         }
 
@@ -176,20 +168,20 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
     # Write out components of change ----
     write_df(
         yr=increment,
-        df=increment_data["components"],
+        df=increment_data["components"],  # type: ignore
         fn=config["output"]["files"]["components"],
     )
 
     # Set population for next increment and finish annual cycle ----
-    pop_df = increment_data["population"].copy()
+    pop_df = increment_data["population"].copy()  # type: ignore
 logger.info("Completed")
 
 if config["sql"]["load_to_database"]:
     # Run the ETL process
     run_etl(
-        engine=engine,
+        engine=SQL_ENGINE,
         launch=config["interval"]["launch"],
         horizon=config["interval"]["horizon"],
         version=config["version"],
-        comments=config["comments"]
+        comments=config["comments"],
     )
