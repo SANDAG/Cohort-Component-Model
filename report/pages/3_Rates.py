@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import utils
+import report_utils
 
 # Rates
 # Sub-tabs for fertility, mortality, and migration rates
@@ -132,12 +132,12 @@ with tab2:
     # Calculate rate-based life expectancy for all race/ethnicity groups
     lfe = (
         mortality.groupby("Race/Ethnicity")["rate_death"]
-        .apply(lambda x: utils.life_expectancy(q_x=x.tolist(), age=0))
+        .apply(lambda x: report_utils.life_expectancy(q_x=x.tolist(), age=0))
         .reset_index(0)
     ).rename(columns={"rate_death": "Life Expectancy"})
 
     # Calculate implied life expectancy for San Diego County using the components of change
-    lfe_sd = utils.life_expectancy(
+    lfe_sd = report_utils.life_expectancy(
         q_x=(
             st.session_state.components_data
             .query("year == @tab2_year & sex == @tab2_sex")

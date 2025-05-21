@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import utils
+import report_utils
 
 # Households
 # Load household output and summarize by year
@@ -83,7 +83,7 @@ households = (
     (households[households["Year"] == year])
     .drop(columns=["Year", "pop", "gq"])
     .melt(var_name="Category", value_name="Value")
-    .assign(Metric=lambda x: x["Category"].apply(utils.hh_metrics))
+    .assign(Metric=lambda x: x["Category"].apply(report_utils.hh_metrics))
 )
 
 st.dataframe(

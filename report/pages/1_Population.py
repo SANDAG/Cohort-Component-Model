@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import utils
+import report_utils
 import plotly.graph_objs as go
 import numpy as np
 
@@ -136,7 +136,7 @@ with tab3:
     # Load population pyramid output and summarize by year
     pyramid = (
         st.session_state.population_data
-        .assign(age_grp=lambda x: x["age"].apply(utils.age_5y))
+        .assign(age_grp=lambda x: x["age"].apply(report_utils.age_5y))
         .groupby(["year", "sex", "age_grp"])["pop"]
         .sum()
         .reset_index()
@@ -186,7 +186,7 @@ with tab3:
 
         data.append(
             go.Bar(
-                y=list(utils.MAP_5Y_AGE_GROUPS.keys()),
+                y=list(report_utils.MAP_5Y_AGE_GROUPS.keys()),
                 x=values,
                 orientation="h",
                 name=name,
