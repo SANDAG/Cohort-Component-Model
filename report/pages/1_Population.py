@@ -174,7 +174,7 @@ with tab3:
     )
 
     data = []
-    for sex in ["M", "F"]:
+    for sex in ["F", "M"]:
         sex_data = pyramid_year[pyramid_year["Sex"] == sex]
         values = sex_data["Total Population"].values
 
