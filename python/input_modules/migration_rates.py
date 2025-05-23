@@ -13,7 +13,7 @@ def get_migration_rates(
     launch_yr: int,
     pop_df: pd.DataFrame,
     pums_migrants: str,
-    engine: sql.engine,
+    engine: sql.Engine,
 ) -> pd.DataFrame:
     """Create migration rates broken down by race, sex, and single year of age.
 
@@ -29,7 +29,7 @@ def get_migration_rates(
             single year of age
         pums_migrants (str): query to get 5-year ACS PUMS in/out
             migrants for San Diego County
-        engine (sql.engine): SQLAlchemy MSSQL connection engine
+        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Migration rates broken down by race, sex, and single

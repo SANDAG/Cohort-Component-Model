@@ -1,12 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import utils
-
-# Load data
-population_data = pd.read_csv("output/population.csv")
-components_data = pd.read_csv("output/components.csv")
-rates_data = pd.read_csv("output/rates.csv")
+import report_utils
 
 # Rates
 # Sub-tabs for fertility, mortality, and migration rates
@@ -16,7 +11,7 @@ tab1, tab2, tab3 = st.tabs(["Fertility", "Mortality", "Migration"])
 with tab1:
     # Load fertility rate data
     fertility = (
-        rates_data[
+        st.session_state.rates_data[
             ["year", "race", "sex", "age", "rate_birth"]
         ]
         .query("age >= 15 & age <= 45")
@@ -58,10 +53,10 @@ with tab1:
 
     # Calculate implied TFR for San Diego County using the components of change
     tfr_sd = (
-        components_data
+        st.session_state.components_data
         .query("year == @tab1_year & sex == 'F'")
         .merge(
-            right=population_data,
+            right=st.session_state.population_data,
             on=["year", "race", "sex", "age"],
         )
         .groupby("age")[["births", "pop"]]
@@ -96,7 +91,7 @@ with tab1:
 # Mortality Rates
 with tab2:
     # Load mortality rate data
-    mortality = rates_data[
+    mortality = st.session_state.rates_data[
         ["year", "race", "sex", "age", "rate_death"]
     ].rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
 
@@ -137,17 +132,17 @@ with tab2:
     # Calculate rate-based life expectancy for all race/ethnicity groups
     lfe = (
         mortality.groupby("Race/Ethnicity")["rate_death"]
-        .apply(lambda x: utils.life_expectancy(q_x=x.tolist(), age=0))
+        .apply(lambda x: report_utils.life_expectancy(q_x=x.tolist(), age=0))
         .reset_index(0)
     ).rename(columns={"rate_death": "Life Expectancy"})
 
     # Calculate implied life expectancy for San Diego County using the components of change
-    lfe_sd = utils.life_expectancy(
+    lfe_sd = report_utils.life_expectancy(
         q_x=(
-            components_data
+            st.session_state.components_data
             .query("year == @tab2_year & sex == @tab2_sex")
             .merge(
-                right=population_data,
+                right=st.session_state.population_data,
                 on=["year", "race", "sex", "age"],
             )
             .groupby("age")[["deaths", "pop"]]
@@ -183,7 +178,7 @@ with tab2:
 with tab3:
     # Load migration rate data
     migration = (
-        rates_data[
+        st.session_state.rates_data[
             ["year", "race", "sex", "age", "rate_in", "rate_out"]
         ]
         .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
@@ -229,7 +224,7 @@ with tab3:
 
     # Display the Race/Ethnicity composition of migrants in a table
     migrants = (
-        components_data
+        st.session_state.components_data
         .query("year == @tab3_year & sex == @tab3_sex")
         .groupby("race")[["ins", "outs"]]
         .sum()

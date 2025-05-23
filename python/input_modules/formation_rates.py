@@ -4,7 +4,7 @@
 
 import logging
 import pandas as pd
-from python.utilities import adjust_sum, distribute_excess
+from python.utils import adjust_sum, distribute_excess
 import sqlalchemy as sql
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ def get_formation_rates(
     launch_yr: int,
     pums_persons: str,
     sandag_estimates: dict,
-    engine: sql.engine,
+    engine: sql.Engine,
 ) -> pd.DataFrame:
     """Generate group quarters and household formation rates broken
     down by race, sex, and single year of age.
@@ -38,7 +38,7 @@ def get_formation_rates(
         pums_persons (str): 5-year ACS PUMS persons query file
         sandag_estimates (dict): loaded JSON control totals from historical
             SANDAG Estimates programs
-        engine (sql.engine): SQLAlchemy MSSQL connection engine
+        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Group quarters and household formation rates broken down

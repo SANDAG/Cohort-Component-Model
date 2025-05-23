@@ -18,7 +18,7 @@ def get_base_yr_2020(
     dof_estimates: str,
     dof_projections: str,
     census_p5: str,
-    engine: sql.engine,
+    engine: sql.Engine,
 ) -> pd.DataFrame:
     """Generate base year 2020 population data broken down by race, sex, and
     single year of age for launch years from 2020-2029. Due to issues with the
@@ -38,7 +38,7 @@ def get_base_yr_2020(
         dof_estimates (str): CA DOF Population Estimates query file
         dof_projections (str): CA DOF Population Projections query file
         census_p5 (str): Census P5 table for 2020 query file
-        engine (sql.engine): SQLAlchemy MSSQL connection engine
+        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.Dataframe: Base year 2020 population data broken down by race,

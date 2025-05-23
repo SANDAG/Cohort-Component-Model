@@ -1,7 +1,7 @@
 """Generate active-duty military population by race, sex, and single year of age."""
 
 import pandas as pd
-from python.utilities import distribute_excess
+from python.utils import distribute_excess
 import sqlalchemy as sql
 
 
@@ -13,7 +13,7 @@ def get_active_duty_military(
     pums_ca_mil: str,
     dmdc_location_report: pd.DataFrame,
     sdmac_report: pd.DataFrame,
-    engine: sql.engine,
+    engine: sql.Engine,
 ) -> pd.DataFrame:
     """Get active-duty military population broken down by race, sex, and
     single year of age for the increment year. Note the active duty military
@@ -39,7 +39,7 @@ def get_active_duty_military(
             https://dwp.dmdc.osd.mil/dwp/app/dod-data-reports/workforce-reports
         sdmac_report (pd.DataFrame): SDMAC Annual EIR data
             https://sdmac.org/reports/past-sdmac-economic-impact-reports
-        engine (sql.engine): SQLAlchemy MSSQL connection engine
+        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: The total population data with active-duty military
