@@ -1,6 +1,8 @@
 """This module contains utility functions used in report generation."""
+
 import os
 import sys
+
 import pandas as pd
 import plotly.express as px
 import sqlalchemy as sql
@@ -11,8 +13,10 @@ from typing import List, Union, Optional
 from plotly.graph_objects import Figure
 
 # Add the parent directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'python')))
-from utils import SQL_ENGINE  
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python"))
+)
+from utils import SQL_ENGINE
 
 # Define mapping of 5-year age groups
 MAP_5Y_AGE_GROUPS = {
@@ -103,6 +107,7 @@ def life_expectancy(q_x: List[float], age: int) -> int:
     # Calculate conditional life expectancy at age x
     return age + sum(L_x[age:]) / l_x[age]
 
+
 def get_data(data_selector: str, run_id: int | None = None) -> dict:
     datasets = {
         "population": {"fp": "output/population.csv", "qry": "report/population.sql"},
@@ -128,22 +133,25 @@ def get_data(data_selector: str, run_id: int | None = None) -> dict:
             else:
                 try:
                     with SQL_ENGINE.connect() as connection:
-                        with open(locations["qry"], "r") as query:  # type: ignore
+                        with open(locations["qry"], "r") as query:
                             df = pd.read_sql_query(
                                 sql.text(query.read().format(run_id=run_id)),
                                 connection,
                             )
-                            result[dataset] = {True: df}           
+                            result[dataset] = {True: df}
                 # if there is an error return a dictionary of {False: Message}
                 except Exception as e:
-                    result[dataset] = {False: f"Failed to query SQL Database for '{dataset}: {e}"}
+                    result[dataset] = {
+                        False: f"Failed to query SQL Database for '{dataset}: {e}"
+                    }
     return result
 
-# Function to check table existence 
-def get_metadata() -> dict: 
+
+# Function to check table existence
+def get_metadata() -> dict:
     try:
         with SQL_ENGINE.connect() as connection:
-            with open("report/metadata.sql", "r") as query:  # type: ignore
+            with open("report/metadata.sql", "r") as query:
                 df = pd.read_sql_query(
                     sql.text(query.read()),
                     connection,
@@ -152,5 +160,3 @@ def get_metadata() -> dict:
     # if there is an error return a dictionary of {False: Message}
     except Exception as e:
         return {False: f"Failed to query SQL Database: {e}"}
-    
-
