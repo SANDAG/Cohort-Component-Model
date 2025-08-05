@@ -11,9 +11,7 @@ tab1, tab2, tab3 = st.tabs(["Fertility", "Mortality", "Migration"])
 with tab1:
     # Load fertility rate data
     fertility = (
-        st.session_state.rates_data[
-            ["year", "race", "sex", "age", "rate_birth"]
-        ]
+        st.session_state.rates_data[["year", "race", "sex", "age", "rate_birth"]]
         .query("age >= 15 & age <= 45")
         .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
     )
@@ -30,16 +28,16 @@ with tab1:
 
     # Show fertility rates in a line chart
     fig = px.line(
-            fertility,
-            x="Age",
-            y="rate_birth",
-            range_x=[15, 45],
-            range_y=[0, fertility["rate_birth"].max() + 0.01],
-            color="Race/Ethnicity",
-            title="San Diego Region: Fertility Rates",
-            labels={"rate_birth": "", "Race/Ethnicity": ""},
-            line_shape="spline",
-        ).update_layout(legend=dict(orientation="h", y=1.15))
+        fertility,
+        x="Age",
+        y="rate_birth",
+        range_x=[15, 45],
+        range_y=[0, fertility["rate_birth"].max() + 0.01],
+        color="Race/Ethnicity",
+        title="San Diego Region: Fertility Rates",
+        labels={"rate_birth": "", "Race/Ethnicity": ""},
+        line_shape="spline",
+    ).update_layout(legend=dict(orientation="h", y=1.15))
 
     st.plotly_chart(fig)
 
@@ -53,8 +51,7 @@ with tab1:
 
     # Calculate implied TFR for San Diego County using the components of change
     tfr_sd = (
-        st.session_state.components_data
-        .query("year == @tab1_year & sex == 'F'")
+        st.session_state.components_data.query("year == @tab1_year & sex == 'F'")
         .merge(
             right=st.session_state.population_data,
             on=["year", "race", "sex", "age"],
@@ -82,97 +79,137 @@ with tab1:
         ),
         hide_index=True,
         column_config={
-            "Total Fertility Rate": st.column_config.NumberColumn(
-                format="localized"
-            )
+            "Total Fertility Rate": st.column_config.NumberColumn(format="localized")
         },
     )
 
 # Mortality Rates
 with tab2:
+
+    sub_tab1, sub_tab2 = st.tabs(["Mortality Rates", "Life Expectancy"])
+
     # Load mortality rate data
     mortality = st.session_state.rates_data[
         ["year", "race", "sex", "age", "rate_death"]
     ].rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
 
-    # Create year slider to filter dataset
-    tab2_year = st.slider(
-        label="**Forecast Year:**",
-        min_value=mortality["Year"].min(),
-        max_value=mortality["Year"].max(),
-        key="tab2_year",
-    )
+    with sub_tab1:
 
-    # Create sex selector and filter line chart
-    tab2_sex = st.pills(
-        label="**Sex:**",
-        options=["M", "F"],
-        selection_mode="single",
-        default="M",
-        key="tab2_sex",
-    )
+        df = mortality.copy()
 
-    mortality = mortality.query("Year == @tab2_year & sex == @tab2_sex")
+        # Create year slider to filter dataset
+        tab2_year = st.slider(
+            label="**Forecast Year:**",
+            min_value=df["Year"].min(),
+            max_value=df["Year"].max(),
+            key="tab2_year",
+        )
 
-    # Show mortality rates in a line chart
-    fig = px.line(
-            mortality,
+        # Create sex selector and filter line chart
+        tab2_sex = st.pills(
+            label="**Sex:**",
+            options=["M", "F"],
+            selection_mode="single",
+            default="M",
+            key="sub_tab1_sex",
+        )
+
+        df = df.query("Year == @tab2_year & sex == @tab2_sex")
+
+        # Show mortality rates in a line chart
+        fig = px.line(
+            df,
             x="Age",
             y="rate_death",
             range_x=[0, 110],
-            range_y=[0, mortality["rate_death"].max() + 0.01],
+            range_y=[0, df["rate_death"].max() + 0.01],
             color="Race/Ethnicity",
             title="San Diego Region: Mortality Rates",
             labels={"rate_death": "", "Race/Ethnicity": ""},
             line_shape="spline",
         ).update_layout(legend=dict(orientation="h", y=1.15))
 
-    st.plotly_chart(fig)
+        st.plotly_chart(fig)
 
-    # Calculate rate-based life expectancy for all race/ethnicity groups
-    lfe = (
-        mortality.groupby("Race/Ethnicity")["rate_death"]
-        .apply(lambda x: report_utils.life_expectancy(q_x=x.tolist(), age=0))
-        .reset_index(0)
-    ).rename(columns={"rate_death": "Life Expectancy"})
+        # Calculate rate-based life expectancy for all race/ethnicity groups
+        lfe = (
+            df.groupby("Race/Ethnicity")["rate_death"]
+            .apply(lambda x: report_utils.life_expectancy(q_x=x.tolist(), age=0))
+            .reset_index(0)
+        ).rename(columns={"rate_death": "Life Expectancy"})
 
-    # Calculate implied life expectancy for San Diego County using the components of change
-    lfe_sd = report_utils.life_expectancy(
-        q_x=(
-            st.session_state.components_data
-            .query("year == @tab2_year & sex == @tab2_sex")
-            .merge(
-                right=st.session_state.population_data,
-                on=["year", "race", "sex", "age"],
-            )
-            .groupby("age")[["deaths", "pop"]]
-            .sum()
-            .assign(rate_death=lambda x: x["deaths"] / x["pop"])["rate_death"]
-            .fillna(0)  # implied mortality rates for 0 population categories
-        ).tolist(),
-        age=0,
-    )
+        # Calculate implied life expectancy for San Diego County using the components of change
+        lfe_sd = report_utils.life_expectancy(
+            q_x=(
+                st.session_state.components_data.query(
+                    "year == @tab2_year & sex == @tab2_sex"
+                )
+                .merge(
+                    right=st.session_state.population_data,
+                    on=["year", "race", "sex", "age"],
+                )
+                .groupby("age")[["deaths", "pop"]]
+                .sum()
+                .assign(rate_death=lambda x: x["deaths"] / x["pop"])["rate_death"]
+                .fillna(0)  # implied mortality rates for 0 population categories
+            ).tolist(),
+            age=0,
+        )
 
-    # Display life expectancy
-    st.dataframe(
-        pd.concat(
-            [
-                lfe,
-                pd.DataFrame(
-                    {
-                        "Race/Ethnicity": "San Diego County",
-                        "Life Expectancy": lfe_sd,
-                    },
-                    index=[0],
-                ),
-            ],
-            ignore_index=True,
-        ),
-        hide_index=True,
-        column_config={
-            "Life Expectancy": st.column_config.NumberColumn(format="localized")
-        },
-    )
+        # Display life expectancy
+        st.dataframe(
+            pd.concat(
+                [
+                    lfe,
+                    pd.DataFrame(
+                        {
+                            "Race/Ethnicity": "San Diego County",
+                            "Life Expectancy": lfe_sd,
+                        },
+                        index=[0],
+                    ),
+                ],
+                ignore_index=True,
+            ),
+            hide_index=True,
+            column_config={
+                "Life Expectancy": st.column_config.NumberColumn(format="localized")
+            },
+        )
+
+    with sub_tab2:
+
+        df = mortality.copy()
+
+        # Create sex selector and filter line chart
+        tab2_sex = st.pills(
+            label="**Sex:**",
+            options=["M", "F"],
+            selection_mode="single",
+            default="M",
+            key="sub_tab2_sex",
+        )
+
+        df = df.query("sex == @tab2_sex")
+
+        # Calculate rate-based life expectancy for all race/ethnicity groups
+        lfe = (
+            df.groupby(["Race/Ethnicity", "Year", "sex"])["rate_death"]
+            .apply(lambda x: report_utils.life_expectancy(q_x=x.tolist(), age=0))
+            .reset_index()
+            .rename(columns={"rate_death": "Life Expectancy", "sex": "Sex"})
+        )[["Race/Ethnicity", "Year", "Sex", "Life Expectancy"]]
+
+        fig = px.line(
+            lfe,
+            x="Year",
+            y="Life Expectancy",
+            range_x=[lfe["Year"].min(), lfe["Year"].max() + 2],
+            color="Race/Ethnicity",
+            title="San Diego Region: Life Expectancy at Birth",
+        ).update_layout(legend=dict(orientation="h", y=1.15))
+        st.plotly_chart(fig)
+
 
 # Migration Rates
 with tab3:
@@ -206,26 +243,25 @@ with tab3:
 
     # Show net migration rates in a line chart
     fig = px.line(
-            migration,
-            x="Age",
-            y="rate_net",
-            range_x=[0, 110],
-            range_y=[
-                -abs(migration["rate_net"]).max() - 0.01,
-                abs(migration["rate_net"]).max() + 0.01,
-            ],
-            color="Race/Ethnicity",
-            title="San Diego Region: Net Migration Rates",
-            labels={"rate_net": "", "Race/Ethnicity": ""},
-            line_shape="spline",
-        ).update_layout(legend=dict(orientation="h", y=1.15))
-    
+        migration,
+        x="Age",
+        y="rate_net",
+        range_x=[0, 110],
+        range_y=[
+            -abs(migration["rate_net"]).max() - 0.01,
+            abs(migration["rate_net"]).max() + 0.01,
+        ],
+        color="Race/Ethnicity",
+        title="San Diego Region: Net Migration Rates",
+        labels={"rate_net": "", "Race/Ethnicity": ""},
+        line_shape="spline",
+    ).update_layout(legend=dict(orientation="h", y=1.15))
+
     st.plotly_chart(fig)
 
     # Display the Race/Ethnicity composition of migrants in a table
     migrants = (
-        st.session_state.components_data
-        .query("year == @tab3_year & sex == @tab3_sex")
+        st.session_state.components_data.query("year == @tab3_year & sex == @tab3_sex")
         .groupby("race")[["ins", "outs"]]
         .sum()
         .assign(net=lambda x: x["ins"] - x["outs"])
