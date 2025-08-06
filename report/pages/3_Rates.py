@@ -207,7 +207,13 @@ with tab2:
             range_x=[lfe["Year"].min(), lfe["Year"].max() + 2],
             color="Race/Ethnicity",
             title="San Diego Region: Life Expectancy at Birth",
-        ).update_layout(legend=dict(orientation="h", y=1.15))
+        ).update_layout(
+            title=dict(
+                text="San Diego Region: Life Expectancy at Birth",
+                y=1,
+            ),
+            legend=dict(orientation="h", y=1.25),
+        )
         st.plotly_chart(fig)
 
 
