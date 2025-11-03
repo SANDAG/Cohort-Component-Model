@@ -64,6 +64,7 @@ direction TB
         launch INT
         horizon INT
     }
+
     outputs_components {
         run_id INT UK, FK
         year INT UK
@@ -75,6 +76,7 @@ direction TB
         ins INT
         outs INT
     }
+
     outputs_population {
         run_id INT UK, FK
         year INT UK
@@ -96,6 +98,7 @@ direction TB
         workers2 INT
         workers3 INT
     }
+    
     outputs_rates {
         run_id INT UK, FK
         year INT UK
