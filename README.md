@@ -50,7 +50,83 @@ sql:
   database: "<SqlDatabaseName>"
 ```
 ### Production Database Schema
-![input](./documentation/Database%20Diagram.png)
+```mermaid
+erDiagram
+direction TB
+
+    metadata_run {
+        run_id INT PK
+        user NVARCHAR(100)
+        date DATETIME
+        version NVARCHAR(50)
+        comments NVARCHAR(200)
+        loaded BIT
+        launch INT
+        horizon INT
+    }
+
+    outputs_components {
+        run_id INT UK, FK
+        year INT UK
+        race NVARCHAR(150) UK
+        sex NVARCHAR(5) UK
+        age INT UK
+        deaths INT
+        births INT
+        ins INT
+        outs INT
+    }
+
+    outputs_population {
+        run_id INT UK, FK
+        year INT UK
+        race NVARCHAR(150) UK
+        sex NVARCHAR(3) UK
+        age INT UK
+        pop INT
+        pop_mil INT
+        gq INT
+        hh INT
+        hh_head_lf INT
+        child1 INT
+        senior1 INT
+        size1 INT
+        size2 INT
+        size3 INT
+        workers0 INT
+        workers1 INT
+        workers2 INT
+        workers3 INT
+    }
+    
+    outputs_rates {
+        run_id INT UK, FK
+        year INT UK
+        race NVARCHAR(150) UK
+        sex NVARCHAR(3) UK
+        age INT UK
+        rate_birth FLOAT
+        rate_death FLOAT
+        rate_in FLOAT
+        rate_out FLOAT
+        rate_gq FLOAT
+        rate_hh FLOAT
+        rate_hh_head_lf FLOAT
+        rate_size1 FLOAT
+        rate_size2 FLOAT
+        rate_size3 FLOAT
+        rate_child1 FLOAT
+        rate_senior1 FLOAT
+        rate_workers0 FLOAT
+        rate_workers1 FLOAT
+        rate_workers2 FLOAT
+        rate_workers3 FLOAT
+    }
+
+    outputs_components ||--o{ metadata_run : "run_id"
+    outputs_population ||--o{ metadata_run : "run_id"
+    outputs_rates ||--o{ metadata_run : "run_id"
+```
 
 ### Streamlit Report App
 This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder or from the production SQL database specified in `secrets.yml`. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/.
