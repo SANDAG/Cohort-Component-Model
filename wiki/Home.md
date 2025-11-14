@@ -23,7 +23,7 @@ SANDAG's Cohort Component Module consists of input data modules, the main foreca
 | [Birth (Fertility)](https://github.com/SANDAG/Cohort-Component-Model/wiki/Birth-Rates) | Crude birth rates by race and single year of age. |
 | [Migration](https://github.com/SANDAG/Cohort-Component-Model/wiki/Migration-Rates) | Crude in/out migration rates by race, sex, and single year of age. |
 | [Formation Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Formation-Rates) | Crude group quarters and household formation rates by race, sex, and single year of age. |
-| [Household Characteristics Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Household-Characteristic-Rates) | Crude household characteristics rates calculated within race, sex, and single year of age for each increment from the base year up to the launch year. |
+| [Household Characteristics Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Household-Characteristics-Rates) | Crude household characteristics rates calculated within race, sex, and single year of age for each increment from the base year up to the launch year. |
 
 #### Table 2: Calculators and Annual Cycle
 | Module | Description |
