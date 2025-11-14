@@ -10,7 +10,7 @@
         <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Birth-Rates">Birth Rates</a></li>
         <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Migration-Rates">Migration Rates</a></li>
         <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Formation-Rates">Formation Rates</a></li>
-        <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Household-Characteristic-Rates">Household Characteristics Rates</a></li>
+        <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Household-Characteristics-Rates">Household Characteristics Rates</a></li>
     </ul>
 </details>
 <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Population-Calculator">Population Calculator</a></li>
