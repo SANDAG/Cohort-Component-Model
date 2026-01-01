@@ -1,7 +1,7 @@
 ---
 name: Documentation Request
 about: Suggest fix or addition to documentation
-title: "[DOC]"
+title: "[DOC] "
 type: "Documentation"
 assignees: ''
 ---
