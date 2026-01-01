@@ -1,7 +1,7 @@
 ---
 name: Warning
 about: Data and/or code needs to be double checked
-title: "[Warning]"
+title: "[Warning] "
 type: "Warning"
 assignees: ''
 ---
