@@ -1,0 +1,15 @@
+[project]
+name = "Cohort-Component-Model"
+version = "0.0.0"  # not used
+requires-python = ">=3.14"
+dependencies = [
+    "black>=26.0.0,<27.0.0",
+    "iteround>=1.0.4,<2.0.0",
+    "numpy>=2.4.2,<3.0.0",
+    "pandas>=2.3.3,<3.0.0",
+    "plotly>=6.5.0,<7.0.0",
+    "pymssql>=2.3.11,<3.0.0",
+    "pyyaml>=6.0.3,<7.0.0",
+    "streamlit>=1.53.1,<2.0.0",
+    "sqlalchemy>=2.0.46,<3.0.0",
+]
