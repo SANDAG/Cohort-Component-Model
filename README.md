@@ -129,13 +129,7 @@ direction TB
 ```
 
 ### Streamlit Report App
-This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder or from the production SQL database specified in `secrets.yml`. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/.
-
-#### Prerequisites
-Clone the repository and ensure an installation of [uv](https://docs.astral.sh/uv/getting-started/installation/) exists. Create a local virtual environment by running `uv venv` then `uv sync` in the command line. Ensure that a `secrets.yml` file exists
-
-#### Generate validation reports
-Run the Streamlit app in the base project directory with the following command.
+This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder or from the production SQL database specified in `secrets.yml`. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/. Run the Streamlit app in the base project directory with the following command.
 
 ```cmd
 streamlit run report/CCM_Validation_Report.py
