@@ -26,8 +26,8 @@ DECLARE @pums_qry nvarchar(max) =
     ELSE NULL END;
 
 -- Declare temporary table to insert results of ACS PUMS query
-DROP TABLE IF EXISTS #pums_tbl
-CREATE TABLE #pums_tbl (
+DROP TABLE IF EXISTS [#pums_tbl]
+CREATE TABLE [#pums_tbl] (
     [ST] varchar(2) NOT NULL,
     [PUMA00] varchar(5) NULL,
     [PUMA10] varchar(5) NULL,
@@ -46,7 +46,7 @@ CREATE TABLE #pums_tbl (
 );
 
 -- Insert ACS PUMS query results into temporary table
-INSERT INTO #pums_tbl
+INSERT INTO [#pums_tbl]
 EXECUTE sp_executesql @pums_qry;
 
 
@@ -157,7 +157,7 @@ with [transformed_tbl] AS (
                 AND ([ST] != '06' OR ([ST] = '06' AND [PUMA00] NOT IN (SELECT DISTINCT PUMA FROM [acs].[pums].[vi_1y_2010_households_sd]))) -- Currently reside not in San Diego County,  defined by state being not California and PUMA of residence being not in a list of San Diego County PUMAs
                 THEN [PWGTP] -- Count persons using the person weight variable
              ELSE 0 END AS [out] -- Create table, called out, for count of out-migrants from San Diego County
-    FROM #pums_tbl
+    FROM [#pums_tbl]
 )
 -- Output final result set of in/out migrants by age/sex/ethnicity
 SELECT

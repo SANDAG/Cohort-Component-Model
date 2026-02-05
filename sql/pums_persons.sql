@@ -3,7 +3,7 @@
 
 
 -- Create shell table of required race, sex, and age variables with necessary categories: Age: 0-110; Sex: F, M; Race: 7 Options
-DROP TABLE IF EXISTS [tt_shell];
+DROP TABLE IF EXISTS [#tt_shell];
 WITH [age] AS (
     SELECT 0 AS [age]  -- Begin with zero
         UNION ALL
@@ -25,7 +25,7 @@ WITH [age] AS (
     ) AS [tt] ([race])
 )
 SELECT [age], [sex], [race]
-INTO [tt_shell]
+INTO [#tt_shell]
 FROM [age]
 CROSS JOIN [sex]
 CROSS JOIN [race]
@@ -109,9 +109,9 @@ WITH [persons] AS (
     GROUP BY [SERIALNO]
 )
 SELECT
-    [tt_shell].[age],
-    [tt_shell].[sex],
-    [tt_shell].[race],
+    [#tt_shell].[age],
+    [#tt_shell].[sex],
+    [#tt_shell].[race],
     ISNULL(SUM([PWGTP]), 0) AS [pop],  -- Total population
     SUM(CASE WHEN [MIL] = '1' THEN [PWGTP] ELSE 0 END) AS [pop_mil],  -- Active-duty military 
     SUM(CASE WHEN [gq] = 1 THEN [PWGTP] ELSE 0 END) AS [pop_gq],  -- Group quarters population 
@@ -130,9 +130,9 @@ SELECT
 FROM [persons]
 INNER JOIN [hh_info]
     ON [persons].[serialno] = [hh_info].[serialno]
-RIGHT OUTER JOIN [tt_shell]
-    ON [persons].[age] = [tt_shell].[age]
-    AND [persons].[sex] = [tt_shell].[sex]
-    AND [persons].[race] = [tt_shell].[race]
-GROUP BY [tt_shell].[age], [tt_shell].[sex], [tt_shell].[race]
-ORDER BY [tt_shell].[age], [tt_shell].[sex], [tt_shell].[race]
+RIGHT OUTER JOIN [#tt_shell]
+    ON [persons].[age] = [#tt_shell].[age]
+    AND [persons].[sex] = [#tt_shell].[sex]
+    AND [persons].[race] = [#tt_shell].[race]
+GROUP BY [#tt_shell].[age], [#tt_shell].[sex], [#tt_shell].[race]
+ORDER BY [#tt_shell].[age], [#tt_shell].[sex], [#tt_shell].[race]
