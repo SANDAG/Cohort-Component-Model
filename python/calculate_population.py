@@ -121,8 +121,8 @@ def calculate_population(
             on=["race", "sex", "age"],
         )
         .assign(
-            gq=lambda x: x["pop"] * x["rate_gq"],
-            hh=lambda x: (x["pop"] - x["pop_mil"]) * x["rate_hh"],
+            gq=lambda x: round(x["pop"] * x["rate_gq"]),
+            hh=lambda x: round((x["pop"] - x["pop_mil"]) * x["rate_hh"]),
         )
         .merge(
             right=rates["hh_characteristics"],
@@ -130,16 +130,16 @@ def calculate_population(
             on=["race", "sex", "age"],
         )
         .assign(
-            hh_head_lf=lambda x: x["hh"] * x["rate_hh_head_lf"],
-            size1=lambda x: x["hh"] * x["rate_size1"],
-            size2=lambda x: x["hh"] * x["rate_size2"],
-            size3=lambda x: x["hh"] * x["rate_size3"],
-            child1=lambda x: x["hh"] * x["rate_child1"],
-            senior1=lambda x: x["hh"] * x["rate_senior1"],
-            workers0=lambda x: x["hh"] * x["rate_workers0"],
-            workers1=lambda x: x["hh"] * x["rate_workers1"],
-            workers2=lambda x: x["hh"] * x["rate_workers2"],
-            workers3=lambda x: x["hh"] * x["rate_workers3"],
+            hh_head_lf=lambda x: round(x["hh"] * x["rate_hh_head_lf"]),
+            size1=lambda x: round(x["hh"] * x["rate_size1"]),
+            size2=lambda x: round(x["hh"] * x["rate_size2"]),
+            size3=lambda x: round(x["hh"] * x["rate_size3"]),
+            child1=lambda x: round(x["hh"] * x["rate_child1"]),
+            senior1=lambda x: round(x["hh"] * x["rate_senior1"]),
+            workers0=lambda x: round(x["hh"] * x["rate_workers0"]),
+            workers1=lambda x: round(x["hh"] * x["rate_workers1"]),
+            workers2=lambda x: round(x["hh"] * x["rate_workers2"]),
+            workers3=lambda x: round(x["hh"] * x["rate_workers3"]),
         )
         .fillna(0)
     )
