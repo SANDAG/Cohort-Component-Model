@@ -5,8 +5,9 @@
 import logging
 import numpy as np
 import pandas as pd
-from python.utils import adjust_sum, distribute_excess
 import sqlalchemy as sql
+
+import python.utils as utils
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ def get_hh_characteristic_rates(
                             pums_persons_df[v["col"]] * scale_pct
                         )
                         # Distribute excess if any characteristic exceeds total households
-                        pums_persons_df[v["col"]] = distribute_excess(
+                        pums_persons_df[v["col"]] = utils.distribute_excess(
                             df=pums_persons_df, subset=v["col"], total="pop_hh_head"
                         )
                 if v["rate"] is not None:
@@ -175,7 +176,7 @@ def get_hh_characteristic_rates(
         ]
 
         for group in groupings:
-            pums_persons_df[group] = adjust_sum(
+            pums_persons_df[group] = utils.adjust_sum(
                 df=pums_persons_df, cols=group, sum=1, option="equals"
             )
 

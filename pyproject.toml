@@ -4,7 +4,6 @@ version = "0.0.0"  # not used
 requires-python = ">=3.11"
 dependencies = [
     "black>=26.0.0,<27.0.0",
-    "iteround>=1.0.4,<2.0.0",
     "numpy>=2.4.2,<3.0.0",
     "pandas>=2.3.3,<3.0.0",
     "plotly>=6.5.0,<7.0.0",
