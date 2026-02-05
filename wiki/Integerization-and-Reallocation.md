@@ -70,7 +70,7 @@ Additionally, keep in mind that this ASE balancing is all a zero-sum game, that 
 | --- | --- | --- |
 | `smallest` | The smallest categories (typically NH-AIAN) will consistently be decreased across all MGRAs in the county | A decrease in NH-AIAN across all MGRAs in the county forces a significant amount of NH-AIAN into MGRAs where NH-AIAN is not the smallest category |
 | `largest_difference` | The categories that were rounded up the most (typically NH-AIAN) will consistently be decreased across all MGRAs in the county | A decrease in NH-AIAN across all MGRAs in the county heavily concentrates NH-AIAN into MGRAs where NH-AIAN is not the category with the most rounding up |
-| `largest` | The largest categories (typically Hispanic or NH-White) will consistently be decrease across all MGRAs in the county | A decrease in Hispanic/NH-White across all MGRAs in the county forces a significant amount of Hispanic/NH-White into MGRAs where Hispanic/NH-White is not the largest category |
+| `largest` | The largest categories (typically Hispanic or NH-White) will consistently be decreased across all MGRAs in the county | A decrease in Hispanic/NH-White across all MGRAs in the county forces a significant amount of Hispanic/NH-White into MGRAs where Hispanic/NH-White is not the largest category |
 
 None of the above changes are acceptable, as they result in ASE data can deviate from the ACS beyond the listed margins of errors. Therefore, the `weighted_random` methodology is used instead. The main difference of course being that the `weighted_random` methodology does not consistently choose the exact same ASE categories, only that it mostly does so.
 
