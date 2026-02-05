@@ -1,10 +1,12 @@
 """Methods for calculating household/population datasets."""
 
-from iteround import saferound
 import logging
+import numpy as np
 import pandas as pd
-from python.utils import reallocate_group_integers, reallocate_integers
 
+import python.utils as utils
+
+generator = np.random.default_rng(utils.RANDOM_SEED)
 logger = logging.getLogger(__name__)
 
 
@@ -65,18 +67,16 @@ def apply_controls(
                     if v["control"] == "hh":
                         for sub_k, sub_v in FIELD_MAP.items():
                             if sub_v["group"] == "households":
-                                pop_df[sub_v["col"]] = pop_df[sub_v["col"]] * scale_pct
+                                pop_df[sub_v["col"]] = round(pop_df[sub_v["col"]] * scale_pct)
                     # Pass total population scaling to all related fields regardless if they are controlled or not
                     elif v["control"] == "pop":
                         for sub_k, sub_v in FIELD_MAP.items():
                             # Do not pass total population scaling to Military
                             if sub_k != "Military":
                                 if sub_v["group"] == "population":
-                                    pop_df[sub_v["col"]] = (
-                                        pop_df[sub_v["col"]] * scale_pct
-                                    )
+                                    pop_df[sub_v["col"]] = round(pop_df[sub_v["col"]] * scale_pct)
                     else:
-                        pop_df[v["col"]] = pop_df[v["col"]] * scale_pct
+                        pop_df[v["col"]] = round(pop_df[v["col"]] * scale_pct)
                 else:
                     logger.warning("No household control total provided for: " + k)
 
@@ -187,24 +187,25 @@ def integerize_population(
     for k, v in FIELD_MAP.items():
         # Round fields to integer preserving sum
         if pop_df[v["col"]].dtype.kind != "i":
-            pop_df[v["col"]] = saferound(pop_df[v["col"]], 0)
-            pop_df[v["col"]] = pop_df[v["col"]].astype(int)
+            pop_df[v["col"]] = utils.integerize_1d(
+                data=pop_df[v["col"]], control=None, generator=generator
+            )
 
         # Reallocate integers if values exceed totals
         if v["group"] == "households":
             # For total households the total population is the maximum
             if v["col"] == "hh":
-                pop_df[v["col"]] = reallocate_integers(
+                pop_df[v["col"]] = utils.reallocate_integers(
                     df=pop_df, subset=v["col"], total="pop"
                 )
             # For all household related fields the total households is the maximum
             else:
-                pop_df[v["col"]] = reallocate_integers(
+                pop_df[v["col"]] = utils.reallocate_integers(
                     df=pop_df, subset=v["col"], total="hh"
                 )
         # For all population related fields the total population is the maximum
         elif v["group"] == "population" and v["col"] != "pop":
-            pop_df[v["col"]] = reallocate_integers(
+            pop_df[v["col"]] = utils.reallocate_integers(
                 df=pop_df, subset=v["col"], total="pop"
             )
         else:
@@ -214,7 +215,9 @@ def integerize_population(
     # Do not allow GQs + HHs > Total Population
     pop_df["pop_minus_hh"] = pop_df["pop"] - pop_df["hh"]
 
-    pop_df["gq"] = reallocate_integers(df=pop_df, subset="gq", total="pop_minus_hh")
+    pop_df["gq"] = utils.reallocate_integers(
+        df=pop_df, subset="gq", total="pop_minus_hh"
+    )
 
     pop_df.drop(labels="pop_minus_hh", axis=1, inplace=True)
 
@@ -229,7 +232,7 @@ def integerize_population(
     }
 
     for k, v in hh_field_groups.items():
-        pop_df[v["cols"]] = reallocate_group_integers(
+        pop_df[v["cols"]] = utils.reallocate_group_integers(
             df=pop_df, cols=v["cols"], total=v["total"]
         )
 

@@ -4,8 +4,9 @@
 
 import logging
 import pandas as pd
-from python.utils import adjust_sum, distribute_excess
 import sqlalchemy as sql
+
+import python.utils as utils
 
 logger = logging.getLogger(__name__)
 
@@ -76,10 +77,10 @@ def get_formation_rates(
 
         # Distribute excess head of household and group quarters population
         # This is done to avoid formation rates > 1
-        pums_persons_df["pop_gq"] = distribute_excess(
+        pums_persons_df["pop_gq"] = utils.distribute_excess(
             df=pums_persons_df, subset="pop_gq", total="pop"
         )
-        pums_persons_df["pop_hh_head"] = distribute_excess(
+        pums_persons_df["pop_hh_head"] = utils.distribute_excess(
             df=pums_persons_df, subset="pop_hh_head", total="pop_hh"
         )
 
@@ -123,7 +124,7 @@ def get_formation_rates(
         # Combine Formation Rates
         # Adjust categories where sum of formation rates > 1
         rates = pd.concat([rates_70under, rates_70plus], ignore_index=True)
-        rates[["rate_gq", "rate_hh"]] = adjust_sum(
+        rates[["rate_gq", "rate_hh"]] = utils.adjust_sum(
             df=rates, cols=["rate_gq", "rate_hh"], sum=1, option="exceeds"
         )
 

@@ -2,14 +2,24 @@
 
 import pathlib
 
+import math
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 import yaml
 
 
+#########
+# PATHS #
+#########
+
 # Store project root folder
 ROOT_FOLDER = pathlib.Path(__file__).parent.resolve().parent
+
+
+#####################
+# SQL CONFIGURATION #
+#####################
 
 # Load secrets YAML file
 try:
@@ -22,6 +32,18 @@ except IOError:
 SQL_ENGINE = sql.create_engine(
     "mssql+pymssql://" + _secrets["sql"]["server"] + "/" + _secrets["sql"]["database"]
 )
+
+
+##############################
+# UTILITY LISTS AND MAPPINGS #
+##############################
+
+RANDOM_SEED = 42  # Seed for random number generation to ensure reproducibility
+
+
+#####################
+# UTILITY FUNCTIONS #
+#####################
 
 
 def _adjust_weights(x: list[float | int], w: list[float | int]) -> list[list]:
@@ -180,6 +202,181 @@ def distribute_excess(df: pd.DataFrame, subset: str, total: str) -> pd.Series:
 
     else:
         raise ValueError("All columns must be integer or floating point.")
+
+
+def integerize_1d(
+    data: np.ndarray | list | pd.Series,
+    control: int | float | None = None,
+    methodology: str = "weighted_random",
+    generator: np.random.Generator | None = None,
+) -> np.ndarray:
+    """Safe rounding of 1-dimensional array-like structures.
+
+    After some basic input data validation, data is rounded, then rounding error is
+    corrected. If input control is zero, the output is also all zero. If input control
+    is non-zero but all data is zero, values at the front of the array will be increased
+    by one
+
+    Instead of using a basic round, this function instead always rounds up, assuming
+    there is any non-zero decimal part. This ensures that when small values (less than
+    .5) are passed in, we do not round them down to zero. This greatly helps balance
+    and control our tightly restricted data, as simply having values be one instead of
+    zero gives us much more flexibility in manual adjustment.
+
+    Args:
+        data (np.ndarray | list | pd.Series): An array-like structure of float or
+            integer values
+        control (int | float | None): Optional control value to scale the input data
+            such that the final sum of the elements exactly the control value. If not
+            value is provided, then the sum of the input data will be preserved
+        methodology (str): How to adjust for rounding error. Defaults to
+            "weighted_random". Valid inputs are:
+            * "largest": Adjust rounding error by decreasing the largest values until
+              the control value is hit
+            * "smallest": Adjust rounding error by decreasing the smallest non-zero
+              until the control value is hit
+            * "largest_difference": Adjust rounding error by decreasing the rounded
+              values with the largest change from the original values until the control
+              value is hit
+            * "weighted_random": Adjust rounding error by decreasing the rounded values
+              randomly, with more weight given to those that had a larger change. This
+              methodology requires the "generator" parameter to be provided
+        generator (np.random.Generator | None): A seeded random generator used to
+            select values to change. This is intentionally required from outside the
+            function, as if this function created a new seeded generator upon every
+            call, it could consistently choose the same categories due to the same
+            random state.
+
+    Returns:
+        np.ndarray: Integerized data preserving sum or control value
+
+    Raises:
+        TypeError: If any of the input variables don't match the correct type
+        ValueError: If negative values are encountered in the input variables
+        ValueError: If no control value is provided and the input data does not sum to
+            an integer
+    """
+    # Check rounding error methodology
+    allowed_methodology = [
+        "largest",
+        "smallest",
+        "largest_difference",
+        "weighted_random",
+    ]
+    if methodology not in allowed_methodology:
+        raise ValueError(
+            f"Input parameter 'methodology' must be one of {str(allowed_methodology)}"
+        )
+
+    # Check a random generator is passed if we are doing "weighted_random"
+    if methodology == "weighted_random":
+        if generator is None:
+            raise ValueError(
+                f"Input parameter 'generator' must be provided when the 'methodology' "
+                f"is '{methodology}'"
+            )
+        if type(generator) != np.random.Generator:
+            raise ValueError(
+                f"Input parameter 'generator' must be of type 'np.random.Generator', "
+                f"not {type(generator)}"
+            )
+
+    # Check class of input data. If not a np.ndarray, convert to one
+    if not isinstance(data, (np.ndarray, list, pd.Series)):
+        raise TypeError(
+            f"Input parameter 'data' is of type {type(data)}, "
+            f"when it must be one of pd.Series, np.ndarray, or list"
+        )
+    if isinstance(data, list):
+        data = np.array(data)
+    elif isinstance(data, pd.Series):
+        data = data.to_numpy()
+
+    # Confirm no negative values are passed
+    if np.any(data < 0):
+        raise ValueError("Input parameter 'data' contains negative values")
+    if control is not None and control < 0:
+        raise ValueError(f"Input parameter 'control' is negative: {control}")
+
+    # If no control provided preserve current sum
+    if control is None:
+        control = np.sum(data)
+
+    # Ensure control is an integer
+    if not math.isclose(control, round(control)):  # type: ignore
+        raise ValueError(f"Input parameter 'control' must be integer: {control}")
+    else:
+        control = int(round(control))  # type: ignore
+
+    # Override if control is zero
+    if control == 0:
+        data.fill(0)
+        return data
+
+    # Override if control is not zero, but all input data is zero
+    if control is not None and control != 0 and np.all(data == 0):
+        np.add.at(data, np.arange(control), 1)
+        return data
+
+    # Scale data to match the control
+    unrounded_data = data * control / np.sum(data)
+
+    # Round every value up
+    rounded_data = np.ceil(unrounded_data).astype(int)
+
+    # Get difference between control and post-rounding sum.
+    # Since data was rounded up, it is guaranteed to be the
+    # same or larger than control, making diff non-negative.
+    diff = int(np.sum(rounded_data) - control)
+
+    # Adjust values to match difference
+    if diff == 0:
+        return rounded_data
+    else:
+
+        # Find the index values for the n largest data points
+        if methodology == "largest":
+            to_decrease = np.argsort(rounded_data, stable=True)[-diff:]
+
+        # Find the index values for the n smallest non-zero data points
+        elif methodology == "smallest":
+            # Find and store all non-zero values/indices
+            non_zero_indices = np.flatnonzero(rounded_data)
+            non_zero_values = rounded_data[non_zero_indices]
+
+            # Get index values of the n smallest non-zero data points
+            n_smallest_non_zero = np.argsort(non_zero_values, stable=True)[:diff]
+
+            # The index values correspond to non_zero_values, not to the original data.
+            # Use the reverse lookup to get the indices of the original data
+            to_decrease = non_zero_indices[n_smallest_non_zero]
+
+        # Find the index values for the n data points with the largest change after
+        # rounding
+        elif methodology == "largest_difference":
+            rounding_difference = rounded_data - unrounded_data
+            to_decrease = np.argsort(rounding_difference, stable=True)[-diff:]
+
+        # Find n random index values weighted on which had the largest change after
+        # rounding
+        elif methodology == "weighted_random":
+            rounding_difference = rounded_data - unrounded_data
+            to_decrease = generator.choice(
+                a=rounding_difference.size,
+                size=diff,
+                replace=False,
+                p=rounding_difference / rounding_difference.sum(),
+            )
+
+        # Decrease n-largest data points by one to match control
+        np.add.at(rounded_data, to_decrease, -1)
+
+        # Double check no negatives are present
+        if np.any(rounded_data < 0):
+            raise ValueError("Negative values encountered in integerized data")
+
+        # Return the data
+        return rounded_data.astype(int)
 
 
 def reallocate_integers(df: pd.DataFrame, subset: str, total: str) -> pd.Series:

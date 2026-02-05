@@ -2,11 +2,12 @@
 
 # TODO: (10-feature) Add function to allow for control totals at each increment for in/out migration.
 
-from iteround import saferound
 import numpy as np
 import pandas as pd
-from typing import Dict
-from python.utils import reallocate_integers
+
+import python.utils as utils
+
+generator = np.random.default_rng(utils.RANDOM_SEED)
 
 
 def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
@@ -49,18 +50,19 @@ def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
             suffixes=["", "_civ_surv"],
         )
         .assign(
-            births=lambda x: x["pop_mil"] * x["rate_birth"]
-            + x["pop_civ_surv"] * x["rate_birth_civ_surv"]
+            births=lambda x: round(x["pop_mil"] * x["rate_birth"]
+            + x["pop_civ_surv"] * x["rate_birth_civ_surv"])
         )
         .fillna(0)
     )
 
     # Integerize preserving sum of Births
-    df["births"] = saferound(df["births"], 0)
-    df["births"] = df["births"].astype(int)
+    df["births"] = utils.integerize_1d(
+        data=df["births"], control=None, generator=generator
+    )
 
     # Ensure Births <= Survived Population after Integerization
-    df["births"] = reallocate_integers(df=df, subset="births", total="pop_surv")
+    df["births"] = utils.reallocate_integers(df=df, subset="births", total="pop_surv")
 
     return df[["race", "sex", "age", "births"]]
 
@@ -87,15 +89,16 @@ def calculate_deaths(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
         pop_df[["race", "sex", "age", "pop", "pop_mil"]]
         .merge(right=rate, how="left", on=["race", "sex", "age"])
         .assign(pop_civ=lambda x: x["pop"] - x["pop_mil"])
-        .assign(deaths=lambda x: x["pop_civ"] * x["rate_death"])
+        .assign(deaths=lambda x: round(x["pop_civ"] * x["rate_death"]))
     )
 
     # Integerize preserving sum of Deaths
-    df["deaths"] = saferound(df["deaths"], 0)
-    df["deaths"] = df["deaths"].astype(int)
+    df["deaths"] = utils.integerize_1d(
+        data=df["deaths"], control=None, generator=generator
+    )
 
     # Ensure Deaths <= Non-Military Population after Integerization
-    df["deaths"] = reallocate_integers(df=df, subset="deaths", total="pop_civ")
+    df["deaths"] = utils.reallocate_integers(df=df, subset="deaths", total="pop_civ")
 
     return df[["race", "sex", "age", "deaths"]]
 
@@ -137,18 +140,16 @@ def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFram
             right_on=["race", "sex", "age"],
             suffixes=["", "_y"],
         )
-        .assign(ins=lambda x: x["pop_civ_surv"] * x["rate_in"])
-        .assign(outs=lambda x: x["pop_civ_surv"] * x["rate_out"])
+        .assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
+        .assign(outs=lambda x: round(x["pop_civ_surv"] * x["rate_out"]))
     )
 
     # Integerize preserving sums of Ins/Outs
-    df["ins"] = saferound(df["ins"], 0)
-    df["ins"] = df["ins"].astype(int)
-    df["outs"] = saferound(df["outs"], 0)
-    df["outs"] = df["outs"].astype(int)
+    df["ins"] = utils.integerize_1d(data=df["ins"], control=None, generator=generator)
+    df["outs"] = utils.integerize_1d(data=df["outs"], control=None, generator=generator)
 
     # Ensure Outs <= Survived Population after Integerization
-    df["outs"] = reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
+    df["outs"] = utils.reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
 
     return df[["race", "sex", "age", "ins", "outs"]]
 
@@ -176,17 +177,15 @@ def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
     )
 
     df["pop"] = np.where(
-        df["sex"] == "M", df["births"] * male_pct, df["births"] * (1 - male_pct)
+        df["sex"] == "M", round(df["births"] * male_pct), round(df["births"] * (1 - male_pct))
     )
 
-    df["pop"] = saferound(df["pop"], 0)
+    df["pop"] = utils.integerize_1d(data=df["pop"], control=None, generator=generator)
 
     return df[["race", "sex", "age", "pop"]]
 
 
-def increment_population(
-    pop_df: pd.DataFrame, rates: dict
-) -> Dict[pd.DataFrame, pd.DataFrame]:
+def increment_population(pop_df: pd.DataFrame, rates: dict) -> dict[str, pd.DataFrame]:
     """Calculate components of change and create input population for next
     increment.
 
@@ -198,10 +197,9 @@ def increment_population(
             by race, sex, and single year of age
 
     Returns:
-        Dict[pd.DataFrame, pd.DataFrame]: Dictionary with two DAtaFrame
-            elementes. The first containing the components of change for the
-            current population. The second containing the input population for
-            the next increment.
+        dict[str, pd.DataFrame]: Dictionary with two DataFrame elements. The
+        first containing the components of change for the current population.
+        The second containing the input population for the next increment.
     """
     # Calculate Components of Change; Deaths, Births, and Migration
     pop_df = pop_df.merge(
@@ -242,7 +240,9 @@ def increment_population(
     # Ensure the Military Population is not greater than the Population
     pop_inc = pop_inc.sort_values(by=["race", "sex", "age"]).reset_index()
     pop_inc["pop_mil"] = pop_inc["pop_mil"].shift(periods=-1, fill_value=0)
-    pop_inc["pop_mil"] = reallocate_integers(df=pop_inc, subset="pop_mil", total="pop")
+    pop_inc["pop_mil"] = utils.reallocate_integers(
+        df=pop_inc, subset="pop_mil", total="pop"
+    )
 
     # Add the newborns into the dataset setting their Military Population to 0
     pop_inc = pd.concat([newborns.assign(pop_mil=0), pop_inc])

@@ -1,8 +1,9 @@
 """Generate active-duty military population by race, sex, and single year of age."""
 
 import pandas as pd
-from python.utils import distribute_excess
 import sqlalchemy as sql
+
+import python.utils as utils
 
 
 def get_active_duty_military(
@@ -120,7 +121,7 @@ def get_active_duty_military(
         # To categories where it is less than the total population using the
         # Distribution of active-duty military within categories where the
         # Active-duty military is less than the total population
-        df["pop_mil"] = distribute_excess(df=df, subset="pop_mil", total="pop")
+        df["pop_mil"] = utils.distribute_excess(df=df, subset="pop_mil", total="pop")
 
         return df[["race", "sex", "age", "pop", "pop_mil"]]
 
