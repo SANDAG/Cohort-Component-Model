@@ -156,6 +156,8 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         )
 
     # Integerize calculated households/population ----
+    # Sort before integerizing to ensure consistent ordering
+    pop_df.sort_values(by=["race", "sex", "age"], inplace=True)
     pop_df = integerize_population(pop_df=pop_df)
 
     # Write out calculated households/population and rates ----
