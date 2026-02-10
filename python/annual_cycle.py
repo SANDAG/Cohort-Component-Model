@@ -56,7 +56,7 @@ def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
             )
         )
         .fillna(0)
-        .sort_values(by=["race", "sex", "age"], kind="stable")
+        .sort_values(by=["race", "sex", "age"])
         .reset_index(drop=True)
     )
 
@@ -94,7 +94,7 @@ def calculate_deaths(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
         .merge(right=rate, how="left", on=["race", "sex", "age"])
         .assign(pop_civ=lambda x: x["pop"] - x["pop_mil"])
         .assign(deaths=lambda x: round(x["pop_civ"] * x["rate_death"]))
-        .sort_values(by=["race", "sex", "age"], kind="stable")
+        .sort_values(by=["race", "sex", "age"])
         .reset_index(drop=True)
     )
 
@@ -148,7 +148,7 @@ def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFram
         )
         .assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
         .assign(outs=lambda x: round(x["pop_civ_surv"] * x["rate_out"]))
-        .sort_values(by=["race", "sex", "age"], kind="stable")
+        .sort_values(by=["race", "sex", "age"])
         .reset_index(drop=True)
     )
 
@@ -182,7 +182,7 @@ def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
             pop_df[pop_df["age"] == 0][["race", "sex", "age"]], how="right", on="race"
         )
         .fillna(0)
-        .sort_values(by=["race", "sex", "age"], kind="stable")
+        .sort_values(by=["race", "sex", "age"])
         .reset_index(drop=True)
     )
 
