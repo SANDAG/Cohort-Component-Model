@@ -50,10 +50,14 @@ def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
             suffixes=["", "_civ_surv"],
         )
         .assign(
-            births=lambda x: round(x["pop_mil"] * x["rate_birth"]
-            + x["pop_civ_surv"] * x["rate_birth_civ_surv"])
+            births=lambda x: round(
+                x["pop_mil"] * x["rate_birth"]
+                + x["pop_civ_surv"] * x["rate_birth_civ_surv"]
+            )
         )
         .fillna(0)
+        .sort_values(by=["race", "sex", "age"])
+        .reset_index(drop=True)
     )
 
     # Integerize preserving sum of Births
@@ -90,6 +94,8 @@ def calculate_deaths(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
         .merge(right=rate, how="left", on=["race", "sex", "age"])
         .assign(pop_civ=lambda x: x["pop"] - x["pop_mil"])
         .assign(deaths=lambda x: round(x["pop_civ"] * x["rate_death"]))
+        .sort_values(by=["race", "sex", "age"])
+        .reset_index(drop=True)
     )
 
     # Integerize preserving sum of Deaths
@@ -142,6 +148,8 @@ def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFram
         )
         .assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
         .assign(outs=lambda x: round(x["pop_civ_surv"] * x["rate_out"]))
+        .sort_values(by=["race", "sex", "age"])
+        .reset_index(drop=True)
     )
 
     # Integerize preserving sums of Ins/Outs
@@ -174,10 +182,14 @@ def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
             pop_df[pop_df["age"] == 0][["race", "sex", "age"]], how="right", on="race"
         )
         .fillna(0)
+        .sort_values(by=["race", "sex", "age"])
+        .reset_index(drop=True)
     )
 
     df["pop"] = np.where(
-        df["sex"] == "M", round(df["births"] * male_pct), round(df["births"] * (1 - male_pct))
+        df["sex"] == "M",
+        round(df["births"] * male_pct),
+        round(df["births"] * (1 - male_pct)),
     )
 
     df["pop"] = utils.integerize_1d(data=df["pop"], control=None, generator=generator)
