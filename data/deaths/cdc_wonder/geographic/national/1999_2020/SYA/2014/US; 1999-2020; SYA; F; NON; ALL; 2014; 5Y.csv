@@ -1,0 +1,164 @@
+"Notes","Single-Year Ages","Single-Year Ages Code","Sex","Sex Code","Hispanic Origin","Hispanic Origin Code",Deaths,Population,Crude Rate
+,"< 1 year","0","Female","F","Not Hispanic or Latino","2186-2",41162,7160693,574.8
+,"1 year","1","Female","F","Not Hispanic or Latino","2186-2",2862,7194445,39.8
+,"2 years","2","Female","F","Not Hispanic or Latino","2186-2",1714,7264338,23.6
+,"3 years","3","Female","F","Not Hispanic or Latino","2186-2",1295,7343620,17.6
+,"4 years","4","Female","F","Not Hispanic or Latino","2186-2",1063,7401764,14.4
+,"5 years","5","Female","F","Not Hispanic or Latino","2186-2",923,7468652,12.4
+,"6 years","6","Female","F","Not Hispanic or Latino","2186-2",837,7539513,11.1
+,"7 years","7","Female","F","Not Hispanic or Latino","2186-2",751,7551282,9.9
+,"8 years","8","Female","F","Not Hispanic or Latino","2186-2",793,7573237,10.5
+,"9 years","9","Female","F","Not Hispanic or Latino","2186-2",760,7632196,10.0
+,"10 years","10","Female","F","Not Hispanic or Latino","2186-2",743,7698208,9.7
+,"11 years","11","Female","F","Not Hispanic or Latino","2186-2",783,7750584,10.1
+,"12 years","12","Female","F","Not Hispanic or Latino","2186-2",864,7803694,11.1
+,"13 years","13","Female","F","Not Hispanic or Latino","2186-2",1017,7873817,12.9
+,"14 years","14","Female","F","Not Hispanic or Latino","2186-2",1208,7916700,15.3
+,"15 years","15","Female","F","Not Hispanic or Latino","2186-2",1506,7959467,18.9
+,"16 years","16","Female","F","Not Hispanic or Latino","2186-2",1973,8057424,24.5
+,"17 years","17","Female","F","Not Hispanic or Latino","2186-2",2348,8185740,28.7
+,"18 years","18","Female","F","Not Hispanic or Latino","2186-2",2858,8362419,34.2
+,"19 years","19","Female","F","Not Hispanic or Latino","2186-2",3307,8579231,38.5
+,"20 years","20","Female","F","Not Hispanic or Latino","2186-2",3585,8744181,41.0
+,"21 years","21","Female","F","Not Hispanic or Latino","2186-2",3995,8839780,45.2
+,"22 years","22","Female","F","Not Hispanic or Latino","2186-2",4192,8861242,47.3
+,"23 years","23","Female","F","Not Hispanic or Latino","2186-2",4356,8799565,49.5
+,"24 years","24","Female","F","Not Hispanic or Latino","2186-2",4591,8701185,52.8
+,"25 years","25","Female","F","Not Hispanic or Latino","2186-2",4696,8594799,54.6
+,"26 years","26","Female","F","Not Hispanic or Latino","2186-2",5008,8523891,58.8
+,"27 years","27","Female","F","Not Hispanic or Latino","2186-2",5070,8521839,59.5
+,"28 years","28","Female","F","Not Hispanic or Latino","2186-2",5558,8528242,65.2
+,"29 years","29","Female","F","Not Hispanic or Latino","2186-2",5946,8542323,69.6
+,"30 years","30","Female","F","Not Hispanic or Latino","2186-2",6231,8527014,73.1
+,"31 years","31","Female","F","Not Hispanic or Latino","2186-2",6475,8460264,76.5
+,"32 years","32","Female","F","Not Hispanic or Latino","2186-2",6931,8380668,82.7
+,"33 years","33","Female","F","Not Hispanic or Latino","2186-2",7148,8218948,87.0
+,"34 years","34","Female","F","Not Hispanic or Latino","2186-2",7527,8083321,93.1
+,"35 years","35","Female","F","Not Hispanic or Latino","2186-2",8013,7934792,101.0
+,"36 years","36","Female","F","Not Hispanic or Latino","2186-2",8401,7841916,107.1
+,"37 years","37","Female","F","Not Hispanic or Latino","2186-2",8857,7860809,112.7
+,"38 years","38","Female","F","Not Hispanic or Latino","2186-2",9705,7962549,121.9
+,"39 years","39","Female","F","Not Hispanic or Latino","2186-2",10693,8237752,129.8
+,"40 years","40","Female","F","Not Hispanic or Latino","2186-2",11883,8452878,140.6
+,"41 years","41","Female","F","Not Hispanic or Latino","2186-2",13126,8639922,151.9
+,"42 years","42","Female","F","Not Hispanic or Latino","2186-2",14697,8778585,167.4
+,"43 years","43","Female","F","Not Hispanic or Latino","2186-2",15888,8843086,179.7
+,"44 years","44","Female","F","Not Hispanic or Latino","2186-2",17453,8830149,197.7
+,"45 years","45","Female","F","Not Hispanic or Latino","2186-2",19133,8925339,214.4
+,"46 years","46","Female","F","Not Hispanic or Latino","2186-2",21855,9118512,239.7
+,"47 years","47","Female","F","Not Hispanic or Latino","2186-2",24354,9391271,259.3
+,"48 years","48","Female","F","Not Hispanic or Latino","2186-2",27316,9660980,282.7
+,"49 years","49","Female","F","Not Hispanic or Latino","2186-2",30947,9922891,311.9
+,"50 years","50","Female","F","Not Hispanic or Latino","2186-2",33952,10084080,336.7
+,"51 years","51","Female","F","Not Hispanic or Latino","2186-2",37288,10114547,368.7
+,"52 years","52","Female","F","Not Hispanic or Latino","2186-2",40254,10168458,395.9
+,"53 years","53","Female","F","Not Hispanic or Latino","2186-2",42585,10148672,419.6
+,"54 years","54","Female","F","Not Hispanic or Latino","2186-2",45678,10083492,453.0
+,"55 years","55","Female","F","Not Hispanic or Latino","2186-2",48356,9962846,485.4
+,"56 years","56","Female","F","Not Hispanic or Latino","2186-2",51103,9806535,521.1
+,"57 years","57","Female","F","Not Hispanic or Latino","2186-2",53586,9629067,556.5
+,"58 years","58","Female","F","Not Hispanic or Latino","2186-2",55334,9381509,589.8
+,"59 years","59","Female","F","Not Hispanic or Latino","2186-2",57349,9125011,628.5
+,"60 years","60","Female","F","Not Hispanic or Latino","2186-2",59937,8894149,673.9
+,"61 years","61","Female","F","Not Hispanic or Latino","2186-2",63035,8641935,729.4
+,"62 years","62","Female","F","Not Hispanic or Latino","2186-2",66759,8505573,784.9
+,"63 years","63","Female","F","Not Hispanic or Latino","2186-2",71835,8348732,860.4
+,"64 years","64","Female","F","Not Hispanic or Latino","2186-2",74241,7943870,934.6
+,"65 years","65","Female","F","Not Hispanic or Latino","2186-2",76509,7542305,1014.4
+,"66 years","66","Female","F","Not Hispanic or Latino","2186-2",78703,7140522,1102.2
+,"67 years","67","Female","F","Not Hispanic or Latino","2186-2",81517,6751752,1207.3
+,"68 years","68","Female","F","Not Hispanic or Latino","2186-2",82362,6164177,1336.1
+,"69 years","69","Female","F","Not Hispanic or Latino","2186-2",86782,5936972,1461.7
+,"70 years","70","Female","F","Not Hispanic or Latino","2186-2",90738,5662143,1602.5
+,"71 years","71","Female","F","Not Hispanic or Latino","2186-2",94016,5359308,1754.3
+,"72 years","72","Female","F","Not Hispanic or Latino","2186-2",95607,4973699,1922.3
+,"73 years","73","Female","F","Not Hispanic or Latino","2186-2",98390,4695144,2095.6
+,"74 years","74","Female","F","Not Hispanic or Latino","2186-2",103577,4479742,2312.1
+,"75 years","75","Female","F","Not Hispanic or Latino","2186-2",109442,4281130,2556.4
+,"76 years","76","Female","F","Not Hispanic or Latino","2186-2",115367,4069868,2834.7
+,"77 years","77","Female","F","Not Hispanic or Latino","2186-2",121990,3886600,3138.7
+,"78 years","78","Female","F","Not Hispanic or Latino","2186-2",129717,3728681,3478.9
+,"79 years","79","Female","F","Not Hispanic or Latino","2186-2",138545,3596954,3851.7
+,"80 years","80","Female","F","Not Hispanic or Latino","2186-2",148462,3449403,4304.0
+,"81 years","81","Female","F","Not Hispanic or Latino","2186-2",159365,3336647,4776.2
+,"82 years","82","Female","F","Not Hispanic or Latino","2186-2",171016,3208564,5330.0
+,"83 years","83","Female","F","Not Hispanic or Latino","2186-2",181360,3054435,5937.6
+,"84 years","84","Female","F","Not Hispanic or Latino","2186-2",192083,2884364,6659.5
+,"85 years","85","Female","F","Not Hispanic or Latino","2186-2",202219,Not Applicable,Not Applicable
+,"86 years","86","Female","F","Not Hispanic or Latino","2186-2",209108,Not Applicable,Not Applicable
+,"87 years","87","Female","F","Not Hispanic or Latino","2186-2",214421,Not Applicable,Not Applicable
+,"88 years","88","Female","F","Not Hispanic or Latino","2186-2",216362,Not Applicable,Not Applicable
+,"89 years","89","Female","F","Not Hispanic or Latino","2186-2",215795,Not Applicable,Not Applicable
+,"90 years","90","Female","F","Not Hispanic or Latino","2186-2",209645,Not Applicable,Not Applicable
+,"91 years","91","Female","F","Not Hispanic or Latino","2186-2",195086,Not Applicable,Not Applicable
+,"92 years","92","Female","F","Not Hispanic or Latino","2186-2",179665,Not Applicable,Not Applicable
+,"93 years","93","Female","F","Not Hispanic or Latino","2186-2",159368,Not Applicable,Not Applicable
+,"94 years","94","Female","F","Not Hispanic or Latino","2186-2",139040,Not Applicable,Not Applicable
+,"95 years","95","Female","F","Not Hispanic or Latino","2186-2",117869,Not Applicable,Not Applicable
+,"96 years","96","Female","F","Not Hispanic or Latino","2186-2",98193,Not Applicable,Not Applicable
+,"97 years","97","Female","F","Not Hispanic or Latino","2186-2",78564,Not Applicable,Not Applicable
+,"98 years","98","Female","F","Not Hispanic or Latino","2186-2",61122,Not Applicable,Not Applicable
+,"99 years","99","Female","F","Not Hispanic or Latino","2186-2",45360,Not Applicable,Not Applicable
+,"100+ years","100","Female","F","Not Hispanic or Latino","2186-2",94965,Not Applicable,Not Applicable
+,"Not Stated","NS","Female","F","Not Hispanic or Latino","2186-2",149,Not Applicable,Not Applicable
+"---"
+"Dataset: Underlying Cause of Death, 1999-2020"
+"Query Parameters:"
+"Title: US; 1999-2020; SYA; F; NON; ALL; 2014; 5Y"
+"Hispanic Origin: Not Hispanic or Latino"
+"Sex: Female"
+"Year/Month: 2010; 2011; 2012; 2013; 2014"
+"Group By: Single-Year Ages; Sex; Hispanic Origin"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/ucd.html for more information."
+"---"
+"Query Date: Feb 9, 2026 9:50:49 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 1999-2020 on CDC WONDER Online Database, released in 2021. Data are from the Multiple Cause of Death Files,"
+"1999-2020, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/ucd-icd10.html on Feb 9, 2026 9:50:49 PM"
+"---"
+Caveats:
+"1. Population and rates are labeled 'Not Applicable' when they include a subset of ages 85-100+ because populations are not"
+"available for those ages. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Ages 85-100."
+"2. As of April 3, 2017, the underlying cause of death has been revised for 125 deaths in 2014. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#2014-Revision."
+"3. Deaths of persons with Age ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among age groups,"
+"so are not included in age-specific counts, age-specific rates or in any age-adjusted rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"4. Deaths of persons with Hispanic origin ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among"
+"Hispanic Origin groups, so are not included in the Hispanic Origin specific counts and rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"5. Information included on the death certificate about the race and Hispanic ethnicity of the decedent is reported by the"
+"funeral director as provided by an informant, often the surviving next of kin, or, in the absence of an informant, on the basis"
+"of observation. Race and ethnicity information from the census is by self-report. To the extent that race and Hispanic origin"
+"are inconsistent between these two data sources, death rates will be biased. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Racial Differences."
+"6. The population figures for year 2020 are bridged-race estimates of the July 1 resident population, from the Vintage 2020"
+"postcensal series released by NCHS on September 22, 2021. The population figures for year 2019 are bridged-race estimates of the"
+"July 1 resident population, from the Vintage 2019 postcensal series released by NCHS on July 9, 2020. The population figures for"
+"year 2018 are bridged-race estimates of the July 1 resident population, from the Vintage 2018 postcensal series released by NCHS"
+"on June 25, 2019. The population figures for year 2017 are bridged-race estimates of the July 1 resident population, from the"
+"Vintage 2017 postcensal series released by NCHS on June 27, 2018. The population figures for year 2016 are bridged-race"
+"estimates of the July 1 resident population, from the Vintage 2016 postcensal series released by NCHS on June 26, 2017. The"
+"population figures for year 2015 are bridged-race estimates of the July 1 resident population, from the Vintage 2015 postcensal"
+"series released by NCHS on June 28, 2016. The population figures for year 2014 are bridged-race estimates of the July 1 resident"
+"population, from the Vintage 2014 postcensal series released by NCHS on June 30, 2015. The population figures for year 2013 are"
+"bridged-race estimates of the July 1 resident population, from the Vintage 2013 postcensal series released by NCHS on June 26,"
+"2014. The population figures for year 2012 are bridged-race estimates of the July 1 resident population, from the Vintage 2012"
+"postcensal series released by NCHS on June 13, 2013. The population figures for year 2011 are bridged-race estimates of the July"
+"1 resident population, from the Vintage 2011 postcensal series released by NCHS on July 18, 2012. Population figures for 2010"
+"are April 1 Census counts. The population figures for years 2001 - 2009 are bridged-race estimates of the July 1 resident"
+"population, from the revised intercensal county-level 2000 - 2009 series released by NCHS on October 26, 2012. Population"
+"figures for 2000 are April 1 Census counts. Population figures for 1999 are from the 1990-1999 intercensal series of July 1"
+"estimates. Population figures for the infant age groups are the number of live births. <br/><b>Note:</b> Rates and population"
+"figures for years 2001 - 2009 differ slightly from previously published reports, due to use of the population estimates which"
+"were available at the time of release."
+"7. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Age Group."
