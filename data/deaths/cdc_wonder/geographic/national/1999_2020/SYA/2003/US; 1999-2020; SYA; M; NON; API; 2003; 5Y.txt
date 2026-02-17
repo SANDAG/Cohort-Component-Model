@@ -1,0 +1,165 @@
+"Notes"	"Single-Year Ages"	"Single-Year Ages Code"	"Sex"	"Sex Code"	"Hispanic Origin"	"Hispanic Origin Code"	"Race"	"Race Code"	Deaths	Population	Crude Rate
+	"< 1 year"	"0"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1998	437949	456.2
+	"1 year"	"1"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	156	425987	36.6
+	"2 years"	"2"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	143	418044	34.2
+	"3 years"	"3"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	71	409834	17.3
+	"4 years"	"4"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	59	409585	14.4
+	"5 years"	"5"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	66	413594	16.0
+	"6 years"	"6"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	57	413524	13.8
+	"7 years"	"7"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	46	418192	11.0
+	"8 years"	"8"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	42	415370	10.1
+	"9 years"	"9"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	40	413717	9.7
+	"10 years"	"10"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	52	425716	12.2
+	"11 years"	"11"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	62	427300	14.5
+	"12 years"	"12"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	49	423654	11.6
+	"13 years"	"13"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	66	422523	15.6
+	"14 years"	"14"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	105	422212	24.9
+	"15 years"	"15"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	109	424251	25.7
+	"16 years"	"16"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	185	429144	43.1
+	"17 years"	"17"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	211	436881	48.3
+	"18 years"	"18"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	300	454505	66.0
+	"19 years"	"19"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	307	472984	64.9
+	"20 years"	"20"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	303	482808	62.8
+	"21 years"	"21"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	314	485715	64.6
+	"22 years"	"22"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	283	486792	58.1
+	"23 years"	"23"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	267	490960	54.4
+	"24 years"	"24"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	276	499889	55.2
+	"25 years"	"25"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	283	520160	54.4
+	"26 years"	"26"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	268	531884	50.4
+	"27 years"	"27"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	299	554506	53.9
+	"28 years"	"28"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	299	559608	53.4
+	"29 years"	"29"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	292	559903	52.2
+	"30 years"	"30"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	286	568674	50.3
+	"31 years"	"31"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	322	552297	58.3
+	"32 years"	"32"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	334	538578	62.0
+	"33 years"	"33"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	308	521802	59.0
+	"34 years"	"34"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	350	508973	68.8
+	"35 years"	"35"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	386	509276	75.8
+	"36 years"	"36"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	397	502979	78.9
+	"37 years"	"37"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	466	502571	92.7
+	"38 years"	"38"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	440	492854	89.3
+	"39 years"	"39"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	460	483733	95.1
+	"40 years"	"40"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	472	479471	98.4
+	"41 years"	"41"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	536	461218	116.2
+	"42 years"	"42"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	560	455628	122.9
+	"43 years"	"43"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	603	447276	134.8
+	"44 years"	"44"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	667	433000	154.0
+	"45 years"	"45"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	732	429697	170.4
+	"46 years"	"46"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	721	411617	175.2
+	"47 years"	"47"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	802	401510	199.7
+	"48 years"	"48"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	851	383817	221.7
+	"49 years"	"49"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	891	372074	239.5
+	"50 years"	"50"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	933	367353	254.0
+	"51 years"	"51"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	926	350489	264.2
+	"52 years"	"52"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1050	338687	310.0
+	"53 years"	"53"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1066	322892	330.1
+	"54 years"	"54"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1071	296366	361.4
+	"55 years"	"55"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1065	276174	385.6
+	"56 years"	"56"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1132	254853	444.2
+	"57 years"	"57"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1138	236991	480.2
+	"58 years"	"58"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1215	223437	543.8
+	"59 years"	"59"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1272	213239	596.5
+	"60 years"	"60"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1335	205690	649.0
+	"61 years"	"61"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1372	194156	706.6
+	"62 years"	"62"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1470	186205	789.5
+	"63 years"	"63"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1473	176630	833.9
+	"64 years"	"64"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1565	164564	951.0
+	"65 years"	"65"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1615	158246	1020.6
+	"66 years"	"66"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1612	146285	1102.0
+	"67 years"	"67"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1705	139329	1223.7
+	"68 years"	"68"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1784	129696	1375.5
+	"69 years"	"69"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1793	123321	1453.9
+	"70 years"	"70"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1812	117694	1539.6
+	"71 years"	"71"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2032	110128	1845.1
+	"72 years"	"72"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2120	105320	2012.9
+	"73 years"	"73"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2294	98951	2318.3
+	"74 years"	"74"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2314	91893	2518.1
+	"75 years"	"75"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2469	87663	2816.5
+	"76 years"	"76"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2571	81447	3156.7
+	"77 years"	"77"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2682	75528	3551.0
+	"78 years"	"78"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2687	69878	3845.3
+	"79 years"	"79"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2707	62712	4316.6
+	"80 years"	"80"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2591	56671	4572.0
+	"81 years"	"81"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2524	48559	5197.8
+	"82 years"	"82"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2454	42251	5808.1
+	"83 years"	"83"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2332	36702	6353.9
+	"84 years"	"84"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2177	30773	7074.4
+	"85 years"	"85"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2086	Not Applicable	Not Applicable
+	"86 years"	"86"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	2079	Not Applicable	Not Applicable
+	"87 years"	"87"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1938	Not Applicable	Not Applicable
+	"88 years"	"88"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1744	Not Applicable	Not Applicable
+	"89 years"	"89"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1704	Not Applicable	Not Applicable
+	"90 years"	"90"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1445	Not Applicable	Not Applicable
+	"91 years"	"91"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1321	Not Applicable	Not Applicable
+	"92 years"	"92"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	1058	Not Applicable	Not Applicable
+	"93 years"	"93"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	873	Not Applicable	Not Applicable
+	"94 years"	"94"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	703	Not Applicable	Not Applicable
+	"95 years"	"95"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	593	Not Applicable	Not Applicable
+	"96 years"	"96"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	438	Not Applicable	Not Applicable
+	"97 years"	"97"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	341	Not Applicable	Not Applicable
+	"98 years"	"98"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	216	Not Applicable	Not Applicable
+	"99 years"	"99"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	157	Not Applicable	Not Applicable
+	"100+ years"	"100"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	306	Not Applicable	Not Applicable
+	"Not Stated"	"NS"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"Asian or Pacific Islander"	"A-PI"	13	Not Applicable	Not Applicable
+"---"
+"Dataset: Underlying Cause of Death, 1999-2020"
+"Query Parameters:"
+"Title: US; 1999-2020; SYA; M; NON; API; 2003; 5Y"
+"Hispanic Origin: Not Hispanic or Latino"
+"Race: Asian or Pacific Islander"
+"Sex: Male"
+"Year/Month: 1999; 2000; 2001; 2002; 2003"
+"Group By: Single-Year Ages; Sex; Hispanic Origin; Race"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/ucd.html for more information."
+"---"
+"Query Date: Apr 18, 2025 8:38:57 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 1999-2020 on CDC WONDER Online Database, released in 2021. Data are from the Multiple Cause of Death Files,"
+"1999-2020, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/ucd-icd10.html on Apr 18, 2025 8:38:57 PM"
+"---"
+Caveats:
+"1. Population and rates are labeled 'Not Applicable' when they include a subset of ages 85-100+ because populations are not"
+"available for those ages. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Ages 85-100."
+"2. Death rates are flagged as Unreliable when the rate is calculated with a numerator of 20 or less. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Unreliable."
+"3. Deaths of persons with Age ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among age groups,"
+"so are not included in age-specific counts, age-specific rates or in any age-adjusted rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"4. Deaths of persons with Hispanic origin ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among"
+"Hispanic Origin groups, so are not included in the Hispanic Origin specific counts and rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"5. Information included on the death certificate about the race and Hispanic ethnicity of the decedent is reported by the"
+"funeral director as provided by an informant, often the surviving next of kin, or, in the absence of an informant, on the basis"
+"of observation. Race and ethnicity information from the census is by self-report. To the extent that race and Hispanic origin"
+"are inconsistent between these two data sources, death rates will be biased. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Racial Differences."
+"6. The population figures for year 2020 are bridged-race estimates of the July 1 resident population, from the Vintage 2020"
+"postcensal series released by NCHS on September 22, 2021. The population figures for year 2019 are bridged-race estimates of the"
+"July 1 resident population, from the Vintage 2019 postcensal series released by NCHS on July 9, 2020. The population figures for"
+"year 2018 are bridged-race estimates of the July 1 resident population, from the Vintage 2018 postcensal series released by NCHS"
+"on June 25, 2019. The population figures for year 2017 are bridged-race estimates of the July 1 resident population, from the"
+"Vintage 2017 postcensal series released by NCHS on June 27, 2018. The population figures for year 2016 are bridged-race"
+"estimates of the July 1 resident population, from the Vintage 2016 postcensal series released by NCHS on June 26, 2017. The"
+"population figures for year 2015 are bridged-race estimates of the July 1 resident population, from the Vintage 2015 postcensal"
+"series released by NCHS on June 28, 2016. The population figures for year 2014 are bridged-race estimates of the July 1 resident"
+"population, from the Vintage 2014 postcensal series released by NCHS on June 30, 2015. The population figures for year 2013 are"
+"bridged-race estimates of the July 1 resident population, from the Vintage 2013 postcensal series released by NCHS on June 26,"
+"2014. The population figures for year 2012 are bridged-race estimates of the July 1 resident population, from the Vintage 2012"
+"postcensal series released by NCHS on June 13, 2013. The population figures for year 2011 are bridged-race estimates of the July"
+"1 resident population, from the Vintage 2011 postcensal series released by NCHS on July 18, 2012. Population figures for 2010"
+"are April 1 Census counts. The population figures for years 2001 - 2009 are bridged-race estimates of the July 1 resident"
+"population, from the revised intercensal county-level 2000 - 2009 series released by NCHS on October 26, 2012. Population"
+"figures for 2000 are April 1 Census counts. Population figures for 1999 are from the 1990-1999 intercensal series of July 1"
+"estimates. Population figures for the infant age groups are the number of live births. <br/><b>Note:</b> Rates and population"
+"figures for years 2001 - 2009 differ slightly from previously published reports, due to use of the population estimates which"
+"were available at the time of release."
+"7. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Age Group."

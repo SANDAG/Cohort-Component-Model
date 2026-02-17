@@ -1,0 +1,164 @@
+"Notes"	"Single-Year Ages"	"Single-Year Ages Code"	"Sex"	"Sex Code"	"Hispanic Origin"	"Hispanic Origin Code"	"Race"	"Race Code"	Deaths	Population	Crude Rate
+	"< 1 year"	"0"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2213	416232	531.7
+	"1 year"	"1"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	154	413023	37.3
+	"2 years"	"2"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	117	406952	28.8
+	"3 years"	"3"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	93	407272	22.8
+	"4 years"	"4"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	66	406548	16.2
+	"5 years"	"5"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	67	404393	16.6
+	"6 years"	"6"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	61	407322	15.0
+	"7 years"	"7"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	50	422512	11.8
+	"8 years"	"8"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	56	437061	12.8
+	"9 years"	"9"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	63	450130	14.0
+	"10 years"	"10"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	68	476447	14.3
+	"11 years"	"11"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	55	485141	11.3
+	"12 years"	"12"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	77	503556	15.3
+	"13 years"	"13"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	102	511641	19.9
+	"14 years"	"14"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	126	514660	24.5
+	"15 years"	"15"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	179	516943	34.6
+	"16 years"	"16"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	241	512868	47.0
+	"17 years"	"17"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	338	505964	66.8
+	"18 years"	"18"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	473	496994	95.2
+	"19 years"	"19"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	525	489151	107.3
+	"20 years"	"20"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	545	493864	110.4
+	"21 years"	"21"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	588	495055	118.8
+	"22 years"	"22"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	556	498077	111.6
+	"23 years"	"23"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	539	501649	107.4
+	"24 years"	"24"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	507	494735	102.5
+	"25 years"	"25"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	514	496210	103.6
+	"26 years"	"26"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	539	477652	112.8
+	"27 years"	"27"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	509	472334	107.8
+	"28 years"	"28"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	442	468523	94.3
+	"29 years"	"29"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	482	459674	104.9
+	"30 years"	"30"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	490	476934	102.7
+	"31 years"	"31"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	564	489635	115.2
+	"32 years"	"32"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	652	523888	124.5
+	"33 years"	"33"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	727	545824	133.2
+	"34 years"	"34"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	781	559820	139.5
+	"35 years"	"35"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	864	574842	150.3
+	"36 years"	"36"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	954	575310	165.8
+	"37 years"	"37"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1057	581965	181.6
+	"38 years"	"38"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1170	600000	195.0
+	"39 years"	"39"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1335	622093	214.6
+	"40 years"	"40"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1545	646226	239.1
+	"41 years"	"41"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1701	671847	253.2
+	"42 years"	"42"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1866	689070	270.8
+	"43 years"	"43"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2032	696327	291.8
+	"44 years"	"44"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2243	698287	321.2
+	"45 years"	"45"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2394	699260	342.4
+	"46 years"	"46"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2667	699487	381.3
+	"47 years"	"47"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2937	691400	424.8
+	"48 years"	"48"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	3122	684510	456.1
+	"49 years"	"49"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	3283	674728	486.6
+	"50 years"	"50"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	3485	653968	532.9
+	"51 years"	"51"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	3636	647145	561.9
+	"52 years"	"52"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	3945	631086	625.1
+	"53 years"	"53"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	4119	619373	665.0
+	"54 years"	"54"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	4244	609112	696.8
+	"55 years"	"55"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	4525	611535	739.9
+	"56 years"	"56"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	4618	587918	785.5
+	"57 years"	"57"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	4652	556835	835.4
+	"58 years"	"58"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	4746	528163	898.6
+	"59 years"	"59"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5003	503530	993.6
+	"60 years"	"60"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5020	448887	1118.3
+	"61 years"	"61"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5072	431938	1174.2
+	"62 years"	"62"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5157	406790	1267.7
+	"63 years"	"63"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5217	380621	1370.7
+	"64 years"	"64"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5389	356379	1512.2
+	"65 years"	"65"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5538	336687	1644.9
+	"66 years"	"66"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5712	320693	1781.1
+	"67 years"	"67"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5945	306973	1936.7
+	"68 years"	"68"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	6172	294231	2097.7
+	"69 years"	"69"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	6541	282708	2313.7
+	"70 years"	"70"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	6931	274433	2525.6
+	"71 years"	"71"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	7374	270995	2721.1
+	"72 years"	"72"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	7842	264456	2965.3
+	"73 years"	"73"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	8738	259867	3362.5
+	"74 years"	"74"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	9192	252818	3635.8
+	"75 years"	"75"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	9779	242977	4024.7
+	"76 years"	"76"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	10608	236965	4476.6
+	"77 years"	"77"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	10983	225927	4861.3
+	"78 years"	"78"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	11678	218861	5335.8
+	"79 years"	"79"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	12033	208532	5770.3
+	"80 years"	"80"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	12825	198030	6476.3
+	"81 years"	"81"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	13618	188816	7212.3
+	"82 years"	"82"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	13694	173211	7906.0
+	"83 years"	"83"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	13649	154694	8823.2
+	"84 years"	"84"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	13530	137252	9857.8
+	"85 years"	"85"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	12654	Not Applicable	Not Applicable
+	"86 years"	"86"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	12200	Not Applicable	Not Applicable
+	"87 years"	"87"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	11413	Not Applicable	Not Applicable
+	"88 years"	"88"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	10705	Not Applicable	Not Applicable
+	"89 years"	"89"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	9633	Not Applicable	Not Applicable
+	"90 years"	"90"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	8554	Not Applicable	Not Applicable
+	"91 years"	"91"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	7270	Not Applicable	Not Applicable
+	"92 years"	"92"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	6021	Not Applicable	Not Applicable
+	"93 years"	"93"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	5029	Not Applicable	Not Applicable
+	"94 years"	"94"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	3932	Not Applicable	Not Applicable
+	"95 years"	"95"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2960	Not Applicable	Not Applicable
+	"96 years"	"96"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	2179	Not Applicable	Not Applicable
+	"97 years"	"97"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1562	Not Applicable	Not Applicable
+	"98 years"	"98"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1148	Not Applicable	Not Applicable
+	"99 years"	"99"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	737	Not Applicable	Not Applicable
+	"100+ years"	"100"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	1236	Not Applicable	Not Applicable
+	"Not Stated"	"NS"	"Male"	"M"	"Not Hispanic or Latino"	"2186-2"	"White"	"2106-3"	71	Not Applicable	Not Applicable
+"---"
+"Dataset: Underlying Cause of Death, 1999-2020"
+"Query Parameters:"
+"Title: CA; 1999-2020; SYA; M; NON; WH; 2006; 5Y"
+"Hispanic Origin: Not Hispanic or Latino"
+"Race: White"
+"Sex: Male"
+"States: California (06)"
+"Year/Month: 2002; 2003; 2004; 2005; 2006"
+"Group By: Single-Year Ages; Sex; Hispanic Origin; Race"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/ucd.html for more information."
+"---"
+"Query Date: Apr 18, 2025 8:27:31 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 1999-2020 on CDC WONDER Online Database, released in 2021. Data are from the Multiple Cause of Death Files,"
+"1999-2020, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/ucd-icd10.html on Apr 18, 2025 8:27:31 PM"
+"---"
+Caveats:
+"1. Population and rates are labeled 'Not Applicable' when they include a subset of ages 85-100+ because populations are not"
+"available for those ages. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Ages 85-100."
+"2. Deaths of persons with Age ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among age groups,"
+"so are not included in age-specific counts, age-specific rates or in any age-adjusted rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"3. Deaths of persons with Hispanic origin ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among"
+"Hispanic Origin groups, so are not included in the Hispanic Origin specific counts and rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"4. Information included on the death certificate about the race and Hispanic ethnicity of the decedent is reported by the"
+"funeral director as provided by an informant, often the surviving next of kin, or, in the absence of an informant, on the basis"
+"of observation. Race and ethnicity information from the census is by self-report. To the extent that race and Hispanic origin"
+"are inconsistent between these two data sources, death rates will be biased. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Racial Differences."
+"5. The population figures for year 2020 are bridged-race estimates of the July 1 resident population, from the Vintage 2020"
+"postcensal series released by NCHS on September 22, 2021. The population figures for year 2019 are bridged-race estimates of the"
+"July 1 resident population, from the Vintage 2019 postcensal series released by NCHS on July 9, 2020. The population figures for"
+"year 2018 are bridged-race estimates of the July 1 resident population, from the Vintage 2018 postcensal series released by NCHS"
+"on June 25, 2019. The population figures for year 2017 are bridged-race estimates of the July 1 resident population, from the"
+"Vintage 2017 postcensal series released by NCHS on June 27, 2018. The population figures for year 2016 are bridged-race"
+"estimates of the July 1 resident population, from the Vintage 2016 postcensal series released by NCHS on June 26, 2017. The"
+"population figures for year 2015 are bridged-race estimates of the July 1 resident population, from the Vintage 2015 postcensal"
+"series released by NCHS on June 28, 2016. The population figures for year 2014 are bridged-race estimates of the July 1 resident"
+"population, from the Vintage 2014 postcensal series released by NCHS on June 30, 2015. The population figures for year 2013 are"
+"bridged-race estimates of the July 1 resident population, from the Vintage 2013 postcensal series released by NCHS on June 26,"
+"2014. The population figures for year 2012 are bridged-race estimates of the July 1 resident population, from the Vintage 2012"
+"postcensal series released by NCHS on June 13, 2013. The population figures for year 2011 are bridged-race estimates of the July"
+"1 resident population, from the Vintage 2011 postcensal series released by NCHS on July 18, 2012. Population figures for 2010"
+"are April 1 Census counts. The population figures for years 2001 - 2009 are bridged-race estimates of the July 1 resident"
+"population, from the revised intercensal county-level 2000 - 2009 series released by NCHS on October 26, 2012. Population"
+"figures for 2000 are April 1 Census counts. Population figures for 1999 are from the 1990-1999 intercensal series of July 1"
+"estimates. Population figures for the infant age groups are the number of live births. <br/><b>Note:</b> Rates and population"
+"figures for years 2001 - 2009 differ slightly from previously published reports, due to use of the population estimates which"
+"were available at the time of release."
+"6. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Age Group."

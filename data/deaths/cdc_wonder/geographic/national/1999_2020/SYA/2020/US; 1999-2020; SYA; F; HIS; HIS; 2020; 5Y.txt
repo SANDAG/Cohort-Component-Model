@@ -1,0 +1,164 @@
+"Notes"	"Single-Year Ages"	"Single-Year Ages Code"	"Sex"	"Sex Code"	"Hispanic Origin"	"Hispanic Origin Code"	Deaths	Population	Crude Rate
+	"< 1 year"	"0"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	10205	2455550	415.6
+	"1 year"	"1"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	685	2493836	27.5
+	"2 years"	"2"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	418	2519600	16.6
+	"3 years"	"3"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	333	2534906	13.1
+	"4 years"	"4"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	276	2541837	10.9
+	"5 years"	"5"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	268	2553033	10.5
+	"6 years"	"6"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	239	2557692	9.3
+	"7 years"	"7"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	260	2562338	10.1
+	"8 years"	"8"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	202	2583569	7.8
+	"9 years"	"9"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	207	2602941	8.0
+	"10 years"	"10"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	245	2606128	9.4
+	"11 years"	"11"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	257	2596735	9.9
+	"12 years"	"12"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	253	2582566	9.8
+	"13 years"	"13"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	290	2545461	11.4
+	"14 years"	"14"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	351	2501106	14.0
+	"15 years"	"15"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	449	2471309	18.2
+	"16 years"	"16"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	467	2452709	19.0
+	"17 years"	"17"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	592	2429609	24.4
+	"18 years"	"18"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	745	2408337	30.9
+	"19 years"	"19"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	837	2389745	35.0
+	"20 years"	"20"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	785	2365626	33.2
+	"21 years"	"21"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	850	2346274	36.2
+	"22 years"	"22"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	886	2343457	37.8
+	"23 years"	"23"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	965	2345688	41.1
+	"24 years"	"24"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	995	2358220	42.2
+	"25 years"	"25"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1000	2366583	42.3
+	"26 years"	"26"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	987	2361623	41.8
+	"27 years"	"27"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1120	2327719	48.1
+	"28 years"	"28"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1082	2288777	47.3
+	"29 years"	"29"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1173	2238417	52.4
+	"30 years"	"30"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1245	2195708	56.7
+	"31 years"	"31"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1231	2165175	56.9
+	"32 years"	"32"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1308	2150317	60.8
+	"33 years"	"33"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1372	2149714	63.8
+	"34 years"	"34"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1460	2157589	67.7
+	"35 years"	"35"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1490	2158903	69.0
+	"36 years"	"36"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1572	2164305	72.6
+	"37 years"	"37"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1647	2150670	76.6
+	"38 years"	"38"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1695	2126539	79.7
+	"39 years"	"39"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1903	2097900	90.7
+	"40 years"	"40"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1991	2066639	96.3
+	"41 years"	"41"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1996	2030278	98.3
+	"42 years"	"42"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2026	2008773	100.9
+	"43 years"	"43"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2212	1984504	111.5
+	"44 years"	"44"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2283	1957326	116.6
+	"45 years"	"45"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2587	1934146	133.8
+	"46 years"	"46"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2702	1901907	142.1
+	"47 years"	"47"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2879	1859585	154.8
+	"48 years"	"48"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3087	1812140	170.4
+	"49 years"	"49"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3308	1757388	188.2
+	"50 years"	"50"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3374	1699960	198.5
+	"51 years"	"51"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3814	1651042	231.0
+	"52 years"	"52"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3956	1616663	244.7
+	"53 years"	"53"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	4177	1578407	264.6
+	"54 years"	"54"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	4416	1540573	286.6
+	"55 years"	"55"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	4795	1496985	320.3
+	"56 years"	"56"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	4945	1449910	341.1
+	"57 years"	"57"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	5319	1390613	382.5
+	"58 years"	"58"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	5603	1332712	420.4
+	"59 years"	"59"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	5832	1279409	455.8
+	"60 years"	"60"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	6110	1225997	498.4
+	"61 years"	"61"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	6397	1167130	548.1
+	"62 years"	"62"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	6686	1113820	600.3
+	"63 years"	"63"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	6709	1059292	633.3
+	"64 years"	"64"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	7091	998973	709.8
+	"65 years"	"65"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	7099	942549	753.2
+	"66 years"	"66"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	7169	888440	806.9
+	"67 years"	"67"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	7613	837948	908.5
+	"68 years"	"68"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	7926	793747	998.6
+	"69 years"	"69"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	8217	756070	1086.8
+	"70 years"	"70"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	8407	707809	1187.7
+	"71 years"	"71"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	8330	658611	1264.8
+	"72 years"	"72"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	8746	614831	1422.5
+	"73 years"	"73"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	8862	572363	1548.3
+	"74 years"	"74"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	9210	525338	1753.2
+	"75 years"	"75"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	9588	489353	1959.3
+	"76 years"	"76"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	9576	456946	2095.7
+	"77 years"	"77"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	9944	426043	2334.0
+	"78 years"	"78"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	10305	395548	2605.2
+	"79 years"	"79"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	10702	369569	2895.8
+	"80 years"	"80"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	11269	345385	3262.7
+	"81 years"	"81"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	11708	321855	3637.7
+	"82 years"	"82"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	12237	296827	4122.6
+	"83 years"	"83"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	12509	272248	4594.7
+	"84 years"	"84"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	12878	249953	5152.2
+	"85 years"	"85"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	13157	Not Applicable	Not Applicable
+	"86 years"	"86"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	13468	Not Applicable	Not Applicable
+	"87 years"	"87"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	13316	Not Applicable	Not Applicable
+	"88 years"	"88"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	13281	Not Applicable	Not Applicable
+	"89 years"	"89"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	13418	Not Applicable	Not Applicable
+	"90 years"	"90"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	12837	Not Applicable	Not Applicable
+	"91 years"	"91"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	12058	Not Applicable	Not Applicable
+	"92 years"	"92"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	10845	Not Applicable	Not Applicable
+	"93 years"	"93"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	9705	Not Applicable	Not Applicable
+	"94 years"	"94"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	8504	Not Applicable	Not Applicable
+	"95 years"	"95"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	7286	Not Applicable	Not Applicable
+	"96 years"	"96"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	5995	Not Applicable	Not Applicable
+	"97 years"	"97"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	4732	Not Applicable	Not Applicable
+	"98 years"	"98"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3690	Not Applicable	Not Applicable
+	"99 years"	"99"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2647	Not Applicable	Not Applicable
+	"100+ years"	"100"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	6017	Not Applicable	Not Applicable
+	"Not Stated"	"NS"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	12	Not Applicable	Not Applicable
+"---"
+"Dataset: Underlying Cause of Death, 1999-2020"
+"Query Parameters:"
+"Title: US; 1999-2020; SYA; F; HIS; HIS; 2020; 5Y"
+"Hispanic Origin: Hispanic or Latino"
+"Sex: Female"
+"Year/Month: 2016; 2017; 2018; 2019; 2020"
+"Group By: Single-Year Ages; Sex; Hispanic Origin"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/ucd.html for more information."
+"---"
+"Query Date: Apr 11, 2025 8:03:56 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 1999-2020 on CDC WONDER Online Database, released in 2021. Data are from the Multiple Cause of Death Files,"
+"1999-2020, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/ucd-icd10.html on Apr 11, 2025 8:03:56 PM"
+"---"
+Caveats:
+"1. Population and rates are labeled 'Not Applicable' when they include a subset of ages 85-100+ because populations are not"
+"available for those ages. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Ages 85-100."
+"2. Death rates are flagged as Unreliable when the rate is calculated with a numerator of 20 or less. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Unreliable."
+"3. Deaths of persons with Age ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among age groups,"
+"so are not included in age-specific counts, age-specific rates or in any age-adjusted rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"4. Deaths of persons with Hispanic origin ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among"
+"Hispanic Origin groups, so are not included in the Hispanic Origin specific counts and rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Not Stated."
+"5. Information included on the death certificate about the race and Hispanic ethnicity of the decedent is reported by the"
+"funeral director as provided by an informant, often the surviving next of kin, or, in the absence of an informant, on the basis"
+"of observation. Race and ethnicity information from the census is by self-report. To the extent that race and Hispanic origin"
+"are inconsistent between these two data sources, death rates will be biased. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd.html#Racial Differences."
+"6. The population figures for year 2020 are bridged-race estimates of the July 1 resident population, from the Vintage 2020"
+"postcensal series released by NCHS on September 22, 2021. The population figures for year 2019 are bridged-race estimates of the"
+"July 1 resident population, from the Vintage 2019 postcensal series released by NCHS on July 9, 2020. The population figures for"
+"year 2018 are bridged-race estimates of the July 1 resident population, from the Vintage 2018 postcensal series released by NCHS"
+"on June 25, 2019. The population figures for year 2017 are bridged-race estimates of the July 1 resident population, from the"
+"Vintage 2017 postcensal series released by NCHS on June 27, 2018. The population figures for year 2016 are bridged-race"
+"estimates of the July 1 resident population, from the Vintage 2016 postcensal series released by NCHS on June 26, 2017. The"
+"population figures for year 2015 are bridged-race estimates of the July 1 resident population, from the Vintage 2015 postcensal"
+"series released by NCHS on June 28, 2016. The population figures for year 2014 are bridged-race estimates of the July 1 resident"
+"population, from the Vintage 2014 postcensal series released by NCHS on June 30, 2015. The population figures for year 2013 are"
+"bridged-race estimates of the July 1 resident population, from the Vintage 2013 postcensal series released by NCHS on June 26,"
+"2014. The population figures for year 2012 are bridged-race estimates of the July 1 resident population, from the Vintage 2012"
+"postcensal series released by NCHS on June 13, 2013. The population figures for year 2011 are bridged-race estimates of the July"
+"1 resident population, from the Vintage 2011 postcensal series released by NCHS on July 18, 2012. Population figures for 2010"
+"are April 1 Census counts. The population figures for years 2001 - 2009 are bridged-race estimates of the July 1 resident"
+"population, from the revised intercensal county-level 2000 - 2009 series released by NCHS on October 26, 2012. Population"
+"figures for 2000 are April 1 Census counts. Population figures for 1999 are from the 1990-1999 intercensal series of July 1"
+"estimates. Population figures for the infant age groups are the number of live births. <br/><b>Note:</b> Rates and population"
+"figures for years 2001 - 2009 differ slightly from previously published reports, due to use of the population estimates which"
+"were available at the time of release."
+"7. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/ucd.html#Age Group."
