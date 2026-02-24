@@ -7,6 +7,13 @@ import pandas as pd
 def get_file_separator(file_path: pathlib.Path) -> str:
     """Determine the appropriate separator based on file extension.
 
+    In 2026, CDC WONDER updated export methods to be either xls, tsv, or csv.
+    Previously, only text files were available. As such, the dataset now contains a mix:
+    - Text files (.txt) use tab separation
+    - CSV files (.csv) use comma separation
+
+    Both formats contain the same data structure and are processed identically.
+
     Args:
         file_path (pathlib.Path): The file path.
 
@@ -36,26 +43,22 @@ def parse_filename(file_path: pathlib.Path) -> dict:
     valid_config = {
         0: {
             "name": "location",
-            "labels": ["SD", "CA", "US"],
             "map": {"SD": "San Diego County", "CA": "California", "US": "US"},
         },
         1: {
             "name": "product",
-            "labels": ["1999-2020", "2018-2023"],
+            "map": {"1999-2020": "1999-2020", "2018-2023": "2018-2023"},
         },
         2: {
             "name": "age_group",
-            "labels": ["SYA"],
             "map": {"SYA": "Single-Year Ages"},
         },
         3: {
             "name": "sex",
-            "labels": ["F", "M"],
             "map": {"F": "Female", "M": "Male"},
         },
         4: {
             "name": "hispanic",
-            "labels": ["NS", "HIS", "NON"],
             "map": {
                 "NS": "Not Stated",
                 "HIS": "Hispanic or Latino",
@@ -64,17 +67,6 @@ def parse_filename(file_path: pathlib.Path) -> dict:
         },
         5: {
             "name": "race",
-            "labels": [
-                "ASIAN",
-                "AIAN",
-                "API",
-                "BAA",
-                "WH",
-                "HIS",
-                "NHPI",
-                "MOR",
-                "ALL",
-            ],
             "map": {
                 "ASIAN": "Asian",
                 "AIAN": "American Indian or Alaska Native",
@@ -89,11 +81,11 @@ def parse_filename(file_path: pathlib.Path) -> dict:
         },
         6: {
             "name": "year",
-            "labels": [str(y) for y in range(1999, 2024)],
+            "map": None,  # Accept any year value without restriction
         },
         7: {
             "name": "moving_average",
-            "labels": ["5Y"],
+            "map": {"5Y": "5Y"},
         },
     }
 
@@ -104,16 +96,22 @@ def parse_filename(file_path: pathlib.Path) -> dict:
     if len(parts) != 8:
         raise ValueError(f"Invalid number of parts in file: {file_path}")
 
-    else:
-        metadata = {}
-        for i, part in enumerate(parts):
-            field = valid_config[i]
-            key = field["name"]
+    metadata = {}
+    for i, part in enumerate(parts):
+        field = valid_config[i]
+        key = field["name"]
+        valid_map = field["map"]
 
-            if part not in field["labels"]:
-                raise ValueError(f"Invalid value for {key}: {part}")
-            else:
-                metadata[key] = field["map"][part] if "map" in field else (part)
+        if valid_map is None:
+            # No validation, accept any value
+            metadata[key] = part
+        elif part in valid_map:
+            # Valid value, map it
+            metadata[key] = valid_map[part]
+        else:
+            raise ValueError(
+                f"Invalid value for {key}: '{part}'. Valid values: {list(valid_map.keys())}"
+            )
 
     return metadata
 
@@ -250,7 +248,7 @@ def transform_CDC_1999(file_path: pathlib.Path) -> pd.DataFrame:
             year=metadata["year"],
             product=metadata["product"],
         )
-        .query("age not in @excluding_sya and product == '1999-2020'")
+        .loc[lambda x: (~x["age"].isin(excluding_sya)) & (x["product"] == "1999-2020")]
         .replace(
             {
                 "Asian or Pacific Islander": "Asian alone",
@@ -326,7 +324,7 @@ def transform_CDC_2018(file_path: pathlib.Path) -> pd.DataFrame:
             year=metadata["year"],
             product=metadata["product"],
         )
-        .query("age not in @excluding_sya and product == '2018-2023'")
+        .loc[lambda x: (~x["age"].isin(excluding_sya)) & (x["product"] == "2018-2023")]
     )
 
     # Ensure proper copy before race transformation to avoid view issues
@@ -348,16 +346,13 @@ def transform_CDC_2018(file_path: pathlib.Path) -> pd.DataFrame:
     return df
 
 
-def parse_not_stated(df: pd.DataFrame) -> pd.DataFrame:
+def parse_not_stated() -> pd.DataFrame:
     """Parse through CDC WONDER to calculate inflation factor for "not stated" data.
 
     The CDC WONDER contains multiple rows marked as "Not Stated"/"NS". This function
     combs through the datasets and locates the number of not stated deaths versus stated
     deaths and separates them by geography, sex, and year. It then calculates an
     inflation factor for each combination.
-
-    Args:
-        df (pd.DataFrame): A DataFrame containing mortality data.
 
     Returns:
         pd.DataFrame: A processed DataFrame with year, geography, sex, and inflation
@@ -452,14 +447,14 @@ def inflate_deaths(df: pd.DataFrame) -> pd.DataFrame:
             "Not Stated" demographic entries.
     """
 
-    data = parse_not_stated(df)
+    data = parse_not_stated()
 
     # Create a filtered DataFrame for "Stated" responses
     stated_df = df.assign(
         deaths=pd.to_numeric(df["deaths"], errors="coerce"),
         pop=pd.to_numeric(df["pop"], errors="coerce"),
         year=pd.to_numeric(df["year"], errors="coerce"),
-    ).query("(`hispanic origin` != 'Not Stated' and age != 'NS')")
+    ).loc[lambda x: (x["hispanic origin"] != "Not Stated") & (x["age"] != "NS")]
 
     results = (
         pd.merge(stated_df, data, on=["year", "location", "sex"])
@@ -733,7 +728,7 @@ def load_local_files(pop_df: pd.DataFrame) -> pd.DataFrame:
     df = (
         pd.concat(all_products, ignore_index=True)
         .sort_values(by=["sex", "race", "year", "age"])
-        .query("age <= 99")
+        .loc[lambda x: x["age"] <= 99]
         .reset_index(drop=True)
     )
 
@@ -885,17 +880,17 @@ def get_death_rates(
             cdc_yr = yr
 
         # Filter to the CDC year and ages < 85, keep only necessary columns
-        cdc_rates = mortality_df.query("year == @cdc_yr and age < 85")[
-            ["race", "sex", "age", "rates"]
-        ].rename(columns={"rates": "rate_death"})
+        cdc_rates = mortality_df.loc[
+            (mortality_df["year"] == cdc_yr) & (mortality_df["age"] < 85)
+        ][["race", "sex", "age", "rates"]].rename(columns={"rates": "rate_death"})
 
         # Get unique race categories from CDC data
         race_categories = cdc_rates["race"].unique()
 
         # Filter Social Security Actuarial Life Table to chosen year and ages >= 85
-        ss_rates = ss_life_tbl.query("year == @ss_yr and age >= 85")[
-            ["age", "sex", "rate"]
-        ].rename(columns={"rate": "rate_death"})
+        ss_rates = ss_life_tbl.loc[
+            (ss_life_tbl["year"] == ss_yr) & (ss_life_tbl["age"] >= 85)
+        ][["age", "sex", "rate"]].rename(columns={"rate": "rate_death"})
 
         # Expand SS rates to include all race categories
         # (SS life table doesn't have race breakdown, so apply same rates to all races)
