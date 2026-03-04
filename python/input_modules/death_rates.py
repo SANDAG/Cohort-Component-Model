@@ -3,6 +3,9 @@ import scipy
 import numpy as np
 import pandas as pd
 
+# Module-level cache for batch loading mortality data across function calls
+_MORTALITY_CACHE = {}
+
 
 def get_file_separator(file_path: pathlib.Path) -> str:
     """Determine the appropriate separator based on file extension.
@@ -670,17 +673,26 @@ def merge_geographies(
     return county_merged
 
 
-def load_local_files(pop_df: pd.DataFrame) -> pd.DataFrame:
-    """Load files from a directory, process them, and combined them into one by product.
+def load_local_files(
+    pop_df: pd.DataFrame, years: int | list[int]
+) -> pd.DataFrame:
+    """Load files from a directory for specific year(s) and combine them by product.
 
     Args:
         pop_df (pd.DataFrame): Population dataframe from CCM for 2018-2023
             product population estimates.
+        years (int | list[int]): A single year or list of years to load data for.
 
     Returns:
-        pd.DataFrame: A single DataFrame composed of 2003-2023 data for
+        pd.DataFrame: A single DataFrame for the specified year(s) with data for
         ages 0-99 from the CDC.
     """
+
+    # Normalize years to a set
+    if isinstance(years, int):
+        target_years = {years}
+    else:
+        target_years = set(years)
 
     data_by_product = {
         "1999-2020": {"San Diego County": [], "California": [], "US": []},
@@ -695,6 +707,11 @@ def load_local_files(pop_df: pd.DataFrame) -> pd.DataFrame:
     for file_path in pathlib.Path("data/deaths/cdc_wonder/geographic").rglob("*"):
         if file_path.is_file():
             meta = parse_filename(file_path)
+
+            # Only process files for the specified year(s)
+            if int(meta["year"]) not in target_years:
+                continue
+
             validate_file_name(file_path)
 
             product = meta["product"]
@@ -844,6 +861,7 @@ def get_death_rates(
     pop_df: pd.DataFrame,
     smooth_s: int = 5,
     smooth_k: int = 2,
+    base_yr: int = None,
 ) -> pd.DataFrame:
     """Create death rates broken down by race, sex, and single year of age.
 
@@ -861,6 +879,10 @@ def get_death_rates(
     as a substitute for year 2021. Smoothing is applied ONLY to CDC data (ages 0-84)
     to preserve the race-agnostic nature of the SS life table at ages 85+.
 
+    This function uses a module-level cache to batch load all needed years
+    (from base_yr to launch_yr) in a single directory scan on the first invocation,
+    then retrieves specific years from the cache on subsequent calls.
+
     Args:
         yr: Increment year
         launch_yr: Launch year
@@ -869,6 +891,8 @@ def get_death_rates(
         pop_df (pd.DataFrame): Population data for the year
         smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
+        base_yr (int, optional): Base year for batch loading. If provided, loads all years
+            from base_yr to launch_yr on first call. If not provided, defaults to yr.
 
     Returns:
         pd.DataFrame: Death rates broken down by race, sex, and single year
@@ -898,19 +922,36 @@ def get_death_rates(
             )
 
         # Load and process CDC WONDER mortality data
-        mortality_df = load_local_files(pop_df=pop_df)
-
-        # Year 2021 not available, use 2020 data instead
+        # Determine which year's data to use (2021 uses 2020 data)
+        cdc_yr = 2020 if yr == 2021 else yr
         if yr == 2021:
-            cdc_yr = 2020
-            print("Warning: CDC WONDER data unavailable for 2021. " "Using 2020 data.")
-        else:
-            cdc_yr = yr
+            print("Warning: CDC WONDER data unavailable for 2021. Using 2020 data.")
 
-        # Filter to the CDC year and ages < 85, keep only necessary columns
-        cdc_rates = mortality_df.loc[
-            (mortality_df["year"] == cdc_yr) & (mortality_df["age"] < 85)
-        ][["race", "sex", "age", "rates"]].rename(columns={"rates": "rate_death"})
+        # Batch load on first call (cache key is launch_yr to allow different horizons)
+        cache_key = f"launch_{launch_yr}"
+        if cache_key not in _MORTALITY_CACHE:
+            # Determine all years needed (base_yr to launch_yr, map 2021 to 2020)
+            start_year = base_yr if base_yr is not None else yr
+            needed_years = set(range(start_year, launch_yr + 1))
+            if 2021 in needed_years:
+                needed_years.add(2020)  # 2021 uses 2020 data
+
+            print(f"Batch loading mortality data for years: {sorted(needed_years)}")
+            _MORTALITY_CACHE[cache_key] = load_local_files(
+                pop_df=pop_df, years=list(needed_years)
+            )
+
+        # Retrieve data from cache for the specific year
+        mortality_df = (
+            _MORTALITY_CACHE[cache_key]
+            .loc[_MORTALITY_CACHE[cache_key]["year"] == cdc_yr]
+            .copy()
+        )
+
+        # Filter to ages < 85, keep only necessary columns
+        cdc_rates = mortality_df.loc[mortality_df["age"] < 85][
+            ["race", "sex", "age", "rates"]
+        ].rename(columns={"rates": "rate_death"})
 
         # Get unique race categories from CDC data
         race_categories = cdc_rates["race"].unique()
