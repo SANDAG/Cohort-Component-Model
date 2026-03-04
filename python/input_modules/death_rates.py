@@ -465,6 +465,13 @@ def inflate_deaths(df: pd.DataFrame) -> pd.DataFrame:
             ),
         )
         .drop(columns=["inflation_factor"])
+        .assign(
+            rates=lambda x: np.where(
+                (x["year"] >= 2022) & (x["location"] == "San Diego County"),
+                x["rates"] / 5,
+                x["rates"],
+            )
+        )
     )
 
     return results
@@ -519,7 +526,7 @@ def rate_substitution(row: pd.Series, age_max: int, age_min: int) -> tuple[float
         - The rate of the next age from the target age in the county dataset
         - ex. target age is 4 therefore take the rate of the next age (5)
     6) Imputation
-        - Impute using deaths_recode
+        - Impute using deaths_recode with NATIONAL data
 
     For each substitution, a corresponding label defining which methodology/dataset was
     used for the substitution will be documented as well.
@@ -547,7 +554,7 @@ def rate_substitution(row: pd.Series, age_max: int, age_min: int) -> tuple[float
     elif pd.notna(row["rate_prev"]) and row["rate_prev"] != 0 and row["age"] != age_min:
         return row["rate_prev"], "Previous Rate Substituted"
     else:
-        return row["rate_imputed"], "Imputation"
+        return row["rate_imputed"], "Imputation (National Data)"
 
 
 def merge_geographies(
@@ -589,12 +596,29 @@ def merge_geographies(
             suffixes=("", "_state"),
         )
         .merge(
-            national[["year", "age", "race", "sex", "hispanic origin", "rates"]],
+            national[
+                [
+                    "year",
+                    "age",
+                    "race",
+                    "sex",
+                    "hispanic origin",
+                    "rates",
+                    "deaths",
+                    "pop",
+                ]
+            ],
             on=["year", "age", "race", "sex", "hispanic origin"],
             how="left",
             suffixes=("", "_national"),
         )
-        .rename(columns={"rates": "rates_county"})
+        .rename(
+            columns={
+                "rates": "rates_county",
+                "deaths": "deaths_county",
+                "pop": "pop_county",
+            }
+        )
         .assign(
             year=lambda x: x["year"].astype(int),
         )
@@ -608,7 +632,8 @@ def merge_geographies(
                 np.nan,
             ),
             rate_imputed=lambda x: x.apply(
-                lambda row: deaths_recode(row["deaths"], row["pop"]) / row["pop"],
+                lambda row: deaths_recode(row["deaths_national"], row["pop_national"])
+                / row["pop_national"],
                 axis=1,
             ),
         )
@@ -629,7 +654,10 @@ def merge_geographies(
                 "rates_national",
                 "product",
                 "hispanic origin",
-                "deaths",
+                "deaths_county",
+                "deaths_national",
+                "pop_county",
+                "pop_national",
                 "location",
                 "rate_prev",
                 "rate_next",
@@ -830,8 +858,8 @@ def get_death_rates(
     outsize impact of COVID-19 on geriatric death rates.
 
     The CDC WONDER dataset for 2021 is unavailable, so 2020 data is used
-    as a substitute for year 2021. Smoothing is applied to the combined rates using
-    spline interpolation to reduce discontinuities across ages.
+    as a substitute for year 2021. Smoothing is applied ONLY to CDC data (ages 0-84)
+    to preserve the race-agnostic nature of the SS life table at ages 85+.
 
     Args:
         yr: Increment year
@@ -902,23 +930,23 @@ def get_death_rates(
 
         ss_rates_expanded = pd.concat(ss_expanded, ignore_index=True)
 
-        # Combine CDC rates (ages 0-84) with Social Security rates (ages 85+)
-        rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True)
-
-        # Apply smoothing if requested
+        # Apply smoothing to CDC data ONLY (ages 0-84)
         if smooth_s is not None and smooth_k is not None:
-            # Prepare DataFrame for smooth_rates function
-            rates_for_smoothing = rates.copy()
-            rates_for_smoothing["year"] = cdc_yr
-            rates_for_smoothing = rates_for_smoothing.rename(
+            # Prepare CDC DataFrame for smooth_rates function
+            cdc_for_smoothing = cdc_rates.copy()
+            cdc_for_smoothing["year"] = cdc_yr
+            cdc_for_smoothing = cdc_for_smoothing.rename(
                 columns={"race": "race/ethnicity", "rate_death": "rates"}
             )
 
             # Apply smoothing
-            smoothed = smooth_rates(rates_for_smoothing, s=smooth_s, k=smooth_k)
+            cdc_smoothed = smooth_rates(cdc_for_smoothing, s=smooth_s, k=smooth_k)
 
-            # Rename columns back and update rates
-            rates["rate_death"] = smoothed["rates"].values
+            # Update CDC rates with smoothed values
+            cdc_rates["rate_death"] = cdc_smoothed["rates"].values
+
+        # Combine smoothed CDC rates (ages 0-84) with unsmoothed SS rates (ages 85+)
+        rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True)
 
         return rates[["race", "sex", "age", "rate_death"]]
 
