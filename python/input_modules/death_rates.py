@@ -1,32 +1,13 @@
+import logging
 import pathlib
 import scipy
 import numpy as np
 import pandas as pd
 
+logger = logging.getLogger(__name__)
+
 # Module-level cache for batch loading mortality data across function calls
 _MORTALITY_CACHE = {}
-
-
-def get_file_separator(file_path: pathlib.Path) -> str:
-    """Determine the appropriate separator based on file extension.
-
-    In 2026, CDC WONDER updated export methods to be either xls, tsv, or csv.
-    Previously, only text files were available. As such, the dataset now contains a mix:
-    - Text files (.txt) use tab separation
-    - CSV files (.csv) use comma separation
-
-    Both formats contain the same data structure and are processed identically.
-
-    Args:
-        file_path (pathlib.Path): The file path.
-
-    Returns:
-        str: The separator character ('\t' for .txt files, ',' for .csv files).
-    """
-    if file_path.suffix.lower() == ".txt":
-        return "\t"
-    else:
-        return ","
 
 
 def parse_filename(file_path: pathlib.Path) -> dict:
@@ -54,11 +35,11 @@ def parse_filename(file_path: pathlib.Path) -> dict:
         },
         2: {
             "name": "age_group",
-            "map": {"SYA": "Single-Year Ages"},
+            "map": {"SYA": "Single-Year Ages", "SYA NS": "SYA NS"},
         },
         3: {
             "name": "sex",
-            "map": {"F": "Female", "M": "Male"},
+            "map": {"F": "Female", "M": "Male", "ALL": "ALL"},
         },
         4: {
             "name": "hispanic",
@@ -66,6 +47,7 @@ def parse_filename(file_path: pathlib.Path) -> dict:
                 "NS": "Not Stated",
                 "HIS": "Hispanic or Latino",
                 "NON": "Not Hispanic or Latino",
+                "ALL": "ALL",
             },
         },
         5: {
@@ -134,8 +116,7 @@ def validate_file_name(file_path: pathlib.Path) -> None:
     # Create a check for moving average
     year_check = "; ".join(str(int(metadata["year"]) - i) for i in reversed(range(5)))
 
-    separator = get_file_separator(file_path)
-    df = pd.read_csv(file_path, sep=separator)
+    df = pd.read_csv(file_path, sep=None, engine="python")
 
     if "Notes" not in df.columns:
         raise ValueError("Missing Notes column for validation")
@@ -155,8 +136,10 @@ def validate_file_name(file_path: pathlib.Path) -> None:
     }
 
     for key, label in single_value_checks.items():
-        if not notes.str.contains(f"{label}: {metadata[key]}").any():
-            raise ValueError(f"Incorrect {key} value")
+        # Only validate when metadata specifies a specific value (not "ALL")
+        if metadata[key] != "ALL":
+            if not notes.str.contains(f"{label}: {metadata[key]}").any():
+                raise ValueError(f"Incorrect {key} value")
 
     # Location Validation
     if metadata["location"] == "US" and notes.str.contains("States").any():
@@ -199,26 +182,37 @@ def validate_file_name(file_path: pathlib.Path) -> None:
             raise ValueError("Incorrect race metadata (2018-2023)")
 
 
-def transform_CDC_1999(file_path: pathlib.Path) -> pd.DataFrame:
-    """Parse the text files and transform the file into a DataFrame.
+def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
+    """Load and transform a single CDC WONDER file into a DataFrame.
 
-    Filter for only the 1999-2020 CDC product and ages 84 and under. Populate location
-    and year for each row. Assign "Hispanic" race to all rows missing a race.
+    Filter for ages 84 and under. Populate location and year for each row. For
+    1999-2020 CDC, assign "Hispanic" race to all rows missing a race. For 2018-2023 CDC,
+    collapse multiple race columns into one titled "race". Assign "race" for races with
+    no race column.
+
+    Files with 2 or more "ALL" values are skipped as they are meant for not stated
+    inflation factor calculation.
 
     Args:
         file_path (pathlib.Path): The file path.
 
     Returns:
-        pd.DataFrame: A processed dataframe for the first CDC product.
+        pd.DataFrame: A processed dataframe for the CDC product, or empty DataFrame
+            if file should be skipped.
     """
 
     # Get metadata dict for column assignment
     metadata = parse_filename(file_path)
 
+    # Skip files with 2+ "ALL" values (meant for not stated calculation)
+    all_count = sum(1 for value in metadata.values() if value == "ALL")
+    if all_count >= 2:
+        return pd.DataFrame()
+
     # Ages to be excluded from dataset
     excluding_sya = [str(age) for age in range(85, 101)]
 
-    required_columns = [
+    required_columns_1999 = [
         "Single-Year Ages Code",
         "Sex Code",
         "Hispanic Origin",
@@ -228,7 +222,7 @@ def transform_CDC_1999(file_path: pathlib.Path) -> pd.DataFrame:
         "Population",
     ]
 
-    column_map = {
+    column_map_1999 = {
         "Single-Year Ages Code": "age",
         "Sex Code": "sex",
         "Hispanic Origin": "hispanic origin",
@@ -239,62 +233,7 @@ def transform_CDC_1999(file_path: pathlib.Path) -> pd.DataFrame:
         "Location": "location",
     }
 
-    separator = get_file_separator(file_path)
-    df = (
-        pd.read_csv(file_path, sep=separator)
-        .pipe(lambda x: (x.loc[: x[x["Notes"] == "---"].index.min() - 1]))
-        .loc[:, lambda x: [col for col in required_columns if col in x.columns]]
-        .rename(columns=column_map, errors="ignore")
-        .assign(
-            race=lambda x: x["race"] if "race" in x.columns else "Hispanic",
-            location=metadata["location"],
-            year=metadata["year"],
-            product=metadata["product"],
-        )
-        .loc[lambda x: (~x["age"].isin(excluding_sya)) & (x["product"] == "1999-2020")]
-        .replace(
-            {
-                "Asian or Pacific Islander": "Asian alone",
-                "Black or African American": "Black or African American alone",
-                "American Indian or Alaska Native": "American Indian or Alaska Native alone",
-                "White": "White alone",
-                "Native Hawaiian or Other Pacific Islander": "Native Hawaiian or Other Pacific Islander alone",
-            }
-        )
-    )
-
-    # If race is ALL, duplicate data for both NHPI and MOR
-    if metadata["race"] == "ALL":
-        df_nhpi = df.copy()
-        df_nhpi["race"] = "Native Hawaiian or Other Pacific Islander alone"
-        df_mor = df.copy()
-        df_mor["race"] = "Two or More Races"
-        df = pd.concat([df_nhpi, df_mor], ignore_index=True)
-
-    return df
-
-
-def transform_CDC_2018(file_path: pathlib.Path) -> pd.DataFrame:
-    """Parse the text files and transform the file into a DataFrame.
-
-    Filter for only the 2018-2023 CDC product and ages 84 and under. Populate location
-    and year for each row. Collapse multiple race columns into one titled "race".
-    Assign "race" for races with no race column.
-
-    Args:
-        file_path (pathlib.Path): The file path.
-
-    Returns:
-        pd.DataFrame: A processed dataframe for the second CDC product.
-    """
-
-    # Get metadata dict for column assignment
-    metadata = parse_filename(file_path)
-
-    # Ages to be excluded from dataset
-    excluding_sya = [str(age) for age in range(85, 101)]
-
-    required_columns = [
+    required_columns_2018 = [
         "Single-Year Ages Code",
         "Sex Code",
         "Hispanic Origin",
@@ -304,7 +243,7 @@ def transform_CDC_2018(file_path: pathlib.Path) -> pd.DataFrame:
         "Population",
     ]
 
-    column_map = {
+    column_map_2018 = {
         "Single-Year Ages Code": "age",
         "Sex Code": "sex",
         "Hispanic Origin": "hispanic origin",
@@ -315,121 +254,145 @@ def transform_CDC_2018(file_path: pathlib.Path) -> pd.DataFrame:
         "Location": "location",
     }
 
-    separator = get_file_separator(file_path)
+    df = pd.read_csv(file_path, sep=None, engine="python").pipe(
+        lambda x: (x.loc[: x[x["Notes"] == "---"].index.min() - 1])
+    )
+
+    # Determine which format based on column presence
+    if "Single Race 6" not in df.columns:
+        # 1999-2020 format
+        required_columns = required_columns_1999
+        column_map = column_map_1999
+    elif "Single Race 6" in df.columns:
+        # 2018-2023 format
+        required_columns = required_columns_2018
+        column_map = column_map_2018
+
     df = (
-        pd.read_csv(file_path, sep=separator)
-        .pipe(lambda x: (x.loc[: x[x["Notes"] == "---"].index.min() - 1]))
-        .loc[:, lambda x: [col for col in required_columns if col in x.columns]]
+        df.loc[:, lambda x: [col for col in required_columns if col in x.columns]]
         .rename(columns=column_map, errors="ignore")
         .assign(
             race=lambda x: x["race"] if "race" in x.columns else "Hispanic",
             location=metadata["location"],
-            year=metadata["year"],
+            year=pd.to_numeric(metadata["year"], errors="coerce"),
             product=metadata["product"],
+            deaths=lambda x: pd.to_numeric(x["deaths"], errors="coerce"),
         )
-        .loc[lambda x: (~x["age"].isin(excluding_sya)) & (x["product"] == "2018-2023")]
+        .assign(
+            deaths=lambda x: np.where(
+                (x["year"] >= 2022) & (x["location"] == "San Diego County"),
+                x["deaths"] / 5,
+                x["deaths"],
+            ),
+        )
+        .loc[lambda x: (~x["age"].isin(excluding_sya))]
+        .replace(
+            {
+                "Asian": "Asian alone",
+                "Asian or Pacific Islander": "Asian alone",
+                "Black or African American": "Black or African American alone",
+                "American Indian or Alaska Native": "American Indian or Alaska Native alone",
+                "More than one race": "Two or More Races",
+                "White": "White alone",
+                "Native Hawaiian or Other Pacific Islander": "Native Hawaiian or Other Pacific Islander alone",
+            }
+        )
     )
 
-    # Ensure proper copy before race transformation to avoid view issues
-    df = df.copy()
+    # Set up dtypes for population where it exists
+    if "pop" in df.columns:
+        df = df.assign(pop=lambda x: pd.to_numeric(x["pop"], errors="coerce"))
 
-    # Replace race values explicitly on the race column
-    df["race"] = df["race"].replace(
-        {
-            "Asian or Pacific Islander": "Asian alone",
-            "Asian": "Asian alone",
-            "Black or African American": "Black or African American alone",
-            "American Indian or Alaska Native": "American Indian or Alaska Native alone",
-            "White": "White alone",
-            "Native Hawaiian or Other Pacific Islander": "Native Hawaiian or Other Pacific Islander alone",
-            "More than one race": "Two or More Races",
-        }
-    )
+    # Mark files with race="ALL" for later duplication (after all math/splining)
+    # This is more efficient than duplicating before processing
+    if (metadata["race"] == "ALL") and (metadata["sex"] != "ALL"):
+        df["race"] = "ALL_RACES"
 
-    return df
+    return pd.DataFrame(df)
 
 
-def parse_not_stated() -> pd.DataFrame:
-    """Parse through CDC WONDER to calculate inflation factor for "not stated" data.
+def parse_not_stated(year: int) -> pd.DataFrame:
+    """Calculate inflation factor for "not stated" deaths for a specific year.
 
     The CDC WONDER contains multiple rows marked as "Not Stated"/"NS". This function
-    combs through the datasets and locates the number of not stated deaths versus stated
-    deaths and separates them by geography, sex, and year. It then calculates an
-    inflation factor for each combination.
+    locates the number of not stated deaths versus stated deaths for a specific year,
+    separated by geography and sex, then calculates an inflation factor.
+
+    Only processes files with 2 or more "ALL" values in the metadata (files meant for
+    not stated calculation) and matching the specified year.
+
+    Args:
+        year (int): The year to calculate inflation factors for.
 
     Returns:
-        pd.DataFrame: A processed DataFrame with year, geography, sex, and inflation
-            factor.
+        pd.DataFrame: A DataFrame with location, sex, and inflation factor for the
+            specified year.
     """
 
     ns, stated = [], []
 
-    # Comb through data files
-    for file_path in pathlib.Path("data/deaths/cdc_wonder/stated_not_stated").rglob(
-        "*"
-    ):
+    # Comb through data files for the specific year
+    for file_path in pathlib.Path("data/deaths").rglob("*"):
         if file_path.is_file():
+            try:
+                # Parse metadata from filename
+                metadata = parse_filename(file_path)
 
-            parts = file_path.name.split("; ")
+                # Only process files with 2+ "ALL" values and matching year
+                all_count = sum(1 for value in metadata.values() if value == "ALL")
+                if all_count < 2 or int(metadata["year"]) != year:
+                    continue
 
-            # Read in data
-            df = (
-                pd.read_csv(file_path)
-                .rename(columns=str.lower)
-                .loc[:, ["sex", "deaths"]]
-                .dropna()
-                .assign(
-                    location=parts[0],
-                    sex=lambda x: x["sex"].replace({"Male": "M", "Female": "F"}),
-                    deaths=lambda x: pd.to_numeric(
-                        x["deaths"].replace({"Suppressed": "0"}), errors="coerce"
-                    ),
-                    year=int(parts[6]),
-                )
-                .assign(
-                    location=lambda x: x["location"].replace(
-                        {"SD": "San Diego County", "CA": "California"}
+                # Read in data
+                df = (
+                    pd.read_csv(file_path, sep=None, engine="python")
+                    .rename(columns=str.lower)
+                    .loc[:, ["sex", "deaths"]]
+                    .dropna()
+                    .assign(
+                        location=metadata["location"],
+                        sex=lambda x: x["sex"].replace({"Male": "M", "Female": "F"}),
+                        deaths=lambda x: pd.to_numeric(
+                            x["deaths"].replace({"Suppressed": "0"}), errors="coerce"
+                        ),
                     )
                 )
-            )
 
-            # Separate data by status
-            if "NS" in file_path.name.upper():
-                df["status"] = "not stated"
-                ns.append(df)
-            else:
-                df["status"] = "stated"
-                stated.append(df)
+                # Separate data by status (check if age_group is "SYA NS")
+                if metadata["age_group"] == "SYA NS":
+                    ns.append(df)
+                else:
+                    stated.append(df)
 
-    # Concatenate all DataFrames into one
+            except (ValueError, KeyError, IndexError):
+                # Skip files that don't match expected format
+                continue
+
+    # Concatenate and aggregate
     ns = (
         pd.concat(ns, ignore_index=True)
-        .groupby(["year", "location", "sex"], as_index=False)["deaths"]
+        .groupby(["location", "sex"], as_index=False)["deaths"]
         .sum()
-        .assign(status="not stated")
     )
-    stated = pd.concat(stated, ignore_index=True)
+    stated = (
+        pd.concat(stated, ignore_index=True)
+        .groupby(["location", "sex"], as_index=False)["deaths"]
+        .sum()
+    )
 
     # Merge and create inflation factor
-    merged = (
-        pd.merge(
-            ns,
-            stated,
-            on=["year", "location", "sex"],
-            suffixes=("_not_stated", "_stated"),
-        ).assign(
-            inflation_factor=lambda x: 1 + (x["deaths_not_stated"] / x["deaths_stated"])
-        )
-    ).drop(
-        columns=[
-            "deaths_not_stated",
-            "status_not_stated",
-            "deaths_stated",
-            "status_stated",
-        ]
-    )
+    result = pd.merge(
+        ns,
+        stated,
+        on=["location", "sex"],
+        suffixes=("_not_stated", "_stated"),
+    ).assign(
+        inflation_factor=lambda x: 1 + (x["deaths_not_stated"] / x["deaths_stated"])
+    )[
+        ["location", "sex", "inflation_factor"]
+    ]
 
-    return merged
+    return result
 
 
 def inflate_deaths(df: pd.DataFrame) -> pd.DataFrame:
@@ -450,17 +413,17 @@ def inflate_deaths(df: pd.DataFrame) -> pd.DataFrame:
             "Not Stated" demographic entries.
     """
 
-    data = parse_not_stated()
+    # Get the year from the dataframe (assumes single year per call)
+    year = int(df["year"].iloc[0])
+    data = parse_not_stated(year)
 
     # Create a filtered DataFrame for "Stated" responses
-    stated_df = df.assign(
-        deaths=pd.to_numeric(df["deaths"], errors="coerce"),
-        pop=pd.to_numeric(df["pop"], errors="coerce"),
-        year=pd.to_numeric(df["year"], errors="coerce"),
-    ).loc[lambda x: (x["hispanic origin"] != "Not Stated") & (x["age"] != "NS")]
+    stated_df = df.loc[
+        lambda x: (x["hispanic origin"] != "Not Stated") & (x["age"] != "NS")
+    ]
 
     results = (
-        pd.merge(stated_df, data, on=["year", "location", "sex"])
+        pd.merge(stated_df, data, on=["location", "sex"])
         .assign(
             deaths=lambda x: x["deaths"] * x["inflation_factor"],
             rates=lambda x: np.where(
@@ -468,13 +431,6 @@ def inflate_deaths(df: pd.DataFrame) -> pd.DataFrame:
             ),
         )
         .drop(columns=["inflation_factor"])
-        .assign(
-            rates=lambda x: np.where(
-                (x["year"] >= 2022) & (x["location"] == "San Diego County"),
-                x["rates"] / 5,
-                x["rates"],
-            )
-        )
     )
 
     return results
@@ -673,9 +629,7 @@ def merge_geographies(
     return county_merged
 
 
-def load_local_files(
-    pop_df: pd.DataFrame, years: int | list[int]
-) -> pd.DataFrame:
+def load_local_files(pop_df: pd.DataFrame, years: int | list[int]) -> pd.DataFrame:
     """Load files from a directory for specific year(s) and combine them by product.
 
     Args:
@@ -699,12 +653,7 @@ def load_local_files(
         "2018-2023": {"San Diego County": [], "California": [], "US": []},
     }
 
-    transform_map = {
-        "1999-2020": transform_CDC_1999,
-        "2018-2023": transform_CDC_2018,
-    }
-
-    for file_path in pathlib.Path("data/deaths/cdc_wonder/geographic").rglob("*"):
+    for file_path in pathlib.Path("data/deaths").rglob("*"):
         if file_path.is_file():
             meta = parse_filename(file_path)
 
@@ -715,12 +664,9 @@ def load_local_files(
             validate_file_name(file_path)
 
             product = meta["product"]
-            transform_fn = transform_map.get(product)
-            if not transform_fn:
-                print(f"Unsupported product: {product}")
-                continue
 
-            df = transform_fn(file_path)
+            # Use unified load_cdc_wonder function
+            df = load_cdc_wonder(file_path)
             if not df.empty:
                 location = df["location"].iloc[0]
 
@@ -854,6 +800,40 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     return df
 
 
+def duplicate_all_races(df: pd.DataFrame) -> pd.DataFrame:
+    """Duplicate rows marked as 'ALL_RACES' into NHPI and MOR race categories.
+
+    This should be called after all mathematical operations (smoothing, etc.) are
+    complete to avoid doing expensive calculations twice.
+
+    Args:
+        df (pd.DataFrame): DataFrame potentially containing 'ALL_RACES' rows.
+
+    Returns:
+        pd.DataFrame: DataFrame with 'ALL_RACES' rows duplicated and renamed to
+            'Native Hawaiian or Other Pacific Islander alone' and 'Two or More Races'.
+    """
+    # Check if there are any ALL_RACES rows
+    if "ALL_RACES" not in df["race"].values:
+        return df
+
+    # Split into ALL_RACES and non-ALL_RACES
+    all_races_df = df[df["race"] == "ALL_RACES"].copy()
+    other_df = df[df["race"] != "ALL_RACES"].copy()
+
+    # Duplicate ALL_RACES into NHPI and MOR
+    nhpi_df = all_races_df.copy()
+    nhpi_df["race"] = "Native Hawaiian or Other Pacific Islander alone"
+
+    mor_df = all_races_df.copy()
+    mor_df["race"] = "Two or More Races"
+
+    # Concatenate all back together
+    result = pd.concat([other_df, nhpi_df, mor_df], ignore_index=True)
+
+    return result
+
+
 def get_death_rates(
     yr: int,
     launch_yr: int,
@@ -891,8 +871,8 @@ def get_death_rates(
         pop_df (pd.DataFrame): Population data for the year
         smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
-        base_yr (int, optional): Base year for batch loading. If provided, loads all years
-            from base_yr to launch_yr on first call. If not provided, defaults to yr.
+        base_yr (int, optional): Base year for batch loading. If provided, loads all
+            years from base_yr to launch_yr on first call. If omitted, defaults to yr.
 
     Returns:
         pd.DataFrame: Death rates broken down by race, sex, and single year
@@ -904,9 +884,11 @@ def get_death_rates(
         # If current year is not available grab the most recent available year
         if yr not in ss_life_tbl["year"].unique():
             ss_yr = ss_life_tbl["year"][ss_life_tbl["year"] <= yr].max()
-            print(
-                f"Warning: Social Security Actuarial Life Table dataset unavailable for {yr}. "
-                f"Defaulting to most recent dataset: {ss_yr}"
+            logger.warning(
+                "Social Security Actuarial Life Table dataset unavailable for: "
+                + str(yr)
+                + " Default to most recent dataset: "
+                + str(ss_yr)
             )
         else:
             ss_yr = yr
@@ -916,8 +898,8 @@ def get_death_rates(
         # Default to 2019 data
         if ss_yr in [2020, 2021]:
             ss_yr = 2019
-            print(
-                "Warning: Social Security Actuarial Life Table dataset not used for 2020/2021. "
+            logger.warning(
+                "Social Security Actuarial Life Table dataset not used for 2020/2021. "
                 "Defaulting to 2019 data."
             )
 
@@ -925,7 +907,7 @@ def get_death_rates(
         # Determine which year's data to use (2021 uses 2020 data)
         cdc_yr = 2020 if yr == 2021 else yr
         if yr == 2021:
-            print("Warning: CDC WONDER data unavailable for 2021. Using 2020 data.")
+            logger.warning("CDC WONDER data unavailable for 2021. Using 2020 data.")
 
         # Batch load on first call (cache key is launch_yr to allow different horizons)
         cache_key = f"launch_{launch_yr}"
@@ -936,7 +918,9 @@ def get_death_rates(
             if 2021 in needed_years:
                 needed_years.add(2020)  # 2021 uses 2020 data
 
-            print(f"Batch loading mortality data for years: {sorted(needed_years)}")
+            logger.warning(
+                "Batch loading mortality data for years: " + str(sorted(needed_years))
+            )
             _MORTALITY_CACHE[cache_key] = load_local_files(
                 pop_df=pop_df, years=list(needed_years)
             )
@@ -988,6 +972,9 @@ def get_death_rates(
 
         # Combine smoothed CDC rates (ages 0-84) with unsmoothed SS rates (ages 85+)
         rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True)
+
+        # Duplicate ALL_RACES rows into NHPI and MOR
+        rates = duplicate_all_races(rates)
 
         return rates[["race", "sex", "age", "rate_death"]]
 
