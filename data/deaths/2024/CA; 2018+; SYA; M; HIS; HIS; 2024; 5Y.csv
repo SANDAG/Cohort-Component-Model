@@ -1,0 +1,182 @@
+"Notes","Single-Year Ages","Single-Year Ages Code","Sex","Sex Code","Hispanic Origin","Hispanic Origin Code",Deaths,Population,Crude Rate,Crude Rate Lower 95% Confidence Interval,Crude Rate Upper 95% Confidence Interval
+,"< 1 year","0","Male","M","Hispanic or Latino","2135-2",2483,547245,453.7,435.9,471.6
+,"1 year","1","Male","M","Hispanic or Latino","2135-2",171,552226,31.0,26.3,35.6
+,"2 years","2","Male","M","Hispanic or Latino","2135-2",124,556790,22.3,18.4,26.2
+,"3 years","3","Male","M","Hispanic or Latino","2135-2",78,562651,13.9,11.0,17.3
+,"4 years","4","Male","M","Hispanic or Latino","2135-2",71,579102,12.3,9.6,15.5
+,"5 years","5","Male","M","Hispanic or Latino","2135-2",67,594063,11.3,8.7,14.3
+,"6 years","6","Male","M","Hispanic or Latino","2135-2",44,606389,7.3,5.3,9.7
+,"7 years","7","Male","M","Hispanic or Latino","2135-2",53,617828,8.6,6.4,11.2
+,"8 years","8","Male","M","Hispanic or Latino","2135-2",59,627612,9.4,7.2,12.1
+,"9 years","9","Male","M","Hispanic or Latino","2135-2",60,638883,9.4,7.2,12.1
+,"10 years","10","Male","M","Hispanic or Latino","2135-2",71,645887,11.0,8.6,13.9
+,"11 years","11","Male","M","Hispanic or Latino","2135-2",71,656450,10.8,8.4,13.6
+,"12 years","12","Male","M","Hispanic or Latino","2135-2",92,674553,13.6,11.0,16.7
+,"13 years","13","Male","M","Hispanic or Latino","2135-2",104,691191,15.0,12.2,17.9
+,"14 years","14","Male","M","Hispanic or Latino","2135-2",162,699775,23.2,19.6,26.7
+,"15 years","15","Male","M","Hispanic or Latino","2135-2",231,702712,32.9,28.6,37.1
+,"16 years","16","Male","M","Hispanic or Latino","2135-2",269,698702,38.5,33.9,43.1
+,"17 years","17","Male","M","Hispanic or Latino","2135-2",425,688471,61.7,55.9,67.6
+,"18 years","18","Male","M","Hispanic or Latino","2135-2",628,674421,93.1,85.8,100.4
+,"19 years","19","Male","M","Hispanic or Latino","2135-2",749,656118,114.2,106.0,122.3
+,"20 years","20","Male","M","Hispanic or Latino","2135-2",771,658565,117.1,108.8,125.3
+,"21 years","21","Male","M","Hispanic or Latino","2135-2",848,658227,128.8,120.2,137.5
+,"22 years","22","Male","M","Hispanic or Latino","2135-2",922,652252,141.4,132.2,150.5
+,"23 years","23","Male","M","Hispanic or Latino","2135-2",936,647631,144.5,135.3,153.8
+,"24 years","24","Male","M","Hispanic or Latino","2135-2",1029,645016,159.5,149.8,169.3
+,"25 years","25","Male","M","Hispanic or Latino","2135-2",1096,642422,170.6,160.5,180.7
+,"26 years","26","Male","M","Hispanic or Latino","2135-2",1119,646932,173.0,162.8,183.1
+,"27 years","27","Male","M","Hispanic or Latino","2135-2",1249,652795,191.3,180.7,201.9
+,"28 years","28","Male","M","Hispanic or Latino","2135-2",1248,660597,188.9,178.4,199.4
+,"29 years","29","Male","M","Hispanic or Latino","2135-2",1376,667565,206.1,195.2,217.0
+,"30 years","30","Male","M","Hispanic or Latino","2135-2",1427,668996,213.3,202.2,224.4
+,"31 years","31","Male","M","Hispanic or Latino","2135-2",1458,659040,221.2,209.9,232.6
+,"32 years","32","Male","M","Hispanic or Latino","2135-2",1402,648932,216.0,204.7,227.4
+,"33 years","33","Male","M","Hispanic or Latino","2135-2",1456,633360,229.9,218.1,241.7
+,"34 years","34","Male","M","Hispanic or Latino","2135-2",1448,620686,233.3,221.3,245.3
+,"35 years","35","Male","M","Hispanic or Latino","2135-2",1450,608786,238.2,225.9,250.4
+,"36 years","36","Male","M","Hispanic or Latino","2135-2",1473,598958,245.9,233.4,258.5
+,"37 years","37","Male","M","Hispanic or Latino","2135-2",1560,592251,263.4,250.3,276.5
+,"38 years","38","Male","M","Hispanic or Latino","2135-2",1583,586825,269.8,256.5,283.0
+,"39 years","39","Male","M","Hispanic or Latino","2135-2",1719,579795,296.5,282.5,310.5
+,"40 years","40","Male","M","Hispanic or Latino","2135-2",1742,578377,301.2,287.0,315.3
+,"41 years","41","Male","M","Hispanic or Latino","2135-2",1691,565429,299.1,284.8,313.3
+,"42 years","42","Male","M","Hispanic or Latino","2135-2",1691,552824,305.9,291.3,320.5
+,"43 years","43","Male","M","Hispanic or Latino","2135-2",1772,540190,328.0,312.8,343.3
+,"44 years","44","Male","M","Hispanic or Latino","2135-2",1864,529743,351.9,335.9,367.8
+,"45 years","45","Male","M","Hispanic or Latino","2135-2",1957,518352,377.5,360.8,394.3
+,"46 years","46","Male","M","Hispanic or Latino","2135-2",2003,508686,393.8,376.5,411.0
+,"47 years","47","Male","M","Hispanic or Latino","2135-2",2091,499634,418.5,400.6,436.4
+,"48 years","48","Male","M","Hispanic or Latino","2135-2",2097,491987,426.2,408.0,444.5
+,"49 years","49","Male","M","Hispanic or Latino","2135-2",2267,487273,465.2,446.1,484.4
+,"50 years","50","Male","M","Hispanic or Latino","2135-2",2348,488028,481.1,461.7,500.6
+,"51 years","51","Male","M","Hispanic or Latino","2135-2",2552,480720,530.9,510.3,551.5
+,"52 years","52","Male","M","Hispanic or Latino","2135-2",2677,475245,563.3,541.9,584.6
+,"53 years","53","Male","M","Hispanic or Latino","2135-2",2755,464830,592.7,570.6,614.8
+,"54 years","54","Male","M","Hispanic or Latino","2135-2",2977,452798,657.5,633.8,681.1
+,"55 years","55","Male","M","Hispanic or Latino","2135-2",3054,441838,691.2,666.7,715.7
+,"56 years","56","Male","M","Hispanic or Latino","2135-2",3303,427084,773.4,747.0,799.8
+,"57 years","57","Male","M","Hispanic or Latino","2135-2",3401,410932,827.6,799.8,855.4
+,"58 years","58","Male","M","Hispanic or Latino","2135-2",3545,395842,895.6,866.1,925.0
+,"59 years","59","Male","M","Hispanic or Latino","2135-2",3668,379449,966.7,935.4,997.9
+,"60 years","60","Male","M","Hispanic or Latino","2135-2",3875,365996,1058.8,1025.4,1092.1
+,"61 years","61","Male","M","Hispanic or Latino","2135-2",4044,346167,1168.2,1132.2,1204.2
+,"62 years","62","Male","M","Hispanic or Latino","2135-2",3984,329092,1210.6,1173.0,1248.2
+,"63 years","63","Male","M","Hispanic or Latino","2135-2",4097,310504,1319.5,1279.1,1359.9
+,"64 years","64","Male","M","Hispanic or Latino","2135-2",4160,293303,1418.3,1375.2,1461.4
+,"65 years","65","Male","M","Hispanic or Latino","2135-2",4133,274882,1503.6,1457.7,1549.4
+,"66 years","66","Male","M","Hispanic or Latino","2135-2",4043,256523,1576.1,1527.5,1624.7
+,"67 years","67","Male","M","Hispanic or Latino","2135-2",4236,238799,1773.9,1720.5,1827.3
+,"68 years","68","Male","M","Hispanic or Latino","2135-2",4064,220328,1844.5,1787.8,1901.2
+,"69 years","69","Male","M","Hispanic or Latino","2135-2",4084,203667,2005.2,1943.7,2066.7
+,"70 years","70","Male","M","Hispanic or Latino","2135-2",4114,187253,2197.0,2129.9,2264.2
+,"71 years","71","Male","M","Hispanic or Latino","2135-2",3890,172211,2258.9,2187.9,2329.8
+,"72 years","72","Male","M","Hispanic or Latino","2135-2",3958,159227,2485.8,2408.3,2563.2
+,"73 years","73","Male","M","Hispanic or Latino","2135-2",3981,147757,2694.3,2610.6,2778.0
+,"74 years","74","Male","M","Hispanic or Latino","2135-2",3795,134920,2812.8,2723.3,2902.3
+,"75 years","75","Male","M","Hispanic or Latino","2135-2",3849,122265,3148.1,3048.6,3247.5
+,"76 years","76","Male","M","Hispanic or Latino","2135-2",3642,109794,3317.1,3209.4,3424.9
+,"77 years","77","Male","M","Hispanic or Latino","2135-2",3602,98380,3661.3,3541.7,3780.9
+,"78 years","78","Male","M","Hispanic or Latino","2135-2",3525,86399,4079.9,3945.2,4214.6
+,"79 years","79","Male","M","Hispanic or Latino","2135-2",3503,77749,4505.5,4356.3,4654.7
+,"80 years","80","Male","M","Hispanic or Latino","2135-2",3573,70967,5034.7,4869.6,5199.8
+,"81 years","81","Male","M","Hispanic or Latino","2135-2",3482,64195,5424.1,5243.9,5604.3
+,"82 years","82","Male","M","Hispanic or Latino","2135-2",3431,57463,5970.8,5771.0,6170.6
+,"83 years","83","Male","M","Hispanic or Latino","2135-2",3351,52068,6435.8,6217.9,6653.7
+,"84 years","84","Male","M","Hispanic or Latino","2135-2",3321,46967,7070.9,6830.4,7311.4
+,"85 years","85","Male","M","Hispanic or Latino","2135-2",3286,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"86 years","86","Male","M","Hispanic or Latino","2135-2",3148,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"87 years","87","Male","M","Hispanic or Latino","2135-2",3198,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"88 years","88","Male","M","Hispanic or Latino","2135-2",2946,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"89 years","89","Male","M","Hispanic or Latino","2135-2",2860,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"90 years","90","Male","M","Hispanic or Latino","2135-2",2606,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"91 years","91","Male","M","Hispanic or Latino","2135-2",2513,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"92 years","92","Male","M","Hispanic or Latino","2135-2",2322,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"93 years","93","Male","M","Hispanic or Latino","2135-2",1944,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"94 years","94","Male","M","Hispanic or Latino","2135-2",1719,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"95 years","95","Male","M","Hispanic or Latino","2135-2",1406,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"96 years","96","Male","M","Hispanic or Latino","2135-2",1083,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"97 years","97","Male","M","Hispanic or Latino","2135-2",901,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"98 years","98","Male","M","Hispanic or Latino","2135-2",647,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"99 years","99","Male","M","Hispanic or Latino","2135-2",491,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"100+ years","100","Male","M","Hispanic or Latino","2135-2",860,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+,"Not Stated","NS","Male","M","Hispanic or Latino","2135-2",14,Not Applicable,Not Applicable,Not Applicable,Not Applicable
+"---"
+"Dataset: Underlying Cause of Death, 2018-2024, Single Race"
+"Query Parameters:"
+"Title: CA; 2018+; SYA; M; HIS; HIS; 2024; 5Y"
+"Hispanic Origin: Hispanic or Latino"
+"Sex: Male"
+"States: California (06)"
+"Year/Month: 2020; 2021; 2022; 2023; 2024"
+"Group By: Single-Year Ages; Sex; Hispanic Origin"
+"Show Totals: False"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/ucd-expanded.html for more information."
+"---"
+"Query Date: Mar 13, 2026 12:13:11 AM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 2018-2024 on CDC WONDER Online Database, released in 2026. Data are from the Multiple Cause of Death Files,"
+"2018-2024, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/ucd-icd10-expanded.html on Mar 13, 2026 12:13:11 AM"
+"---"
+Caveats:
+"1. Population and rates are labeled 'Not Applicable' when they include a subset of ages 85-100+ because populations are not"
+"available for those ages. More information: http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Ages 85-100."
+"2. Deaths of persons with Age ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among age groups,"
+"so are not included in age-specific counts, age-specific rates or in any age-adjusted rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Not Stated."
+"3. Deaths of persons with Hispanic origin ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among"
+"Hispanic Origin groups, so are not included in the Hispanic Origin specific counts and rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Not Stated."
+"4. Information included on the death certificate about the race and Hispanic ethnicity of the decedent is reported by the"
+"funeral director as provided by an informant, often the surviving next of kin, or, in the absence of an informant, on the basis"
+"of observation. Race and ethnicity information from the census is by self-report. To the extent that race and Hispanic origin"
+"are inconsistent between these two data sources, death rates will be biased. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Racial Differences."
+"5. The method used to calculate 95% confidence intervals is documented here: More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Confidence-Intervals."
+"6. The population figures for year 2024 are single-race estimates of the July 1 resident population, from the Vintage 2024"
+"postcensal series released by the Census Bureau on June 27, 2024. The 2024 series is based on the Modified Blended Base produced"
+"by the US Census Bureau in lieu of the April 1, 2020 decennial population count. The Modified Blended Base consists of the blend"
+"of Vintage 2020 postcensal population estimates for April 1, 2020, 2020 Demographic Analysis Estimates, and 2020 Census data"
+"from the internal Census Edited File (CEF). The population figures for year 2023 are single-race estimates of the July 1"
+"resident population, from the Vintage 2023 postcensal series released by the Census Bureau on June 27, 2024. The 2023 series is"
+"based on the Modified Blended Base produced by the US Census Bureau in lieu of the April 1, 2020 decennial population count. The"
+"Modified Blended Base consists of the blend of Vintage 2020 postcensal population estimates for April 1, 2020, 2020 Demographic"
+"Analysis Estimates, and 2020 Census data from the internal Census Edited File (CEF). The population figures for years 2022 are"
+"single-race estimates of the July 1 resident population, from the Vintage 2022 postcensal series released by the Census Bureau"
+"on June 22, 2023. The 2022 series is based on the Modified Blended Base produced by the US Census Bureau in lieu of the April 1,"
+"2020 decennial population count. The Modified Blended Base consists of the blend of Vintage 2020 postcensal population estimates"
+"for April 1, 2020, 2020 Demographic Analysis Estimates, and 2020 Census data from the internal Census Edited File (CEF). The"
+"population figures for years 2021 are single-race estimates of the July 1 resident population, based on the Blended Base"
+"produced by the US Census Bureau in lieu of the April 1, 2020 decennial population count, from the Vintage 2021 postcensal"
+"series released by the Census Bureau on June 30, 2022. The population figures for year 2020 are single-race estimates of the"
+"July 1 resident population, from the Vintage 2020 postcensal series based on April 2010 Census, released by the Census Bureau on"
+"July 27, 2021. The population figures for year 2019 are single-race estimates of the July 1 resident population, from the"
+"Vintage 2019 postcensal series based on April 2010 Census, released by the Census Bureau on June 25, 2020. The population"
+"figures for year 2018 are single-race estimates of the July 1 resident population, from the Vintage 2018 postcensal series based"
+"on April 2010 Census, released by the Census Bureau on June 20, 2019. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Population Data."
+"7. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Age"
+"Group."
+"8. The U.S. - Mexico Border Regions distinguish between counties near the U.S. - Mexico border in the border states of Arizona,"
+"California, New Mexico, and Texas, and other areas. To simplify the Border region analysis, two mutually exclusive regions"
+"within the United States are available: 1) U.S. - Mexico Border Region (i.e., 44 counties within 100 kilometers (62 miles) of"
+"the U.S. - Mexico border), and 2) the U.S. Non-Border Region with the remaining counties of the selected four border states. The"
+"Border counties selection was based on the 1983 La Paz Agreement:"
+"https://www.epa.gov/sites/production/files/2015-09/documents/lapazagreement.pdf.. (i.e., counties for each state which fall"
+"within 100 kilometers of the Border). Statistics are also available by each of the USA border counties along the U.S.-Mexico"
+"area."
+"9. After the creation of the final 2023 dataset, North Carolina updated the cause of death information for over 900 death"
+"certificates to include a cause of death code indicating drug overdose (ICD-10 underlying cause-of-death codes: X40-X44,"
+"X60-X64, X85, and Y10-Y14). Jurisdictions can continue to update death certificates after the closing of the mortality file. As"
+"a result, users should consider that the actual death count for drug overdose deaths for North Carolina in 2023 is over 4,400"
+"deaths, with a crude rate of approximately 41.0 per 100,000 population, and an age-adjusted rate of approximately 42.1 per"
+"100,000 population. These deaths will not be updated on the final mortality datasets."
