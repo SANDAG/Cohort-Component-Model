@@ -290,73 +290,54 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     # Get metadata dict for column assignment
     metadata = parse_filename(file_path)
 
-    # Skip files with 2+ "ALL" values (meant for not stated calculation)
-    all_count = sum(1 for value in metadata.values() if value == "ALL")
-    if all_count >= 2:
+    # Files with fields that are "Not Stated" or "All" across all fields are skipped
+    # These files are meant for calculating inflation factors for "Not Stated" values
+    if (
+        (metadata["age_group"] == "Not Stated")
+        | (metadata["hispanic"] == "Not Stated")
+        | (
+            (metadata["sex"] == "All")
+            & (metadata["race"] == "All")
+            & (metadata["hispanic"] == "All")
+        )
+    ):
         return pd.DataFrame()
 
     # Ages to be excluded from dataset
     excluding_sya = [str(age) for age in range(85, 101)]
 
-    required_columns_1999 = [
-        "Single-Year Ages Code",
-        "Sex Code",
-        "Hispanic Origin",
-        "Race",
-        "Year",
-        "Deaths",
-        "Population",
-    ]
-
-    column_map_1999 = {
-        "Single-Year Ages Code": "age",
-        "Sex Code": "sex",
-        "Hispanic Origin": "hispanic origin",
-        "Race": "race",
-        "Year": "year",
-        "Deaths": "deaths",
-        "Population": "pop",
-        "Location": "location",
-    }
-
-    required_columns_2018 = [
-        "Single-Year Ages Code",
-        "Sex Code",
-        "Hispanic Origin",
-        "Single Race 6",
-        "Year",
-        "Deaths",
-        "Population",
-    ]
-
-    column_map_2018 = {
-        "Single-Year Ages Code": "age",
-        "Sex Code": "sex",
-        "Hispanic Origin": "hispanic origin",
-        "Year": "year",
-        "Single Race 6": "race",
-        "Deaths": "deaths",
-        "Population": "pop",
-        "Location": "location",
-    }
-
-    df = pd.read_csv(file_path, sep=None, engine="python").pipe(
-        lambda x: (x.loc[: x[x["Notes"] == "---"].index.min() - 1])
-    )
-
-    # Determine which format based on column presence
-    if "Single Race 6" not in df.columns:
-        # 1999-2020 format
-        required_columns = required_columns_1999
-        column_map = column_map_1999
-    elif "Single Race 6" in df.columns:
-        # 2018-2023 format
-        required_columns = required_columns_2018
-        column_map = column_map_2018
-
     df = (
-        df.loc[:, lambda x: [col for col in required_columns if col in x.columns]]
-        .rename(columns=column_map, errors="ignore")
+        pd.read_csv(
+            file_path,
+            sep=None,
+            engine="python",
+            usecols=lambda col: col
+            in [
+                "Single-Year Ages Code",
+                "Sex Code",
+                "Hispanic Origin",
+                "Year",
+                "Deaths",
+                "Population",
+                "Race",
+                "Single Race 6",
+                "Notes",
+            ],
+        )
+        .pipe(lambda x: (x.loc[: x[x["Notes"] == "---"].index.min() - 1]))
+        .drop(columns=["Notes"])
+        .rename(
+            columns={
+                "Single-Year Ages Code": "age",
+                "Sex Code": "sex",
+                "Hispanic Origin": "hispanic origin",
+                "Year": "year",
+                "Deaths": "deaths",
+                "Population": "pop",
+                "Race": "race",
+                "Single Race 6": "race",
+            }
+        )
         .assign(
             race=lambda x: x["race"] if "race" in x.columns else "Hispanic",
             location=metadata["location"],
@@ -365,6 +346,10 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             deaths=lambda x: pd.to_numeric(x["deaths"], errors="coerce"),
         )
         .assign(
+            # Convert 2022+ San Diego County 5-year average deaths to annual deaths
+            # Population for 2022+ county level is suppressed and will be replaced
+            # with yearly CCM population estimates which require annual death counts to
+            # calculate rates
             deaths=lambda x: np.where(
                 (x["year"] >= 2022) & (x["location"] == "San Diego County"),
                 x["deaths"] / 5,
@@ -389,10 +374,9 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     if "pop" in df.columns:
         df = df.assign(pop=lambda x: pd.to_numeric(x["pop"], errors="coerce"))
 
-    # Mark files with race="ALL" for later duplication (after all math/splining)
-    # This is more efficient than duplicating before processing
-    if (metadata["race"] == "ALL") and (metadata["sex"] != "ALL"):
-        df["race"] = "ALL_RACES"
+    # Mark files with race="All" for later duplication
+    if (metadata["race"] == "All") and (metadata["sex"] != "All"):
+        df["race"] = metadata["race"]
 
     return pd.DataFrame(df)
 
@@ -417,16 +401,29 @@ def parse_not_stated(year: int) -> pd.DataFrame:
 
     ns, stated = [], []
 
-    # Comb through data files for the specific year
+    # Comb through data files for "Not Stated" files matching the year
     for file_path in pathlib.Path("data/deaths").rglob("*"):
         if file_path.is_file():
             try:
                 # Parse metadata from filename
                 metadata = parse_filename(file_path)
 
-                # Only process files with 2+ "ALL" values and matching year
-                all_count = sum(1 for value in metadata.values() if value == "ALL")
-                if all_count < 2 or int(metadata["year"]) != year:
+                # Only process files for the specified year
+                if int(metadata["year"]) != year:
+                    continue
+
+                # Only process files related to "Not Stated" calculation
+                # These are files with age_group="Not Stated" OR hispanic="Not Stated"
+                # OR files with all demographics set to "All"
+                if not (
+                    (metadata["age_group"] == "Not Stated")
+                    | (metadata["hispanic"] == "Not Stated")
+                    | (
+                        (metadata["sex"] == "All")
+                        & (metadata["race"] == "All")
+                        & (metadata["hispanic"] == "All")
+                    )
+                ):
                     continue
 
                 # Read in data
@@ -445,7 +442,7 @@ def parse_not_stated(year: int) -> pd.DataFrame:
                 )
 
                 # Separate data by status (check if age_group is "SYA NS")
-                if metadata["age_group"] == "SYA NS":
+                if metadata["age_group"] == "Not Stated":
                     ns.append(df)
                 else:
                     stated.append(df)
