@@ -10,176 +10,262 @@ logger = logging.getLogger(__name__)
 _MORTALITY_CACHE = {}
 
 
-def parse_filename(file_path: pathlib.Path) -> dict:
-    """Parses and validates file name matches expected metadata structure.
+def parse_filename(fp: pathlib.Path) -> dict:
+    """Parses and validates file name.
+
+    Mortality rate files are downloaded from the NCHS CDC WONDER website.
+    https://wonder.cdc.gov/deaths-by-underlying-cause.html
+
+    File names for mortality rates are assumed to follow the structure
+    delimited by semicolons with the following parts in order:
+    Location; Product; Age Group; Sex; Hispanic; Race; Year; Moving Average
+
+    This function checks that the file name contains exactly 8 parts, that
+    each part is in the expected position, and that the values for each part
+    are valid based on predefined lists. If any part is missing, extra, or has
+    an incorrect value, a ValueError is raised with a descriptive message.
 
     Args:
-        file_path (pathlib.Path): The file path.
+        fp (pathlib.Path): The file path to parse and validate
 
     Raises:
-        ValueError: If there are missing/extra/incorrect parts in file name.
+        ValueError: If missing/extra/incorrect parts in file name
 
     Returns:
-        dict: A dictionary of the metadata for each file.
+        dict: A dictionary of the metadata for the file based on the file name
     """
-
-    # Naming for filename structure
-    valid_config = {
-        0: {
-            "name": "location",
-            "map": {"SD": "San Diego County", "CA": "California", "US": "US"},
-        },
-        1: {
-            "name": "product",
-            "map": {"1999-2020": "1999-2020", "2018-2023": "2018-2023"},
-        },
-        2: {
-            "name": "age_group",
-            "map": {"SYA": "Single-Year Ages", "SYA NS": "SYA NS"},
-        },
-        3: {
-            "name": "sex",
-            "map": {"F": "Female", "M": "Male", "ALL": "ALL"},
-        },
-        4: {
-            "name": "hispanic",
+    # Define expected structure and valid values and map values to their
+    # labels in the underlying file content for later validation
+    valid_parts = {
+        "location": {
+            "order": 0,
             "map": {
-                "NS": "Not Stated",
+                "SD": "San Diego County",
+                "CA": "California",
+                "US": "United States",
+            },
+        },
+        "product": {"order": 1, "map": {"1999-2020": "1999-2020", "2018+": "2018+"}},
+        "age_group": {
+            "order": 2,
+            "map": {"SYA": "Single-Year Ages", "NS": "Not Stated", "ALL": "All"},
+        },
+        "sex": {"order": 3, "map": {"F": "Female", "M": "Male", "ALL": "All"}},
+        "hispanic": {
+            "order": 4,
+            "map": {
                 "HIS": "Hispanic or Latino",
                 "NON": "Not Hispanic or Latino",
-                "ALL": "ALL",
+                "NS": "Not Stated",
+                "ALL": "All",
             },
         },
-        5: {
-            "name": "race",
+        "race": {
+            "order": 5,
             "map": {
-                "ASIAN": "Asian",
                 "AIAN": "American Indian or Alaska Native",
-                "API": "Asian",
+                "API": "Asian or Pacific Islander",
+                "ASIAN": "Asian",
                 "BAA": "Black or African American",
-                "WH": "White",
+                "MOR": "More than one race",
                 "HIS": "Hispanic",
                 "NHPI": "Native Hawaiian or Other Pacific Islander",
-                "MOR": "More than one race",
-                "ALL": "ALL",
+                "WH": "White",
+                "ALL": "All",
+                "NA": "Not Available",
             },
         },
-        6: {
-            "name": "year",
-            "map": None,  # Accept any year value without restriction
-        },
-        7: {
-            "name": "moving_average",
-            "map": {"5Y": "5Y"},
-        },
+        "year": {
+            "order": 6,
+            "map": None,
+        },  # Accept any year value without restriction
+        "moving_average": {"order": 7, "map": {"5Y": "5-Year Moving Average"}},
     }
 
-    parts = file_path.name.split("; ")
-    # Strip file extension from last part
-    parts[7] = parts[7].split(".")[0]
+    # Break file name into parts based on ";" separator
+    parts = fp.stem.split("; ")
 
     if len(parts) != 8:
-        raise ValueError(f"Invalid number of parts in file: {file_path}")
+        raise ValueError(f"Invalid number of parts in file: {fp}")
 
     metadata = {}
-    for i, part in enumerate(parts):
-        field = valid_config[i]
-        key = field["name"]
-        valid_map = field["map"]
-
-        if valid_map is None:
-            # No validation, accept any value
-            metadata[key] = part
-        elif part in valid_map:
-            # Valid value, map it
-            metadata[key] = valid_map[part]
-        else:
+    for key, config in valid_parts.items():
+        part_value = parts[config["order"]]  # type: ignore
+        if config["map"] is not None and part_value not in config["map"]:
             raise ValueError(
-                f"Invalid value for {key}: '{part}'. Valid values: {list(valid_map.keys())}"
+                f"Invalid value for {key}: '{part_value}'. Valid values: {list(config['map'].keys())}"  # type: ignore
             )
+        elif config["map"] is not None:
+            metadata[key] = config["map"][part_value]  # type: ignore
+        else:
+            metadata[key] = part_value
 
     return metadata
 
 
-def validate_file_name(file_path: pathlib.Path) -> None:
-    """Validates that metadata matches the query metadata in the file's Notes column.
+def validate_file(fp: pathlib.Path) -> None:
+    """Validates file contents against metadata parsed from file name.
+
+    Mortality rate files are downloaded from the NCHS CDC WONDER website.
+    https://wonder.cdc.gov/deaths-by-underlying-cause.html
+
+    File names are expected to follow an explicit metadata structure as
+    detailed in the parse_filename function. This function verifies the
+    contents of the downloaded file match the file name metadata by parsing
+    the "Notes" section of the CDC WONDER downloaded file and comparing its
+    contents to the metadata implied by the file name.
 
     Args:
-        file_path (pathlib.Path): The file path.
+        fp (pathlib.Path): The file path to parse and validate
 
     Raises:
-        ValueError: If any mismatch is found between the file content and the metadata.
+        ValueError: If missing/extra/incorrect/mismatching metadata and notes
     """
 
-    metadata = parse_filename(file_path)
+    # Parse and validate the file name to extract metadata
+    metadata = parse_filename(fp)
 
-    # Create a check for moving average
-    year_check = "; ".join(str(int(metadata["year"]) - i) for i in reversed(range(5)))
+    # Stream the file content to extract query metadata from notes
+    notes = {}
+    with open(fp, "r") as file:
+        for line in file.readlines():
+            line = line.strip('"\n')
+            if line.startswith("States:"):
+                notes["location"] = line.split(":")[1].strip()
+            elif line.startswith("Dataset:"):
+                notes["product"] = line.split(":")[1].strip()
+            elif line.startswith("Sex:"):
+                notes["sex"] = line.split(":")[1].strip()
+            elif line.startswith("Hispanic Origin:"):
+                notes["hispanic"] = line.split(":")[1].strip()
+            elif line.startswith("Race:"):
+                notes["race"] = line.split(":")[1].strip()
+            elif line.startswith("Single Race 6:"):
+                notes["race"] = line.split(":")[1].strip()
+            elif line.startswith("Year/Month:"):
+                notes["year"] = line.split(":")[1].strip()
+            elif line.startswith("Single-Year Ages"):
+                notes["age_group"] = line
+            else:
+                pass
 
-    df = pd.read_csv(file_path, sep=None, engine="python")
+    # Location validation is done explicitly for County and State level
+    # The United States location will have no information in the notes
+    if "location" in notes:
+        if metadata["location"] not in notes["location"]:
+            raise ValueError(
+                f"Metadata location: '{metadata['location']}' Does not match file contents: '{notes['location']}'."
+            )
+    elif metadata["location"] != "United States":
+        raise ValueError(
+            f"Metadata location: '{metadata['location']}' does not match file contents: 'United States'."
+        )
+    else:
+        pass
 
-    if "Notes" not in df.columns:
-        raise ValueError("Missing Notes column for validation")
-
-    notes = df["Notes"].astype(str)
-
-    # Age Group Validation
-    if ("Single-Year Ages" in df.columns) and (
-        metadata["age_group"] != "Single-Year Ages"
-    ):
-        raise ValueError("Incorrect age specification")
-
-    # Sex and Hispanic Validation
-    single_value_checks = {
-        "sex": "Sex",
-        "hispanic": "Hispanic Origin",
-    }
-
-    for key, label in single_value_checks.items():
-        # Only validate when metadata specifies a specific value (not "ALL")
-        if metadata[key] != "ALL":
-            if not notes.str.contains(f"{label}: {metadata[key]}").any():
-                raise ValueError(f"Incorrect {key} value")
-
-    # Location Validation
-    if metadata["location"] == "US" and notes.str.contains("States").any():
-        raise ValueError("Incorrect national location")
-    elif metadata["location"] != "US":
-        if not notes.str.contains(f"States: {metadata['location']}").any():
-            raise ValueError("Incorrect city or state location")
-
-    # Year Validation
-    if not notes.str.contains(f"Year/Month: {year_check}").any():
-        raise ValueError("Incorrect year(s)")
-
-    # Check for 1999-2020 formatting
-    if metadata["product"] == "1999-2020":
-        if (~notes.str.contains(f"Race: {metadata['race']}").any()) and metadata[
-            "race"
-        ] not in ["Hispanic", "ALL"]:
-            raise ValueError("Incorrect race metadata (1999-2020)")
-        elif (notes.str.contains(f"Race: {metadata['race']}").any()) and metadata[
-            "race"
-        ] in ["Hispanic", "ALL"]:
-            raise ValueError("Incorrect race metadata (1999-2020)")
-
-    # Check for 2018-2023 formatting
-    elif metadata["product"] == "2018-2023":
+    # Product metadata validation is done explicitly for both products
+    # This information is always available in the notes
+    if "product" in notes:
         if (
-            ~notes.str.contains(f"Single Race 6: {metadata['race']}").any()
-        ) and metadata["race"] not in [
-            "Hispanic",
-            "ALL",
-        ]:
-            raise ValueError("Incorrect race metadata (2018-2023)")
+            metadata["product"] == "1999-2020"
+            and notes["product"] != "Underlying Cause of Death, 1999-2020"
+        ) or (metadata["product"] == "2018+" and "Single Race" not in notes["product"]):
+            raise ValueError(
+                f"Metadata product: '{metadata['product']}' does not match file contents: '{notes['product']}'."
+            )
+    else:
+        raise ValueError("Product metadata is missing from file contents.")
 
+    # Age group validation is done explicitly for Single Year Age and Not Stated
+    # The All category will have no notes information
+    # Single-Year Ages may or may not have notes (depends on Group By parameters)
+    # Not Stated will have "Single-Year Ages: Not Stated" in notes
+    if "age_group" in notes:
         if (
-            notes.str.contains(f"Single Race 6: {metadata['race']}").any()
-        ) and metadata["race"] in [
-            "Hispanic",
-            "ALL",
-        ]:
-            raise ValueError("Incorrect race metadata (2018-2023)")
+            metadata["age_group"] == "Single-Year Ages"
+            and "Single-Year Ages" in notes["age_group"]
+        ):
+            pass
+        elif (
+            metadata["age_group"] == "Not Stated" and "Not Stated" in notes["age_group"]
+        ):
+            pass
+        else:
+            raise ValueError(
+                f"Metadata age_group: '{metadata['age_group']}' does not match file contents: '{notes['age_group']}'."
+            )
+    elif metadata["age_group"] in ["All", "Single-Year Ages"]:
+        pass
+    else:
+        raise ValueError(
+            f"Metadata age_group: '{metadata['age_group']}' does not match file contents."
+        )
+
+    # Sex validation is done explicitly for Female and Male
+    # The All category will have no notes information
+    if "sex" in notes:
+        if metadata["sex"] == notes["sex"]:
+            pass
+        else:
+            raise ValueError(
+                f"Metadata sex: '{metadata['sex']}' does not match file contents: '{notes['sex']}'."
+            )
+    elif metadata["sex"] == "All":
+        pass
+    else:
+        raise ValueError(
+            f"Metadata sex: '{metadata['sex']}' does not match file contents."
+        )
+
+    # Hispanic validation is done explicitly excepting for All
+    # The All category may have "Hispanic or Latino; Not Hispanic or Latino" in notes
+    if "hispanic" in notes:
+        if (
+            metadata["hispanic"] == "All"
+            and notes["hispanic"] == "Hispanic or Latino; Not Hispanic or Latino"
+        ):
+            pass
+        elif metadata["hispanic"] == notes["hispanic"]:
+            pass
+        else:
+            raise ValueError(
+                f"Metadata hispanic: '{metadata['hispanic']}' does not match file contents: '{notes['hispanic']}'."
+            )
+    elif metadata["hispanic"] == "All":
+        pass
+    else:
+        raise ValueError(
+            f"Metadata hispanic: '{metadata['hispanic']}' does not match file contents."
+        )
+
+    # Race validation is done explicitly excepting for All and Hispanic
+    # The All and Hispanic category will have no notes information
+    if "race" in notes:
+        if metadata["race"] == notes["race"]:
+            pass
+        else:
+            raise ValueError(
+                f"Metadata race: '{metadata['race']}' does not match file contents: '{notes['race']}'."
+            )
+    elif metadata["race"] in ["All", "Hispanic"]:
+        pass
+    else:
+        raise ValueError(
+            f"Metadata race: '{metadata['race']}' does not match file contents."
+        )
+
+    # Year validation for 5-year moving average and years
+    # Build expected year string: "year-4; year-3; year-2; year-1; year"
+    if "year" in notes:
+        expected_years = "; ".join(
+            str(int(metadata["year"]) - i) for i in reversed(range(5))
+        )
+        if expected_years not in notes["year"]:
+            raise ValueError(
+                f"Metadata year: '{metadata['year']}' (5-year moving average) does not match file contents: '{notes['year']}'."
+            )
+    else:
+        raise ValueError("Year metadata is missing from file contents.")
 
 
 def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
