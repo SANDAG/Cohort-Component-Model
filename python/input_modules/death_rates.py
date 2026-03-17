@@ -478,47 +478,6 @@ def parse_not_stated(year: int) -> pd.DataFrame:
     return result
 
 
-def inflate_deaths(df: pd.DataFrame) -> pd.DataFrame:
-    """Inflate death counts based on the proportion of deaths labeled as "Not Stated".
-
-    The rows with "Not Stated" or "NS" have associated death counts but no population
-    counts, making them unattributable to a specific demographic.
-
-    To address this, the function:
-    - Inflates the attributable deaths by this proportion
-    - Recalculates rates based on the inflated death counts
-
-    Args:
-        df (pd.DataFrame): A geography-specific DataFrame containing mortality data.
-
-    Returns:
-        pd.DataFrame: A processed DataFrame with adjusted death counts, rates, and no
-            "Not Stated" demographic entries.
-    """
-
-    # Get the year from the dataframe (assumes single year per call)
-    year = int(df["year"].iloc[0])
-    data = parse_not_stated(year)
-
-    # Create a filtered DataFrame for "Stated" responses
-    stated_df = df.loc[
-        lambda x: (x["hispanic origin"] != "Not Stated") & (x["age"] != "NS")
-    ]
-
-    results = (
-        pd.merge(stated_df, data, on=["location", "sex"])
-        .assign(
-            deaths=lambda x: x["deaths"] * x["inflation_factor"],
-            rates=lambda x: np.where(
-                x["deaths"].isnull(), np.nan, x["deaths"] / x["pop"]
-            ),
-        )
-        .drop(columns=["inflation_factor"])
-    )
-
-    return results
-
-
 def deaths_recode(deaths: int, pop: int) -> float:
     """Recode WONDER deaths 0 and "Suppressed" values.
 
@@ -716,8 +675,8 @@ def load_local_files(pop_df: pd.DataFrame, years: int | list[int]) -> pd.DataFra
     """Load files from a directory for specific year(s) and combine them by product.
 
     Args:
-        pop_df (pd.DataFrame): Population dataframe from CCM for 2018-2023
-            product population estimates.
+        pop_df (pd.DataFrame): Population dataframe from CCM for 2018+ product
+            population estimates.
         years (int | list[int]): A single year or list of years to load data for.
 
     Returns:
@@ -732,9 +691,12 @@ def load_local_files(pop_df: pd.DataFrame, years: int | list[int]) -> pd.DataFra
         target_years = set(years)
 
     data_by_product = {
-        "1999-2020": {"San Diego County": [], "California": [], "US": []},
-        "2018-2023": {"San Diego County": [], "California": [], "US": []},
+        "1999-2020": {"San Diego County": [], "California": [], "United States": []},
+        "2018+": {"San Diego County": [], "California": [], "United States": []},
     }
+
+    # Cache inflation factors by year to avoid recalculating
+    inflation_cache = {}
 
     for file_path in pathlib.Path("data/deaths").rglob("*"):
         if file_path.is_file():
@@ -744,7 +706,7 @@ def load_local_files(pop_df: pd.DataFrame, years: int | list[int]) -> pd.DataFra
             if int(meta["year"]) not in target_years:
                 continue
 
-            validate_file_name(file_path)
+            validate_file(file_path)
 
             product = meta["product"]
 
@@ -758,9 +720,9 @@ def load_local_files(pop_df: pd.DataFrame, years: int | list[int]) -> pd.DataFra
                 df = df.dropna(subset=["age"])
                 df = df.astype({"age": int, "year": int, "sex": str, "race": str})
 
-                # For 2018-2023 San Diego County, merge with CCM population
+                # For the 2018+ product, merge SD County deaths with CCM population
                 if (
-                    product == "2018-2023"
+                    product == "2018+"
                     and location == "San Diego County"
                     and pop_df is not None
                 ):
@@ -776,8 +738,28 @@ def load_local_files(pop_df: pd.DataFrame, years: int | list[int]) -> pd.DataFra
                         how="left",
                     )
 
-                # Inflate deaths for both products
-                df = inflate_deaths(df)
+                # Inflate deaths based on "Not Stated" proportions
+                year = int(meta["year"])
+                if year not in inflation_cache:
+                    inflation_cache[year] = parse_not_stated(year)
+
+                # Filter to "Stated" responses
+                stated_df = df.loc[
+                    lambda x: (x["hispanic origin"] != "Not Stated")
+                    & (x["age"] != "NS")
+                ]
+
+                # Merge with inflation factors and inflate deaths/rates
+                df = (
+                    pd.merge(stated_df, inflation_cache[year], on=["location", "sex"])
+                    .assign(
+                        deaths=lambda x: x["deaths"] * x["inflation_factor"],
+                        rates=lambda x: np.where(
+                            x["deaths"].isnull(), np.nan, x["deaths"] / x["pop"]
+                        ),
+                    )
+                    .drop(columns=["inflation_factor"])
+                )
 
                 data_by_product[product][location].append(df)
 
@@ -786,7 +768,7 @@ def load_local_files(pop_df: pd.DataFrame, years: int | list[int]) -> pd.DataFra
     for product, locations in data_by_product.items():
         county_dfs = locations["San Diego County"]
         state_dfs = locations["California"]
-        national_dfs = locations["US"]
+        national_dfs = locations["United States"]
 
         if not county_dfs or not state_dfs or not national_dfs:
             continue
@@ -884,25 +866,25 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
 
 
 def duplicate_all_races(df: pd.DataFrame) -> pd.DataFrame:
-    """Duplicate rows marked as 'ALL_RACES' into NHPI and MOR race categories.
+    """Duplicate rows marked as 'All' into NHPI and MOR race categories.
 
     This should be called after all mathematical operations (smoothing, etc.) are
     complete to avoid doing expensive calculations twice.
 
     Args:
-        df (pd.DataFrame): DataFrame potentially containing 'ALL_RACES' rows.
+        df (pd.DataFrame): DataFrame potentially containing 'All' race rows.
 
     Returns:
-        pd.DataFrame: DataFrame with 'ALL_RACES' rows duplicated and renamed to
+        pd.DataFrame: DataFrame with 'All' race rows duplicated and renamed to
             'Native Hawaiian or Other Pacific Islander alone' and 'Two or More Races'.
     """
-    # Check if there are any ALL_RACES rows
-    if "ALL_RACES" not in df["race"].values:
+    # Check if there are any All race rows
+    if "All" not in df["race"].values:
         return df
 
-    # Split into ALL_RACES and non-ALL_RACES
-    all_races_df = df[df["race"] == "ALL_RACES"].copy()
-    other_df = df[df["race"] != "ALL_RACES"].copy()
+    # Split into All race and other race rows
+    all_races_df = df[df["race"] == "All"].copy()
+    other_df = df[df["race"] != "All"].copy()
 
     # Duplicate ALL_RACES into NHPI and MOR
     nhpi_df = all_races_df.copy()
