@@ -371,9 +371,21 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     if "pop" in df.columns:
         df = df.assign(pop=lambda x: pd.to_numeric(x["pop"], errors="coerce"))
 
-    # Mark files with race="All" for later duplication
-    if (metadata["race"] == "All") and (metadata["sex"] != "All"):
-        df["race"] = metadata["race"]
+    # Files with race="All" AND hispanic="Hispanic or Latino" represent Hispanic data
+    if (
+        (metadata["race"] == "All")
+        and (metadata["hispanic"] == "Hispanic or Latino")
+        and (metadata["sex"] != "All")
+    ):
+        df["race"] = "Hispanic"
+    # Files with race="All" AND hispanic="Not Hispanic or Latino" will be marked as "All"
+    # and later duplicated into NHPI and MOR (races with insufficient data)
+    elif (
+        (metadata["race"] == "All")
+        and (metadata["hispanic"] == "Not Hispanic or Latino")
+        and (metadata["sex"] != "All")
+    ):
+        df["race"] = "All"
 
     return pd.DataFrame(df)
 
@@ -850,10 +862,11 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
 
 
 def duplicate_all_races(df: pd.DataFrame) -> pd.DataFrame:
-    """Duplicate rows marked as 'All' into NHPI and MOR race categories.
+    """Duplicate 'All' race rows (non-Hispanic) into NHPI and MOR race categories.
 
-    This should be called after all mathematical operations (smoothing, etc.) are
-    complete to avoid doing expensive calculations twice.
+    Due to insufficient data for the "Native Hawaiian or Other Pacific Islander alone"
+    and "Two or More" race, we opt to use the data from all races to artificially
+    populate these categories.
 
     Args:
         df (pd.DataFrame): DataFrame potentially containing 'All' race rows.
@@ -870,7 +883,7 @@ def duplicate_all_races(df: pd.DataFrame) -> pd.DataFrame:
     all_races_df = df[df["race"] == "All"].copy()
     other_df = df[df["race"] != "All"].copy()
 
-    # Duplicate ALL_RACES into NHPI and MOR
+    # Duplicate All into NHPI and MOR
     nhpi_df = all_races_df.copy()
     nhpi_df["race"] = "Native Hawaiian or Other Pacific Islander alone"
 
@@ -995,7 +1008,7 @@ def get_death_rates(
         # Combine smoothed CDC rates (ages 0-84) with unsmoothed SS rates (ages 85+)
         rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True)
 
-        # Duplicate ALL_RACES rows into NHPI and MOR
+        # Duplicate 'All' race rows (non-Hispanic) into NHPI and MOR
         rates = duplicate_all_races(rates)
 
         return rates[["race", "sex", "age", "rate_death"]]
