@@ -65,11 +65,9 @@ def parse_filename(fp: pathlib.Path) -> dict:
                 "ASIAN": "Asian",
                 "BAA": "Black or African American",
                 "MOR": "More than one race",
-                "HIS": "Hispanic",
                 "NHPI": "Native Hawaiian or Other Pacific Islander",
                 "WH": "White",
                 "ALL": "All",
-                "NA": "Not Available",
             },
         },
         "year": {
@@ -235,8 +233,8 @@ def validate_file(fp: pathlib.Path) -> None:
             f"Metadata hispanic: '{metadata['hispanic']}' does not match file contents."
         )
 
-    # Race validation is done explicitly excepting for All and Hispanic
-    # The All and Hispanic category will have no notes information
+    # Race validation is done explicitly excepting for All
+    # The All category will have no notes information
     if "race" in notes:
         if metadata["race"] == notes["race"]:
             pass
@@ -244,7 +242,7 @@ def validate_file(fp: pathlib.Path) -> None:
             raise ValueError(
                 f"Metadata race: '{metadata['race']}' does not match file contents: '{notes['race']}'."
             )
-    elif metadata["race"] in ["All", "Hispanic"]:
+    elif metadata["race"] == "All":
         pass
     else:
         raise ValueError(
@@ -340,17 +338,16 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             location=metadata["location"],
             year=pd.to_numeric(metadata["year"], errors="coerce"),
             product=metadata["product"],
-            deaths=lambda x: pd.to_numeric(x["deaths"], errors="coerce"),
-        )
-        .assign(
             # Convert 2022+ San Diego County 5-year average deaths to annual deaths
             # Population for 2022+ county level is suppressed and will be replaced
             # with yearly CCM population estimates which require annual death counts to
             # calculate rates
-            deaths=lambda x: np.where(
-                (x["year"] >= 2022) & (x["location"] == "San Diego County"),
-                x["deaths"] / 5,
-                x["deaths"],
+            deaths=lambda x: pd.to_numeric(x["deaths"], errors="coerce")
+            / (
+                5
+                if int(metadata["year"]) >= 2022
+                and metadata["location"] == "San Diego County"
+                else 1
             ),
         )
         .loc[lambda x: (~x["age"].isin(excluding_sya))]
@@ -365,11 +362,16 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
                 "Native Hawaiian or Other Pacific Islander": "Native Hawaiian or Other Pacific Islander alone",
             }
         )
+        .pipe(
+            lambda x: (
+                x.assign(pop=pd.to_numeric(x["pop"], errors="coerce"))
+                if "pop" in x.columns
+                else x
+            )
+        )
+        .assign(age=lambda x: pd.to_numeric(x["age"], errors="coerce"))
+        .dropna(subset=["age"])
     )
-
-    # Set up dtypes for population where it exists
-    if "pop" in df.columns:
-        df = df.assign(pop=lambda x: pd.to_numeric(x["pop"], errors="coerce"))
 
     # Files with race="All" AND hispanic="Hispanic or Latino" represent Hispanic data
     if (
@@ -387,7 +389,7 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     ):
         df["race"] = "All"
 
-    return pd.DataFrame(df)
+    return df
 
 
 def parse_not_stated(year: int) -> pd.DataFrame:
@@ -448,8 +450,10 @@ def parse_not_stated(year: int) -> pd.DataFrame:
                     )
                 )
 
-                # Separate data by status (check if age_group is "SYA NS")
-                if metadata["age_group"] == "Not Stated":
+                # Separate data by status
+                if (metadata["age_group"] == "Not Stated") | (
+                    metadata["hispanic"] == "Not Stated"
+                ):
                     ns.append(df)
                 else:
                     stated.append(df)
@@ -516,168 +520,6 @@ def deaths_recode(deaths: int, pop: int) -> float:
         return float(deaths)
 
 
-def rate_substitution(row: pd.Series, age_max: int, age_min: int) -> tuple[float, str]:
-    """Determine mortality rate for a given row based on data availability.
-
-    Mortality rates that are missing from the county level dataset are substituted in
-    the following order:
-
-    1) State rate
-    2) National rate
-    3) Average rate
-        - The average of the county rates from ages before and after the target age
-        - ex. target age is 4 therefore take the average rate of age 3 and 5
-    4) Previous rate
-        - The rate of the previous age from the target age in the county dataset
-        - ex. target age is 4 therefore take the rate of the previous age (3)
-    5) Next rate
-        - The rate of the next age from the target age in the county dataset
-        - ex. target age is 4 therefore take the rate of the next age (5)
-    6) Imputation
-        - Impute using deaths_recode with NATIONAL data
-
-    For each substitution, a corresponding label defining which methodology/dataset was
-    used for the substitution will be documented as well.
-
-    Args:
-        row (pd.series): A row of data containing rate data.
-        age_max (int): The max age in the dataset.
-        age_min (int): The minimum age in the dataset.
-
-    Returns:
-        tuple[float, str]: The selected rate substitution, and the corresponding
-            substitution label.
-    """
-
-    if pd.notna(row["rates_county"]) and row["rates_county"] != 0:
-        return row["rates_county"], "San Diego County Data"
-    elif pd.notna(row["rates_state"]) and row["rates_state"] != 0:
-        return row["rates_state"], "California Data Substituted"
-    elif pd.notna(row["rates_national"]) and row["rates_national"] != 0:
-        return row["rates_national"], "United States Data Substituted"
-    elif pd.notna(row["rate_avg"]) and row["rate_avg"] != 0:
-        return row["rate_avg"], "Average Rate Substituted"
-    elif pd.notna(row["rate_next"]) and row["rate_next"] != 0 and row["age"] != age_max:
-        return row["rate_next"], "Next Rate Substituted"
-    elif pd.notna(row["rate_prev"]) and row["rate_prev"] != 0 and row["age"] != age_min:
-        return row["rate_prev"], "Previous Rate Substituted"
-    else:
-        return row["rate_imputed"], "Imputation (National Data)"
-
-
-def merge_geographies(
-    county: pd.DataFrame, state: pd.DataFrame, national: pd.DataFrame
-) -> pd.DataFrame:
-    """Merge and impute mortality rates using hierarchical geographic sources.
-
-    This function merges mortality data from county, state, and national levels to
-    produce a unified DataFrame in which missing county-level rates are substituted
-    using the rate_substitution and track_changes functions.
-
-    Args:
-        county (pd.DataFrame): A DataFrame containing mortality data for San Diego
-            County.
-        state (pd.DataFrame): A DataFrame containing mortality data for the state of
-            California.
-        national (pd.DataFrame): A DataFrame containing mortality data for the United
-            States.
-
-    Returns:
-        pd.DataFrame: A single DataFrame primarily based on county data, with missing
-            rates substituted using state and national data.
-    """
-
-    # Filter out any rows with NaN age values
-    county = county.dropna(subset=["age"])
-    state = state.dropna(subset=["age"])
-    national = national.dropna(subset=["age"])
-
-    age_min = county["age"].min()
-    age_max = county["age"].max()
-
-    # Merge county with state and national data
-    county_merged = (
-        county.merge(
-            state[["year", "age", "race", "sex", "hispanic origin", "rates"]],
-            on=["year", "age", "race", "sex", "hispanic origin"],
-            how="left",
-            suffixes=("", "_state"),
-        )
-        .merge(
-            national[
-                [
-                    "year",
-                    "age",
-                    "race",
-                    "sex",
-                    "hispanic origin",
-                    "rates",
-                    "deaths",
-                    "pop",
-                ]
-            ],
-            on=["year", "age", "race", "sex", "hispanic origin"],
-            how="left",
-            suffixes=("", "_national"),
-        )
-        .rename(
-            columns={
-                "rates": "rates_county",
-                "deaths": "deaths_county",
-                "pop": "pop_county",
-            }
-        )
-        .assign(
-            year=lambda x: x["year"].astype(int),
-        )
-        .sort_values(["sex", "hispanic origin", "race", "year", "age"])
-        .assign(
-            rate_prev=lambda x: x["rates_county"].shift(1),
-            rate_next=lambda x: x["rates_county"].shift(-1),
-            rate_avg=lambda x: np.where(
-                pd.notna(x["rate_next"]) & pd.notna(x["rate_prev"]),
-                x[["rate_prev", "rate_next"]].mean(axis=1),
-                np.nan,
-            ),
-            rate_imputed=lambda x: x.apply(
-                lambda row: deaths_recode(row["deaths_national"], row["pop_national"])
-                / row["pop_national"],
-                axis=1,
-            ),
-        )
-        .pipe(
-            lambda x: x.assign(
-                rates=x.apply(
-                    lambda row: rate_substitution(row, age_min, age_max)[0], axis=1
-                ),
-                tracked_changes=x.apply(
-                    lambda row: rate_substitution(row, age_min, age_max)[1], axis=1
-                ),
-            )
-        )
-        .drop(
-            columns=[
-                "rates_county",
-                "rates_state",
-                "rates_national",
-                "product",
-                "hispanic origin",
-                "deaths_county",
-                "deaths_national",
-                "pop_county",
-                "pop_national",
-                "location",
-                "rate_prev",
-                "rate_next",
-                "rate_avg",
-                "rate_imputed",
-            ]
-        )
-    )
-
-    return county_merged
-
-
 def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     """Load files from a directory for a specific year and combine them by product.
 
@@ -691,10 +533,7 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
         ages 0-99 from the CDC.
     """
 
-    data_by_product = {
-        "1999-2020": {"San Diego County": [], "California": [], "United States": []},
-        "2018+": {"San Diego County": [], "California": [], "United States": []},
-    }
+    dfs = []
 
     # Look in the specific year folder
     year_folder = pathlib.Path(f"data/deaths/{year}")
@@ -709,45 +548,24 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
             meta = parse_filename(file_path)
             validate_file(file_path)
 
-            product = meta["product"]
-
             # Use unified load_cdc_wonder function
             df = load_cdc_wonder(file_path)
             if not df.empty:
-                location = df["location"].iloc[0]
-
-                # Convert age to numeric and ensure consistent types
-                df["age"] = pd.to_numeric(df["age"], errors="coerce")
-                df = df.dropna(subset=["age"])
-                df = df.astype({"age": int, "year": int, "sex": str, "race": str})
-
                 # For the 2018+ product, merge SD County deaths with CCM population
                 if (
-                    product == "2018+"
-                    and location == "San Diego County"
+                    meta["product"] == "2018+"
+                    and meta["location"] == "San Diego County"
                     and pop_df is not None
                 ):
-                    pop_df_with_year = pop_df.copy()
-                    pop_df_with_year["year"] = year
-                    pop_df_with_year = pop_df_with_year.astype(
-                        {"age": int, "sex": str, "race": str}
-                    )
-
                     df = df.merge(
-                        pop_df_with_year[["year", "age", "sex", "race", "pop"]],
+                        pop_df.assign(year=year)[["year", "age", "sex", "race", "pop"]],
                         on=["year", "age", "sex", "race"],
                         how="left",
                     )
 
-                # Filter to "Stated" responses
-                stated_df = df.loc[
-                    lambda x: (x["hispanic origin"] != "Not Stated")
-                    & (x["age"] != "NS")
-                ]
-
                 # Merge with inflation factors and inflate deaths/rates
                 df = (
-                    pd.merge(stated_df, inflation_factor, on=["location", "sex"])
+                    pd.merge(df, inflation_factor, on=["location", "sex"])
                     .assign(
                         deaths=lambda x: x["deaths"] * x["inflation_factor"],
                         rates=lambda x: np.where(
@@ -757,24 +575,58 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
                     .drop(columns=["inflation_factor"])
                 )
 
-                data_by_product[product][location].append(df)
+                dfs.append(df)
+
+    # Combine all data and process by product
+    all_data = pd.concat(dfs, ignore_index=True)
 
     all_products = []
+    for product in all_data["product"].unique():
+        # Pivot by location to get county, state, national as separate columns
+        pivoted = (
+            all_data[all_data["product"] == product]
+            .pivot_table(
+                index=["year", "age", "race", "sex", "hispanic origin"],
+                columns="location",
+                values=["rates", "deaths", "pop"],
+                aggfunc="first",
+            )
+            .pipe(lambda df: df.set_axis(["_".join(col) for col in df.columns], axis=1))
+            .reset_index()
+        )
 
-    for product, locations in data_by_product.items():
-        county_dfs = locations["San Diego County"]
-        state_dfs = locations["California"]
-        national_dfs = locations["United States"]
+        # Retrieve fields
+        county, state, national, nat_deaths, nat_pop = (
+            pivoted.get("rates_San Diego County", pd.Series(dtype=float)),
+            pivoted.get("rates_California", pd.Series(dtype=float)),
+            pivoted.get("rates_United States", pd.Series(dtype=float)),
+            pivoted.get("deaths_United States", pd.Series(dtype=float)),
+            pivoted.get("pop_United States", pd.Series(dtype=float)),
+        )
 
-        if not county_dfs or not state_dfs or not national_dfs:
-            continue
+        # Impute missing or zero rates for national
+        national_impute = np.where(
+            (nat_pop.notna()) & (nat_pop > 0),
+            np.vectorize(deaths_recode)(nat_deaths, nat_pop) / nat_pop,
+            np.nan,
+        )
 
-        county = pd.concat(county_dfs, ignore_index=True)
-        state = pd.concat(state_dfs, ignore_index=True)
-        national = pd.concat(national_dfs, ignore_index=True)
-        substituted_df = merge_geographies(county, state, national)
+        # Geography Hierarchy for rates: County > State > National
+        pivoted["rates"] = np.where(
+            (county.notna()) & (county > 0),
+            county,
+            np.where(
+                (state.notna()) & (state > 0),
+                state,
+                np.where(
+                    (national.notna()) & (national > 0),
+                    national,
+                    national_impute,
+                ),
+            ),
+        )
 
-        all_products.append(substituted_df)
+        all_products.append(pivoted[["year", "age", "race", "sex", "rates"]])
 
     # Finalize combined dataset
     df = (
