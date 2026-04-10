@@ -264,22 +264,26 @@ def validate_file(fp: pathlib.Path) -> None:
 
 
 def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
-    """Load and transform a single CDC WONDER file into a DataFrame.
+    """Load and transform a single CDC WONDER mortality file into a standardized DataFrame.
 
-    Filter for ages 84 and under. Populate location and year for each row. For
-    1999-2020 CDC, assign "Hispanic" race to all rows missing a race. For 2018-2023 CDC,
-    collapse multiple race columns into one titled "race". Assign "race" for races with
-    no race column.
-
-    Files with 2 or more "ALL" values are skipped as they are meant for not stated
-    inflation factor calculation.
+    This function reads a CDC WONDER mortality file, parses and validates its metadata
+    from the filename, and processes the data to produce a DataFrame suitable for
+    downstream analysis. It performs the following:
+    - Skips files intended for 'not stated' inflation factor calculation (files with
+        'Not Stated' or 'All' in key fields).
+    - Filters out ages 85 and above.
+    - Standardizes column names and values (e.g., race, sex, location, year).
+    - For San Diego County 2022+ 5-year average files, converts deaths to annual counts
+        for later merge with population data
+    - Handles special cases for Hispanic/Not Hispanic and 'All' race combinations.
 
     Args:
-        file_path (pathlib.Path): The file path.
+        file_path (pathlib.Path): Path to the CDC WONDER mortality file.
 
     Returns:
-        pd.DataFrame: A processed dataframe for the CDC product, or empty DataFrame
-            if file should be skipped.
+        pd.DataFrame: Processed DataFrame with columns standardized and filtered for
+            ages 0-84. Returns an empty DataFrame if the file is meant for 'not stated'
+            inflation factor calculation.
     """
 
     # Get metadata dict for column assignment
@@ -389,7 +393,18 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     ):
         df["race"] = "All"
 
-    return df
+    # Duplicate 'All' race rows into NHPI and MOR, keep other races
+    all_races = df[df["race"] == "All"]
+    result = pd.concat(
+        [
+            df[df["race"] != "All"],
+            all_races.assign(race="Native Hawaiian or Other Pacific Islander alone"),
+            all_races.assign(race="Two or More Races"),
+        ],
+        ignore_index=True,
+    )
+
+    return result
 
 
 def parse_not_stated(year: int) -> pd.DataFrame:
@@ -434,6 +449,9 @@ def parse_not_stated(year: int) -> pd.DataFrame:
                     )
                 ):
                     continue
+
+                # Validate not stated files
+                validate_file(file_path)
 
                 # Read in data
                 df = (
@@ -490,17 +508,24 @@ def parse_not_stated(year: int) -> pd.DataFrame:
 
 
 def deaths_recode(deaths: int, pop: int) -> float:
-    """Recode WONDER deaths 0 and "Suppressed" values.
+    """Recode CDC WONDER zero death and suppressed values.
 
     This function is used as the final methodology for substituting missing rates where
-    deaths are imputed using the following logic.
+        deaths are imputed using the following logic:
+        - If deaths == 0 and population > 0, return 1 (minimum imputed death count for
+            nonzero population)
+        - If deaths is NaN (suppressed or missing):
+            - If population > 4, return 4.5 (midpoint imputation for suppressed values)
+            - If 0 < population <= 4, return 1 (minimum imputation for small population)
+            - If population == 0, return 0
 
-    Args:
-        deaths (int): The total number of deaths.
-        pop (int): The total population.
+        Args:
+            deaths (int): The total number of deaths (may be 0, NaN, or a positive
+                integer).
+            pop (int): The total population.
 
-    Returns:
-        float: The recoded number of deaths.
+        Returns:
+            float: The recoded (possibly imputed) number of deaths.
     """
 
     pop = int(pop)  # floor function on floats
@@ -533,7 +558,7 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
         ages 0-99 from the CDC.
     """
 
-    dfs = []
+    all_data = []
 
     # Look in the specific year folder
     year_folder = pathlib.Path(f"data/deaths/{year}")
@@ -575,62 +600,57 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
                     .drop(columns=["inflation_factor"])
                 )
 
-                dfs.append(df)
+                all_data.append(df)
 
     # Combine all data and process by product
-    all_data = pd.concat(dfs, ignore_index=True)
+    all_data = pd.concat(all_data, ignore_index=True)
 
-    all_products = []
-    for product in all_data["product"].unique():
-        # Pivot by location to get county, state, national as separate columns
-        pivoted = (
-            all_data[all_data["product"] == product]
-            .pivot_table(
-                index=["year", "age", "race", "sex", "hispanic origin"],
-                columns="location",
-                values=["rates", "deaths", "pop"],
-                aggfunc="first",
-            )
-            .pipe(lambda df: df.set_axis(["_".join(col) for col in df.columns], axis=1))
-            .reset_index()
+    # Pivot by location to get county, state, national as separate columns
+    pivoted = (
+        all_data.pivot_table(
+            index=["year", "age", "race", "sex", "hispanic origin"],
+            columns="location",
+            values=["rates", "deaths", "pop"],
+            aggfunc="first",
         )
+        .pipe(lambda df: df.set_axis(["_".join(col) for col in df.columns], axis=1))
+        .reset_index()
+    )
 
-        # Retrieve fields
-        county, state, national, nat_deaths, nat_pop = (
-            pivoted.get("rates_San Diego County", pd.Series(dtype=float)),
-            pivoted.get("rates_California", pd.Series(dtype=float)),
-            pivoted.get("rates_United States", pd.Series(dtype=float)),
-            pivoted.get("deaths_United States", pd.Series(dtype=float)),
-            pivoted.get("pop_United States", pd.Series(dtype=float)),
-        )
+    # Retrieve fields
+    county, state, national, nat_deaths, nat_pop = (
+        pivoted.get("rates_San Diego County", pd.Series(dtype=float)),
+        pivoted.get("rates_California", pd.Series(dtype=float)),
+        pivoted.get("rates_United States", pd.Series(dtype=float)),
+        pivoted.get("deaths_United States", pd.Series(dtype=float)),
+        pivoted.get("pop_United States", pd.Series(dtype=float)),
+    )
 
-        # Impute missing or zero rates for national
-        national_impute = np.where(
-            (nat_pop.notna()) & (nat_pop > 0),
-            np.vectorize(deaths_recode)(nat_deaths, nat_pop) / nat_pop,
-            np.nan,
-        )
+    # Impute missing or zero rates for national
+    national_impute = np.where(
+        (nat_pop.notna()) & (nat_pop > 0),
+        np.vectorize(deaths_recode)(nat_deaths, nat_pop) / nat_pop,
+        np.nan,
+    )
 
-        # Geography Hierarchy for rates: County > State > National
-        pivoted["rates"] = np.where(
-            (county.notna()) & (county > 0),
-            county,
+    # Geography Hierarchy for rates: County > State > National
+    pivoted["rates"] = np.where(
+        (county.notna()) & (county > 0),
+        county,
+        np.where(
+            (state.notna()) & (state > 0),
+            state,
             np.where(
-                (state.notna()) & (state > 0),
-                state,
-                np.where(
-                    (national.notna()) & (national > 0),
-                    national,
-                    national_impute,
-                ),
+                (national.notna()) & (national > 0),
+                national,
+                national_impute,
             ),
-        )
-
-        all_products.append(pivoted[["year", "age", "race", "sex", "rates"]])
+        ),
+    )
 
     # Finalize combined dataset
     df = (
-        pd.concat(all_products, ignore_index=True)
+        pivoted[["year", "age", "race", "sex", "rates"]]
         .sort_values(by=["sex", "race", "year", "age"])
         .loc[lambda x: x["age"] <= 99]
         .reset_index(drop=True)
@@ -711,41 +731,6 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
                 df.loc[subset.index, "rates"] = smoothed_rates
 
     return df
-
-
-def duplicate_all_races(df: pd.DataFrame) -> pd.DataFrame:
-    """Duplicate 'All' race rows (non-Hispanic) into NHPI and MOR race categories.
-
-    Due to insufficient data for the "Native Hawaiian or Other Pacific Islander alone"
-    and "Two or More" race, we opt to use the data from all races to artificially
-    populate these categories.
-
-    Args:
-        df (pd.DataFrame): DataFrame potentially containing 'All' race rows.
-
-    Returns:
-        pd.DataFrame: DataFrame with 'All' race rows duplicated and renamed to
-            'Native Hawaiian or Other Pacific Islander alone' and 'Two or More Races'.
-    """
-    # Check if there are any All race rows
-    if "All" not in df["race"].values:
-        return df
-
-    # Split into All race and other race rows
-    all_races_df = df[df["race"] == "All"].copy()
-    other_df = df[df["race"] != "All"].copy()
-
-    # Duplicate All into NHPI and MOR
-    nhpi_df = all_races_df.copy()
-    nhpi_df["race"] = "Native Hawaiian or Other Pacific Islander alone"
-
-    mor_df = all_races_df.copy()
-    mor_df["race"] = "Two or More Races"
-
-    # Concatenate all back together
-    result = pd.concat([other_df, nhpi_df, mor_df], ignore_index=True)
-
-    return result
 
 
 def get_death_rates(
@@ -859,9 +844,6 @@ def get_death_rates(
 
         # Combine smoothed CDC rates (ages 0-84) with unsmoothed SS rates (ages 85+)
         rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True)
-
-        # Duplicate 'All' race rows (non-Hispanic) into NHPI and MOR
-        rates = duplicate_all_races(rates)
 
         return rates[["race", "sex", "age", "rate_death"]]
 
