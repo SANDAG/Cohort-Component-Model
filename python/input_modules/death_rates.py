@@ -300,7 +300,10 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             & (metadata["hispanic"] == "All")
         )
     ):
-        return pd.DataFrame()
+        raise ValueError(
+            "Files used in not stated calculation should be omitted when loading in the "
+            "CDC WONDER mortality data as they have been dealt with separately."
+        )
 
     # Ages to be excluded from dataset
     excluding_sya = [str(age) for age in range(85, 101)]
@@ -571,6 +574,19 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     for file_path in year_folder.glob("*"):
         if file_path.is_file():
             meta = parse_filename(file_path)
+
+            # Skip files used in not stated calculation
+            if (
+                (meta["age_group"] == "Not Stated")
+                | (meta["hispanic"] == "Not Stated")
+                | (
+                    (meta["sex"] == "All")
+                    & (meta["race"] == "All")
+                    & (meta["hispanic"] == "All")
+                )
+            ):
+                continue
+
             validate_file(file_path)
 
             # Use unified load_cdc_wonder function
@@ -602,7 +618,7 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
 
                 all_data.append(df)
 
-    # Combine all data and process by product
+    # Combine all data
     all_data = pd.concat(all_data, ignore_index=True)
 
     # Pivot by location to get county, state, national as separate columns
@@ -652,7 +668,6 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     df = (
         pivoted[["year", "age", "race", "sex", "rates"]]
         .sort_values(by=["sex", "race", "year", "age"])
-        .loc[lambda x: x["age"] <= 99]
         .reset_index(drop=True)
     )
 
@@ -802,12 +817,9 @@ def get_death_rates(
             logger.warning("CDC WONDER data unavailable for 2021. Using 2020 data.")
 
         # Load mortality data for this specific year
-        mortality_df = load_local_files(pop_df=pop_df, year=cdc_yr)
-
-        # Filter to ages < 85, keep only necessary columns
-        cdc_rates = mortality_df.loc[mortality_df["age"] < 85][
+        cdc_rates = load_local_files(pop_df=pop_df, year=cdc_yr)[
             ["race", "sex", "age", "rates"]
-        ].rename(columns={"rates": "rate_death"})
+        ]
 
         # Get unique race categories from CDC data
         race_categories = cdc_rates["race"].unique()
@@ -815,7 +827,7 @@ def get_death_rates(
         # Filter Social Security Actuarial Life Table to chosen year and ages >= 85
         ss_rates = ss_life_tbl.loc[
             (ss_life_tbl["year"] == ss_yr) & (ss_life_tbl["age"] >= 85)
-        ][["age", "sex", "rate"]].rename(columns={"rate": "rate_death"})
+        ][["age", "sex", "rate"]].rename(columns={"rate": "rates"})
 
         # Expand SS rates to include all race categories
         # (SS life table doesn't have race breakdown, so apply same rates to all races)
@@ -833,17 +845,19 @@ def get_death_rates(
             cdc_for_smoothing = cdc_rates.copy()
             cdc_for_smoothing["year"] = cdc_yr
             cdc_for_smoothing = cdc_for_smoothing.rename(
-                columns={"race": "race/ethnicity", "rate_death": "rates"}
+                columns={"race": "race/ethnicity"}
             )
 
             # Apply smoothing
             cdc_smoothed = smooth_rates(cdc_for_smoothing, s=smooth_s, k=smooth_k)
 
-            # Update CDC rates with smoothed values
-            cdc_rates["rate_death"] = cdc_smoothed["rates"].values
+            # Update the existing rates column with smoothed values
+            cdc_rates["rates"] = cdc_smoothed["rates"].values
 
-        # Combine smoothed CDC rates (ages 0-84) with unsmoothed SS rates (ages 85+)
-        rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True)
+        # Combine CDC rates (ages 0-84) with SS rates (ages 85+)
+        rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True).rename(
+            columns={"rates": "rate_death"}
+        )
 
         return rates[["race", "sex", "age", "rate_death"]]
 
