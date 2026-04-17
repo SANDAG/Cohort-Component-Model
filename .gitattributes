@@ -1,0 +1,3 @@
+# Disable diff for large data files to avoid bloating repository
+data/**/*.csv -diff
+data/**/*.txt -diff

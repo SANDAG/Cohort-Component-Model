@@ -111,7 +111,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
                 ss_life_tbl=config["csv"]["ss_life_table"],
-                rates_map=config["configurations"]["rates_map"],
+                pop_df=pop_df,
             ),
             # Crude Migration Rates
             "migration": get_migration_rates(

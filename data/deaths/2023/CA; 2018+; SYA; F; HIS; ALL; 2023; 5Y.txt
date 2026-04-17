@@ -1,0 +1,181 @@
+"Notes"	"Single-Year Ages"	"Single-Year Ages Code"	"Sex"	"Sex Code"	"Hispanic Origin"	"Hispanic Origin Code"	Deaths	Population	Crude Rate
+	"< 1 year"	"0"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2088	537986	388.1
+	"1 year"	"1"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	124	541243	22.9
+	"2 years"	"2"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	91	547947	16.6
+	"3 years"	"3"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	65	563252	11.5
+	"4 years"	"4"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	58	575752	10.1
+	"5 years"	"5"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	51	587809	8.7
+	"6 years"	"6"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	35	598599	5.8
+	"7 years"	"7"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	37	607746	6.1
+	"8 years"	"8"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	56	617774	9.1
+	"9 years"	"9"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	49	623618	7.9
+	"10 years"	"10"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	58	628547	9.2
+	"11 years"	"11"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	53	641693	8.3
+	"12 years"	"12"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	70	655859	10.7
+	"13 years"	"13"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	81	664752	12.2
+	"14 years"	"14"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	102	667715	15.3
+	"15 years"	"15"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	114	666069	17.1
+	"16 years"	"16"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	130	657118	19.8
+	"17 years"	"17"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	166	647523	25.6
+	"18 years"	"18"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	191	642888	29.7
+	"19 years"	"19"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	218	629507	34.6
+	"20 years"	"20"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	241	631866	38.1
+	"21 years"	"21"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	253	634512	39.9
+	"22 years"	"22"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	292	632199	46.2
+	"23 years"	"23"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	281	628945	44.7
+	"24 years"	"24"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	284	628841	45.2
+	"25 years"	"25"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	281	630434	44.6
+	"26 years"	"26"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	342	633360	54.0
+	"27 years"	"27"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	334	638679	52.3
+	"28 years"	"28"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	370	642113	57.6
+	"29 years"	"29"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	367	639574	57.4
+	"30 years"	"30"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	421	624662	67.4
+	"31 years"	"31"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	392	608789	64.4
+	"32 years"	"32"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	383	590023	64.9
+	"33 years"	"33"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	478	572288	83.5
+	"34 years"	"34"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	455	559028	81.4
+	"35 years"	"35"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	426	550104	77.4
+	"36 years"	"36"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	483	543990	88.8
+	"37 years"	"37"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	502	542078	92.6
+	"38 years"	"38"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	515	540185	95.3
+	"39 years"	"39"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	575	540549	106.4
+	"40 years"	"40"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	609	533890	114.1
+	"41 years"	"41"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	670	524085	127.8
+	"42 years"	"42"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	675	516248	130.8
+	"43 years"	"43"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	764	509211	150.0
+	"44 years"	"44"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	794	503810	157.6
+	"45 years"	"45"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	837	500728	167.2
+	"46 years"	"46"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	841	494825	170.0
+	"47 years"	"47"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	903	489733	184.4
+	"48 years"	"48"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1020	486161	209.8
+	"49 years"	"49"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1039	483529	214.9
+	"50 years"	"50"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1099	476567	230.6
+	"51 years"	"51"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1170	465174	251.5
+	"52 years"	"52"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1214	453072	267.9
+	"53 years"	"53"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1389	438911	316.5
+	"54 years"	"54"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1422	428648	331.7
+	"55 years"	"55"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1460	419909	347.7
+	"56 years"	"56"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1561	408067	382.5
+	"57 years"	"57"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1682	396333	424.4
+	"58 years"	"58"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1802	385018	468.0
+	"59 years"	"59"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1985	374968	529.4
+	"60 years"	"60"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2056	360526	570.3
+	"61 years"	"61"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2074	344483	602.1
+	"62 years"	"62"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2203	329580	668.4
+	"63 years"	"63"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2295	315159	728.2
+	"64 years"	"64"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2468	300685	820.8
+	"65 years"	"65"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2339	285741	818.6
+	"66 years"	"66"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2494	269065	926.9
+	"67 years"	"67"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2534	252189	1004.8
+	"68 years"	"68"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2585	236108	1094.8
+	"69 years"	"69"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2657	221511	1199.5
+	"70 years"	"70"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2645	207185	1276.6
+	"71 years"	"71"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2782	194217	1432.4
+	"72 years"	"72"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2834	182797	1550.4
+	"73 years"	"73"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2941	169134	1738.9
+	"74 years"	"74"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3053	157196	1942.2
+	"75 years"	"75"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3046	145184	2098.0
+	"76 years"	"76"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3096	133449	2320.0
+	"77 years"	"77"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3091	121265	2549.0
+	"78 years"	"78"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3137	112751	2782.2
+	"79 years"	"79"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3174	105015	3022.4
+	"80 years"	"80"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3404	96947	3511.2
+	"81 years"	"81"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3384	88459	3825.5
+	"82 years"	"82"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3577	81770	4374.5
+	"83 years"	"83"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3611	75631	4774.5
+	"84 years"	"84"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3814	70026	5446.5
+	"85 years"	"85"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3835	Not Applicable	Not Applicable
+	"86 years"	"86"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3875	Not Applicable	Not Applicable
+	"87 years"	"87"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3754	Not Applicable	Not Applicable
+	"88 years"	"88"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3787	Not Applicable	Not Applicable
+	"89 years"	"89"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3828	Not Applicable	Not Applicable
+	"90 years"	"90"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3830	Not Applicable	Not Applicable
+	"91 years"	"91"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3733	Not Applicable	Not Applicable
+	"92 years"	"92"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3450	Not Applicable	Not Applicable
+	"93 years"	"93"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	3215	Not Applicable	Not Applicable
+	"94 years"	"94"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2728	Not Applicable	Not Applicable
+	"95 years"	"95"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2426	Not Applicable	Not Applicable
+	"96 years"	"96"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2062	Not Applicable	Not Applicable
+	"97 years"	"97"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1699	Not Applicable	Not Applicable
+	"98 years"	"98"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1305	Not Applicable	Not Applicable
+	"99 years"	"99"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	1013	Not Applicable	Not Applicable
+	"100+ years"	"100"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	2193	Not Applicable	Not Applicable
+	"Not Stated"	"NS"	"Female"	"F"	"Hispanic or Latino"	"2135-2"	Suppressed	Not Applicable	Not Applicable
+"---"
+"Dataset: Underlying Cause of Death, 2018-2023, Single Race"
+"Query Parameters:"
+"Title: CA; 2018-2023; SYA; F; HIS; HIS; 2023; 5Y"
+"Hispanic Origin: Hispanic or Latino"
+"Sex: Female"
+"States: California (06)"
+"Year/Month: 2019; 2020; 2021; 2022; 2023"
+"Group By: Single-Year Ages; Sex; Hispanic Origin"
+"Show Totals: Disabled"
+"Show Zero Values: True"
+"Show Suppressed: True"
+"Calculate Rates Per: 100,000"
+"Rate Options: Default intercensal populations for years 2001-2009 (except Infant Age Groups)"
+"---"
+"Help: See http://wonder.cdc.gov/wonder/help/ucd-expanded.html for more information."
+"---"
+"Query Date: Apr 18, 2025 8:46:34 PM"
+"---"
+"Suggested Citation: Centers for Disease Control and Prevention, National Center for Health Statistics. National Vital Statistics"
+"System, Mortality 2018-2023 on CDC WONDER Online Database, released in 2024. Data are from the Multiple Cause of Death Files,"
+"2018-2023, as compiled from data provided by the 57 vital statistics jurisdictions through the Vital Statistics Cooperative"
+"Program. Accessed at http://wonder.cdc.gov/ucd-icd10-expanded.html on Apr 18, 2025 8:46:34 PM"
+"---"
+Messages:
+"1. Totals are not available for these results due to suppression constraints. More Information:"
+"http://wonder.cdc.gov/wonder/help/faq.html#Privacy."
+"---"
+Caveats:
+"1. Population and rates are labeled 'Not Applicable' when they include a subset of ages 85-100+ because populations are not"
+"available for those ages. More information: http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Ages 85-100."
+"2. Data are Suppressed when the data meet the criteria for confidentiality constraints. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Assurance of Confidentiality."
+"3. Deaths of persons with Age ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among age groups,"
+"so are not included in age-specific counts, age-specific rates or in any age-adjusted rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Not Stated."
+"4. Deaths of persons with Hispanic origin ""Not Stated"" are included in ""All"" counts and rates, but are not distributed among"
+"Hispanic Origin groups, so are not included in the Hispanic Origin specific counts and rates. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Not Stated."
+"5. Information included on the death certificate about the race and Hispanic ethnicity of the decedent is reported by the"
+"funeral director as provided by an informant, often the surviving next of kin, or, in the absence of an informant, on the basis"
+"of observation. Race and ethnicity information from the census is by self-report. To the extent that race and Hispanic origin"
+"are inconsistent between these two data sources, death rates will be biased. More information:"
+"http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Racial Differences."
+"6. The population figures for years 2023 are single-race estimates of the July 1 resident population, from the Vintage 2023"
+"postcensal series released by the Census Bureau on June 27, 2024. The 2023 series is based on the Modified Blended Base produced"
+"by the US Census Bureau in lieu of the April 1, 2020 decennial population count. The Modified Blended Base consists of the blend"
+"of Vintage 2020 postcensal population estimates for April 1, 2020, 2020 Demographic Analysis Estimates, and 2020 Census data"
+"from the internal Census Edited File (CEF). The population figures for years 2022 are single-race estimates of the July 1"
+"resident population, from the Vintage 2022 postcensal series released by the Census Bureau on June 22, 2023. The 2022 series is"
+"based on the Modified Blended Base produced by the US Census Bureau in lieu of the April 1, 2020 decennial population count. The"
+"Modified Blended Base consists of the blend of Vintage 2020 postcensal population estimates for April 1, 2020, 2020 Demographic"
+"Analysis Estimates, and 2020 Census data from the internal Census Edited File (CEF). The population figures for years 2021 are"
+"single-race estimates of the July 1 resident population, based on the Blended Base produced by the US Census Bureau in lieu of"
+"the April 1, 2020 decennial population count, from the Vintage 2021 postcensal series released by the Census Bureau on June 30,"
+"2022. The population figures for year 2020 are single-race estimates of the July 1 resident population, from the Vintage 2020"
+"postcensal series based on April 2010 Census, released by the Census Bureau on July 27, 2021. The population figures for year"
+"2019 are single-race estimates of the July 1 resident population, from the Vintage 2019 postcensal series based on April 2010"
+"Census, released by the Census Bureau on June 25, 2020. The population figures for year 2018 are single-race estimates of the"
+"July 1 resident population, from the Vintage 2018 postcensal series based on April 2010 Census, released by the Census Bureau on"
+"June 20, 2019. More information: http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Population Data."
+"7. The population figures used in the calculation of death rates for the age group 'under 1 year' are the estimates of the"
+"resident population that is under one year of age. More information: http://wonder.cdc.gov/wonder/help/ucd-expanded.html#Age"
+"Group."
+"8. The U.S. - Mexico Border Regions distinguish between counties near the U.S. - Mexico border in the border states of Arizona,"
+"California, New Mexico, and Texas, and other areas. To simplify the Border region analysis, two mutually exclusive regions"
+"within the United States are available: 1) U.S. - Mexico Border Region (i.e., 44 counties within 100 kilometers (62 miles) of"
+"the U.S. - Mexico border), and 2) the U.S. Non-Border Region with the remaining counties of the selected four border states. The"
+"Border counties selection was based on the 1983 La Paz Agreement:"
+"https://www.epa.gov/sites/production/files/2015-09/documents/lapazagreement.pdf.. (i.e., counties for each state which fall"
+"within 100 kilometers of the Border). Statistics are also available by each of the USA border counties along the U.S.-Mexico"
+"area."
+"9. After the creation of the final 2023 dataset, North Carolina updated the cause of death information for over 900 death"
+"certificates to include a cause of death code indicating drug overdose (ICD-10 underlying cause-of-death codes: X40-X44,"
+"X60-X64, X85, and Y10-Y14). Jurisdictions can continue to update death certificates after the closing of the mortality file. As"
+"a result, users should consider that the actual death count for drug overdose deaths for North Carolina in 2023 is over 4,400"
+"deaths, with a crude rate of approximately 41.0 per 100,000 population, and an age-adjusted rate of approximately 42.1 per"
+"100,000 population. These deaths will not be updated on the final mortality datasets."
