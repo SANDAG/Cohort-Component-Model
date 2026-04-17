@@ -134,4 +134,7 @@ def get_base_yr_2020(
     # Return blended estimate of population by race/sex/age
     df["pop"] = df["pop_blended"] * scale_pop_pct
 
+    # Cap age at 99 to match maximum supported age
+    df = df[df["age"] < 100]
+
     return df[["race", "sex", "age", "pop"]]

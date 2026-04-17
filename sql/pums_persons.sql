@@ -2,12 +2,12 @@
 -- Household characteristics assigned to head of household record
 
 
--- Create shell table of required race, sex, and age variables with necessary categories: Age: 0-110; Sex: F, M; Race: 7 Options
+-- Create shell table of required race, sex, and age variables with necessary categories: Age: 0-99; Sex: F, M; Race: 7 Options
 DROP TABLE IF EXISTS [#tt_shell];
 WITH [age] AS (
     SELECT 0 AS [age]  -- Begin with zero
         UNION ALL
-    SELECT [age] + 1 FROM [age] WHERE [age] < 110  -- Add each age category up to 110
+    SELECT [age] + 1 FROM [age] WHERE [age] < 99  -- Add each age category up to 99
 ),
 [sex] AS (
     SELECT [sex] FROM (VALUES ('F'), ('M')) AS [tt] ([sex])
@@ -29,7 +29,7 @@ INTO [#tt_shell]
 FROM [age]
 CROSS JOIN [sex]
 CROSS JOIN [race]
-OPTION (MAXRECURSION 111);  -- Stop at 110
+OPTION (MAXRECURSION 100);  -- Stop at 99
 
 
 -- Select ACS PUMS data based on input survey year (this is done to lower runtime)
@@ -75,7 +75,7 @@ EXECUTE sp_executesql @pums_qry;
 WITH [persons] AS (
     SELECT
         [SERIALNO], -- Count persons by their serial number
-        CASE WHEN [AGEP] > 110 THEN 110 ELSE [agep] END AS [age], -- Group oldest ages into one category: if over 110, as 110; otherwise keep single year of age
+        CASE WHEN [AGEP] > 99 THEN 99 ELSE [agep] END AS [age], -- Group oldest ages into one category: if over 99, as 99; otherwise keep single year of age
         CASE WHEN [SEX] = '1' THEN 'M' WHEN [sex] = '2' THEN 'F' ELSE NULL END AS [sex], -- Change numeric codes into standard M and F text codes
 		CASE WHEN [HISP] NOT IN ('01', '1') THEN 'Hispanic' -- Exclude non-Hispanic which is 01 or 1.  Hispanic takes precendence over Race
              WHEN [RAC1P] IN ('1', '8') THEN 'White alone' -- Combine Some other race with White

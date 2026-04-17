@@ -128,6 +128,9 @@ def get_formation_rates(
             df=rates, cols=["rate_gq", "rate_hh"], sum=1, option="exceeds"
         )
 
+        # Cap age at 99 to match maximum supported age
+        rates = rates[rates["age"] < 100]
+
         return rates
 
     # Formation rates are not calculated after the launch year

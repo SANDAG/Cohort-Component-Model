@@ -135,8 +135,8 @@ def get_hh_characteristic_rates(
                 pd.DataFrame(data={"age_group": 5, "age": list(range(35, 50))}),
                 pd.DataFrame(data={"age_group": 6, "age": list(range(50, 60))}),
                 pd.DataFrame(data={"age_group": 7, "age": list(range(60, 71))}),
-                # Note maximum age of 110 in defining age groups
-                pd.DataFrame(data={"age_group": 8, "age": list(range(71, 111))}),
+                # Note maximum age of 99 in defining age groups
+                pd.DataFrame(data={"age_group": 8, "age": list(range(71, 100))}),
             ],
             ignore_index=True,
         )
@@ -185,6 +185,9 @@ def get_hh_characteristic_rates(
         for k, v in hh_attributes.items():
             if v["rate"] is not None:
                 rates.append(v["rate"])
+
+        # Cap age at 99 to match maximum supported age
+        pums_persons_df = pums_persons_df[pums_persons_df["age"] < 100]
 
         return pums_persons_df[["race", "sex", "age", *rates]]
 

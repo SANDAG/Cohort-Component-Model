@@ -35,7 +35,7 @@ def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
         pop_df[["race", "sex", "age", "pop", "pop_mil", "deaths"]]
         .assign(
             pop_civ_surv=lambda x: x["pop"] - x["pop_mil"] - x["deaths"],
-            age_civ_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=110),
+            age_civ_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
             pop_surv=lambda x: x["pop"] - x["deaths"],
         )
         .groupby(["race", "sex", "age", "age_civ_surv"])
@@ -134,7 +134,7 @@ def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFram
         pop_df[["race", "sex", "age", "pop", "pop_mil", "deaths"]]
         .assign(
             pop_civ_surv=lambda x: x["pop"] - x["pop_mil"] - x["deaths"],
-            age_civ_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=110),
+            age_civ_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
         .groupby(["race", "sex", "age", "age_civ_surv"])
         .sum()
@@ -240,7 +240,7 @@ def increment_population(pop_df: pd.DataFrame, rates: dict) -> dict[str, pd.Data
     pop_inc = (
         pop_df.assign(
             pop=lambda x: x["pop"] - x["deaths"] + x["ins"] - x["outs"],
-            age=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=110),
+            age=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
         .groupby(["race", "sex", "age"])
         .sum()

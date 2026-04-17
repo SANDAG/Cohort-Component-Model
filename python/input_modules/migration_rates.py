@@ -64,6 +64,9 @@ def get_migration_rates(
         df["rate_in"] = np.where(df["rate_in"] > 0.2, 0.2, df["rate_in"])
         df["rate_out"] = np.where(df["rate_out"] > 0.2, 0.2, df["rate_out"])
 
+        # Cap age at 99 to match maximum supported age
+        df = df[df["age"] < 100]
+
         return df[["race", "sex", "age", "rate_in", "rate_out"]]
 
     # Migration rates are not calculated after the launch year
