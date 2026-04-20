@@ -685,7 +685,7 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
 
     Args:
         input_df (pd.DataFrame): DataFrame containing mortality rates with
-            columns 'age', 'rates', 'sex', 'race/ethnicity', and 'year'.
+            columns 'age', 'rates', 'sex', 'race', and 'year'.
         s (int): Smoothing factor for the spline. Higher values produce
             smoother curves. s=0 means no smoothing (interpolation).
         k (int): Degree of the spline polynomial (1 ≤ k ≤ 5). Common values:
@@ -706,7 +706,7 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
         >>> df_custom = smooth_rates(df, s=10, k=3, group_cols=["year", "region"])
     """
     # Validate required columns
-    required_cols = ["age", "rates", "sex", "race/ethnicity", "year"]
+    required_cols = ["age", "rates", "sex", "race", "year"]
     missing_cols = [col for col in required_cols if col not in input_df.columns]
     if missing_cols:
         raise ValueError(f"Missing required columns: {missing_cols}")
@@ -722,11 +722,11 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     df = input_df.copy()
 
     for sex in df["sex"].unique():
-        for race in df["race/ethnicity"].unique():
+        for race in df["race"].unique():
             for year in df["year"].unique():
                 mask = (
                     (df["sex"] == sex)
-                    & (df["race/ethnicity"] == race)
+                    & (df["race"] == race)
                     & (df["year"] == year)
                 )
 
@@ -748,10 +748,119 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     return df
 
 
+def process_life_tables() -> pd.DataFrame:
+    """Processes male and female life table files (either survivors or life expectancy).
+
+    Data from the UN DESA will be used to calculate mortality rates for ages 85-99 due
+    to data from the CDC being unavailable and heavily suppressed for ages 85+. Data
+    will be filtered for years 1999-2023 to match CDC years, with age being cut off at
+    99 due to lack of data past 100+.
+
+    Raises:
+        ValueError: Raise error if incorrect file urls.
+
+    Returns:
+        pd.DataFrame: The rates table.
+    """
+
+    rates = []
+
+    for file in pathlib.Path("data/undesa").glob("*.xlsx"):
+        df = pd.read_excel(
+            file,
+            sheet_name="Estimates",
+            index_col=None,
+            header=16,
+        )
+
+        filename = file.name
+        if "_MALE" in filename:
+            sex = "M"
+        elif "_FEMALE" in filename:
+            sex = "F"
+        else:
+            raise ValueError("Unknown file type")
+
+        df = (
+            df.query(
+                "`Region, subregion, country or area *` == 'United States of America'"
+            )
+            .drop(
+                columns=[
+                    "Index",
+                    "Variant",
+                    "Region, subregion, country or area *",
+                    "Notes",
+                    "Location code",
+                    "ISO3 Alpha-code",
+                    "ISO2 Alpha-code",
+                    "SDMX code**",
+                    "Type",
+                    "Parent code",
+                ]
+            )
+            .rename(columns={"Year": "year", "Age": "age"})
+            .assign(year=lambda x: x["year"].astype(int))
+            .query("year >= 1999")
+            .melt(
+                id_vars="year",
+                var_name="age",
+                value_name="survivors",
+            )
+            .assign(sex=sex)
+            .sort_values(["year", "age"])
+            .reset_index(drop=True)
+        )
+
+        df = process_life_rates(df)
+        rates.append(df)
+
+    rates = pd.concat(rates, ignore_index=True)
+
+    return rates
+
+
+def process_life_rates(df: pd.DataFrame) -> pd.DataFrame:
+    """Create five-year moving average rate for each race/ethnicity in CDC WONDER.
+
+    The survivors dataset from UN DESA does not contain data for races nor does it have
+    any moving averages. To be appended to the CDC WONDER data, races are added into the
+    dataset and five-year moving averages are calculated for each rate.
+
+    Args:
+        df (pd.DataFrame): The cleaned Survivors Life Table dataset.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the five-year moving averaged rates and
+            races matching the CDC WONDER.
+    """
+
+    df = (
+        df.assign(
+            age=lambda x: x["age"].replace("100+", "100").astype("int64"),
+            deaths=lambda x: (
+                x["survivors"] - x.groupby(["year", "sex"])["survivors"].shift(-1)
+            ),
+        )
+        .assign(
+            deaths=lambda x: x.groupby(["sex", "age"])["deaths"]
+            .transform(lambda x: x.rolling(window=5, min_periods=5).sum())
+            .astype("float64"),
+            survivors=lambda x: x.groupby(["sex", "age"])["survivors"]
+            .transform(lambda x: x.rolling(window=5, min_periods=5).sum())
+            .astype("float64"),
+        )
+        .assign(rates=lambda x: (x["deaths"] / x["survivors"]).astype("float64"))
+        .query("year >= 2003 and age >= 85 and age < 100")
+        .reset_index(drop=True)
+    )
+
+    return df
+
+
 def get_death_rates(
     yr: int,
     launch_yr: int,
-    ss_life_tbl: pd.DataFrame,
     pop_df: pd.DataFrame,
     smooth_s: int = 5,
     smooth_k: int = 2,
@@ -764,52 +873,28 @@ def get_death_rates(
     of 4.5 and 0 raw deaths to values of 1. This strategy avoids missing value
     records and implausible 0% death rates.
 
-    For ages >= 85 the Social Security Actuarial Life Table is used,
-    substituting the 2019 dataset for base years 2020 and 2021 due to the
-    outsize impact of COVID-19 on geriatric death rates.
+    For ages >= 85, UN DESA life table data is used. The data is filtered for
+    the specified year and provides mortality rates for ages 85-99 across all
+    race categories.
 
     The CDC WONDER dataset for 2021 is unavailable, so 2020 data is used
-    as a substitute for year 2021. Smoothing is applied ONLY to CDC data (ages 0-84)
-    to preserve the race-agnostic nature of the SS life table at ages 85+.
+    as a substitute for year 2021.
+
+    Smoothing is applied to the combined CDC and UN DESA dataset.
 
     Args:
-        yr: Increment year
-        launch_yr: Launch year
-        ss_life_tbl (pd.DataFrame): Social Security Actuarial Life Table from
-            death_rates.load_ss_life_tbl
-        pop_df (pd.DataFrame): Population data for the year
+        yr: Increment year.
+        launch_yr: Launch year.
+        pop_df (pd.DataFrame): Population data for the year.
         smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
 
     Returns:
         pd.DataFrame: Death rates broken down by race, sex, and single year
-            of age
+            of age.
     """
     # Death rates calculated from year up to the launch year
     if yr <= launch_yr:
-        # For the Social Security Actuarial Life Table dataset
-        # If current year is not available grab the most recent available year
-        if yr not in ss_life_tbl["year"].unique():
-            ss_yr = ss_life_tbl["year"][ss_life_tbl["year"] <= yr].max()
-            logger.warning(
-                "Social Security Actuarial Life Table dataset unavailable for: "
-                + str(yr)
-                + " Default to most recent dataset: "
-                + str(ss_yr)
-            )
-        else:
-            ss_yr = yr
-
-        # Social Security Actuarial Life Table dataset
-        # Years 2020 and 2021 not used due to COVID-19 impact on geriatric death rates
-        # Default to 2019 data
-        if ss_yr in [2020, 2021]:
-            ss_yr = 2019
-            logger.warning(
-                "Social Security Actuarial Life Table dataset not used for 2020/2021. "
-                "Defaulting to 2019 data."
-            )
-
         # Load and process CDC WONDER mortality data
         # Determine which year's data to use (2021 uses 2020 data)
         cdc_yr = 2020 if yr == 2021 else yr
@@ -824,103 +909,49 @@ def get_death_rates(
         # Get unique race categories from CDC data
         race_categories = cdc_rates["race"].unique()
 
-        # Filter Social Security Actuarial Life Table to chosen year and ages 85-99
-        ss_rates = ss_life_tbl.loc[
-            (ss_life_tbl["year"] == ss_yr)
-            & (ss_life_tbl["age"] >= 85)
-            & (ss_life_tbl["age"] < 100)
-        ][["age", "sex", "rate"]].rename(columns={"rate": "rates"})
+        # Load UNDESA data for ages 85-99
+        undesa_rates = process_life_tables()
 
-        # Expand SS rates to include all race categories
-        # (SS life table doesn't have race breakdown, so apply same rates to all races)
-        ss_expanded = []
-        for race in race_categories:
-            ss_race = ss_rates.copy()
-            ss_race["race"] = race
-            ss_expanded.append(ss_race)
-
-        ss_rates_expanded = pd.concat(ss_expanded, ignore_index=True)
-
-        # Apply smoothing to CDC data ONLY (ages 0-84)
-        if smooth_s is not None and smooth_k is not None:
-            # Prepare CDC DataFrame for smooth_rates function
-            cdc_for_smoothing = cdc_rates.copy()
-            cdc_for_smoothing["year"] = cdc_yr
-            cdc_for_smoothing = cdc_for_smoothing.rename(
-                columns={"race": "race/ethnicity"}
+        # UNDESA data only available through 2023. For years beyond 2023, use 2023 data
+        # Will need to update once 2024 data becomes available
+        undesa_yr = min(cdc_yr, 2023)
+        if cdc_yr > 2023:
+            logger.warning(
+                f"UN DESA data unavailable for {cdc_yr}. Using 2023 data for ages 85-99."
             )
 
-            # Apply smoothing
-            cdc_smoothed = smooth_rates(cdc_for_smoothing, s=smooth_s, k=smooth_k)
+        undesa_rates = undesa_rates[undesa_rates["year"] == undesa_yr][
+            ["sex", "age", "rates"]
+        ]
 
-            # Update the existing rates column with smoothed values
-            cdc_rates["rates"] = cdc_smoothed["rates"].values
+        # Expand UNDESA rates to include all race categories
+        # UN DESA life table doesn't have race breakdown, so apply same rates to all
+        undesa_expanded = []
+        for race in race_categories:
+            undesa_race = undesa_rates.copy()
+            undesa_race["race"] = race
+            undesa_expanded.append(undesa_race)
 
-        # Combine CDC rates (ages 0-84) with SS rates (ages 85+)
-        rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True).rename(
-            columns={"rates": "rate_death"}
+        undesa_rates_expanded = pd.concat(undesa_expanded, ignore_index=True)
+
+        # Combine CDC rates (ages 0-84) with UNDESA rates (ages 85-99)
+        combined_rates = pd.concat(
+            [cdc_rates, undesa_rates_expanded], ignore_index=True
         )
 
-        # Cap age at 99 to match maximum supported age
-        rates = rates[rates["age"] < 100]
+        # Apply smoothing to the combined dataset (ages 0-99)
+        if smooth_s is not None and smooth_k is not None:
+            # Prepare combined DataFrame for smooth_rates function
+            combined_rates["year"] = cdc_yr
+
+            # Apply smoothing to full age range
+            combined_rates = smooth_rates(combined_rates, s=smooth_s, k=smooth_k)
+
+        # Rename to final column name
+        rates = combined_rates.rename(columns={"rates": "rate_death"})
 
         return rates[["race", "sex", "age", "rate_death"]]
 
     # Death rates are not calculated after the launch year
     else:
         raise ValueError("Death rates not calculated past launch year")
-
-
-def load_ss_life_tbl(file_path: str) -> pd.DataFrame:
-    """Load the Social Security Actuarial Life Table.
-
-    Args:
-        file_path: Path to Social Security Actuarial Life Table file
-
-    Returns:
-        pd.DataFrame: The Social Security Actuarial Life Table
-    """
-    # Load the Social Security Actuarial Life Table
-    df = pd.read_csv(
-        file_path,
-        usecols=[
-            "Year",
-            "Exact age",
-            "Male Death Probability",
-            "Male Number of lives",
-            "Female Death Probability",
-            "Female Number of lives",
-        ],
-        dtype={
-            "Year": int,
-            "Exact age": int,
-            "Male Death Probability": float,
-            "Male Number of lives": int,
-            "Female Death Probability": float,
-            "Female Number of lives": int,
-        },
-    ).rename(
-        columns={
-            "Year": "year",
-            "Exact age": "age",
-            "Male Death Probability": "rate-M",
-            "Male Number of lives": "lives-M",
-            "Female Death Probability": "rate-F",
-            "Female Number of lives": "lives-F",
-        }
-    )
-
-    # Transform DataFrame structure to long-format
-    df = pd.wide_to_long(
-        df=df,
-        stubnames="rate",
-        i=[
-            "year",
-            "age",
-        ],
-        j="sex",
-        sep="-",
-        suffix=r"\w+",
-    ).reset_index()
-
-    return df
