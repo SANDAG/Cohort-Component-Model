@@ -121,7 +121,7 @@ with tab2:
             df,
             x="Age",
             y="rate_death",
-            range_x=[0, 110],
+            range_x=[0, 99],
             range_y=[0, df["rate_death"].max() + 0.01],
             color="Race/Ethnicity",
             title="San Diego Region: Mortality Rates",
@@ -249,7 +249,7 @@ with tab3:
         migration,
         x="Age",
         y="rate_net",
-        range_x=[0, 110],
+        range_x=[0, 99],
         range_y=[
             -abs(migration["rate_net"]).max() - 0.01,
             abs(migration["rate_net"]).max() + 0.01,

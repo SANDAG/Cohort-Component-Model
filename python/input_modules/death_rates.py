@@ -824,9 +824,11 @@ def get_death_rates(
         # Get unique race categories from CDC data
         race_categories = cdc_rates["race"].unique()
 
-        # Filter Social Security Actuarial Life Table to chosen year and ages >= 85
+        # Filter Social Security Actuarial Life Table to chosen year and ages 85-99
         ss_rates = ss_life_tbl.loc[
-            (ss_life_tbl["year"] == ss_yr) & (ss_life_tbl["age"] >= 85)
+            (ss_life_tbl["year"] == ss_yr)
+            & (ss_life_tbl["age"] >= 85)
+            & (ss_life_tbl["age"] < 100)
         ][["age", "sex", "rate"]].rename(columns={"rate": "rates"})
 
         # Expand SS rates to include all race categories
@@ -859,6 +861,9 @@ def get_death_rates(
             columns={"rates": "rate_death"}
         )
 
+        # Cap age at 99 to match maximum supported age
+        rates = rates[rates["age"] < 100]
+
         return rates[["race", "sex", "age", "rate_death"]]
 
     # Death rates are not calculated after the launch year
@@ -868,10 +873,6 @@ def get_death_rates(
 
 def load_ss_life_tbl(file_path: str) -> pd.DataFrame:
     """Load the Social Security Actuarial Life Table.
-
-    Load the Social Security Actuarial Life Table replacing age records >= 110
-    with the weighted average of the crude death rate for all age records
-    >= 110 within the given year.
 
     Args:
         file_path: Path to Social Security Actuarial Life Table file
@@ -907,38 +908,6 @@ def load_ss_life_tbl(file_path: str) -> pd.DataFrame:
             "Female Death Probability": "rate-F",
             "Female Number of lives": "lives-F",
         }
-    )
-
-    # Calculate weighted crude death rate for ages >= 110
-    # Assign this death rate for ages 110+
-    weighted_df = df[df["age"] >= 110].copy()
-    weighted_df["weighted-M"] = weighted_df["rate-M"] * weighted_df["lives-M"]
-    weighted_df["weighted-F"] = weighted_df["rate-F"] * weighted_df["lives-F"]
-
-    weighted_df = (
-        weighted_df.groupby("year")[
-            [
-                "lives-M",
-                "weighted-M",
-                "lives-F",
-                "weighted-F",
-            ]
-        ]
-        .sum()
-        .reset_index()
-    )
-
-    weighted_df["rate-M"] = weighted_df["weighted-M"] / weighted_df["lives-M"]
-    weighted_df["rate-F"] = weighted_df["weighted-F"] / weighted_df["lives-F"]
-    weighted_df["age"] = 110
-
-    # Replace ages >= 110 with the weighted crude death rate
-    df = pd.concat(
-        [
-            df[df["age"] < 110][["year", "age", "rate-M", "rate-F"]],
-            weighted_df[["year", "age", "rate-M", "rate-F"]],
-        ],
-        ignore_index=True,
     )
 
     # Transform DataFrame structure to long-format

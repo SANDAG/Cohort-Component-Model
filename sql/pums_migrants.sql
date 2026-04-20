@@ -53,7 +53,7 @@ EXECUTE sp_executesql @pums_qry;
 -- Create a new table which transforms the raw data in the PUMS table into useful summaries.
 with [transformed_tbl] AS (
     SELECT
-        CASE WHEN [AGEP] > 110 THEN 110 ELSE [AGEP] END AS [age],  -- Group oldest ages into one category, if over 110 as 110, otherwise keep single year of age
+        CASE WHEN [AGEP] > 99 THEN 99 ELSE [AGEP] END AS [age],  -- Group oldest ages into one category, if over 99 as 99, otherwise keep single year of age
         CASE WHEN [SEX] = '1' THEN 'M' WHEN [SEX] = '2' THEN 'F' ELSE NULL END AS [sex],  -- Change numeric codes into standard M and F text codes.
         CASE WHEN [HISP] NOT IN ('01', '1') THEN 'Hispanic' -- Exclude non-Hispanic which is 01 or 1.  Hispanic takes precendence over Race
              WHEN [RAC1P] IN ('1', '8') THEN 'White alone' -- Combine Some other race with White

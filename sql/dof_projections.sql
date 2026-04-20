@@ -15,7 +15,7 @@ WITH [projections] AS (
     SELECT
         CONVERT(int, [vintage]) AS [vintage],
         CONVERT(int, [year]) AS [year],
-        CASE WHEN [age] > 110 THEN 110 ELSE [age] END AS [age], -- maximum age is 110
+        CASE WHEN [age] > 99 THEN 99 ELSE [age] END AS [age], -- maximum age is 99
         CASE WHEN [sex] = 'Female' THEN 'F' WHEN [sex] = 'Male' THEN 'M' ELSE NULL END AS [sex],
         CASE WHEN [race/ethnicity] = 'White, Non-Hispanic' THEN 'White alone'
              WHEN [race/ethnicity] = 'Black, Non-Hispanic' THEN 'Black or African American alone'
