@@ -186,9 +186,6 @@ def get_hh_characteristic_rates(
             if v["rate"] is not None:
                 rates.append(v["rate"])
 
-        # Cap age at 99 to match maximum supported age
-        pums_persons_df = pums_persons_df[pums_persons_df["age"] < 100]
-
         return pums_persons_df[["race", "sex", "age", *rates]]
 
     # Household characteristics rates are not calculated after the launch year
