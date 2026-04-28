@@ -957,14 +957,18 @@ def get_death_rates(
     of 4.5 and 0 raw deaths to values of 1. This strategy avoids missing value
     records and implausible 0% death rates.
 
-    For ages >= 85, UN DESA life table data is used. The data is filtered for
-    the specified year and provides mortality rates for ages 85-99 across all
-    race categories.
+    For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
+    rates by sex and age but not by race. To incorporate race-specific variation,
+    scaling factors are calculated using CDC TYA (Ten-Year Age) 85+ rates by race/sex.
+    The scaling factor for each race/sex combination equals the CDC 85+ rate divided
+    by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to each
+    individual UN DESA age (85-99) to produce race-specific rates that match CDC's
+    overall 85+ mortality pattern by race.
 
     The CDC WONDER dataset for 2021 is unavailable, so 2020 data is used
     as a substitute for year 2021.
 
-    Smoothing is applied to the combined CDC and UN DESA dataset.
+    Smoothing is applied to the combined CDC and scaled UN DESA dataset.
 
     Args:
         yr: Increment year.
@@ -986,12 +990,9 @@ def get_death_rates(
             logger.warning("CDC WONDER data unavailable for 2021. Using 2020 data.")
 
         # Load mortality data for this specific year
-        cdc_rates = load_local_files(pop_df=pop_df, year=cdc_yr)[
+        cdc_data = load_local_files(pop_df=pop_df, year=cdc_yr)[
             ["race", "sex", "age", "rates"]
         ]
-
-        # Get unique race categories from CDC data
-        race_categories = cdc_rates["race"].unique()
 
         # Load UNDESA data for ages 85-99
         undesa_rates = process_life_tables()
@@ -1003,25 +1004,51 @@ def get_death_rates(
             logger.warning(
                 f"UN DESA data unavailable for {cdc_yr}. Using 2023 data for ages 85-99."
             )
-
         undesa_rates = undesa_rates[undesa_rates["year"] == undesa_yr][
-            ["sex", "age", "rates"]
+            ["sex", "age", "rates", "deaths", "survivors"]
         ]
 
         # Expand UNDESA rates to include all race categories
         # UN DESA life table doesn't have race breakdown, so apply same rates to all
+        race_categories = cdc_data["race"].unique()
         undesa_expanded = []
         for race in race_categories:
             undesa_race = undesa_rates.copy()
             undesa_race["race"] = race
             undesa_expanded.append(undesa_race)
+        undesa_rates = pd.concat(undesa_expanded, ignore_index=True)
 
-        undesa_rates_expanded = pd.concat(undesa_expanded, ignore_index=True)
+        # Get CDC mortality rate for age 85 (from TYA 85+ group)
+        cdc_rate_85plus = cdc_data[cdc_data["age"] == 85][
+            ["race", "sex", "rates"]
+        ].rename(columns={"rates": "cdc_rate"})
 
-        # Combine CDC rates (ages 0-84) with UNDESA rates (ages 85-99)
-        combined_rates = pd.concat(
-            [cdc_rates, undesa_rates_expanded], ignore_index=True
-        )
+        # Calculate UN DESA implied mortality rate and scaling factor
+        scaling_df = cdc_rate_85plus.merge(
+            undesa_rates.groupby(["sex", "race"], as_index=False)
+            .agg({"deaths": "sum", "survivors": "sum"})
+            .assign(undesa_rate=lambda x: x["deaths"] / x["survivors"])[
+                ["sex", "race", "undesa_rate"]
+            ],
+            on=["sex", "race"],
+            how="left",
+        ).assign(scaling_factor=lambda x: x["cdc_rate"] / x["undesa_rate"])
+
+        # Merge scaling factor and apply to UNDESA mortality rates
+        undesa_rates = (
+            undesa_rates.merge(
+                scaling_df[["sex", "race", "scaling_factor"]],
+                on=["sex", "race"],
+                how="left",
+            )
+            .assign(rates=lambda x: x["rates"] * x["scaling_factor"])
+            .drop(columns=["scaling_factor"])
+        )[["sex", "age", "race", "rates"]]
+
+        cdc_rates = cdc_data[cdc_data["age"] < 85]
+
+        # Combine CDC rates (ages 0-84) with scaled UNDESA rates (ages 85-99)
+        combined_rates = pd.concat([cdc_rates, undesa_rates], ignore_index=True)
 
         # Apply smoothing to the combined dataset (ages 0-99)
         if smooth_s is not None and smooth_k is not None:
