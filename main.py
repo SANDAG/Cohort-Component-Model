@@ -17,7 +17,7 @@ from python.etl import run_etl
 from python.input_modules.active_duty_military import get_active_duty_military
 from python.input_modules.base_yr import get_base_yr_2020
 from python.input_modules.birth_rates import get_birth_rates
-from python.input_modules.death_rates import get_death_rates, load_ss_life_tbl
+from python.input_modules.death_rates import get_death_rates
 from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
 from python.input_modules.migration_rates import get_migration_rates
@@ -49,10 +49,7 @@ for k, v in config["output"]["files"].items():
 
 # Load csv data sources ----
 for k, v in config["csv"].items():
-    if k == "ss_life_table":
-        config["csv"][k] = load_ss_life_tbl(v)
-    else:
-        config["csv"][k] = pd.read_csv(v)
+    config["csv"][k] = pd.read_csv(v)
 
 
 # Initialize base year dataset -----------------------------------------------
@@ -110,7 +107,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
             "deaths": get_death_rates(
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
-                ss_life_tbl=config["csv"]["ss_life_table"],
                 pop_df=pop_df,
             ),
             # Crude Migration Rates

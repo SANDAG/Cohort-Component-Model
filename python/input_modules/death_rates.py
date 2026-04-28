@@ -45,7 +45,12 @@ def parse_filename(fp: pathlib.Path) -> dict:
         "product": {"order": 1, "map": {"1999-2020": "1999-2020", "2018+": "2018+"}},
         "age_group": {
             "order": 2,
-            "map": {"SYA": "Single-Year Ages", "NS": "Not Stated", "ALL": "All"},
+            "map": {
+                "SYA": "Single-Year Ages",
+                "TYA": "Ten-Year Ages",
+                "NS": "Not Stated",
+                "ALL": "All",
+            },
         },
         "sex": {"order": 3, "map": {"F": "Female", "M": "Male", "ALL": "All"}},
         "hispanic": {
@@ -141,6 +146,8 @@ def validate_file(fp: pathlib.Path) -> None:
                 notes["year"] = line.split(":")[1].strip()
             elif line.startswith("Single-Year Ages"):
                 notes["age_group"] = line
+            elif line.startswith("Ten-Year Age Groups"):
+                notes["age_group"] = line
             else:
                 pass
 
@@ -171,14 +178,20 @@ def validate_file(fp: pathlib.Path) -> None:
     else:
         raise ValueError("Product metadata is missing from file contents.")
 
-    # Age group validation is done explicitly for Single Year Age and Not Stated
+    # Age group validation is done explicitly for Single Year Age, Ten Year Age, and Not Stated
     # The All category will have no notes information
     # Single-Year Ages may or may not have notes (depends on Group By parameters)
+    # Ten-Year Ages will have "Ten-Year Age Groups" in notes
     # Not Stated will have "Single-Year Ages: Not Stated" in notes
     if "age_group" in notes:
         if (
             metadata["age_group"] == "Single-Year Ages"
             and "Single-Year Ages" in notes["age_group"]
+        ):
+            pass
+        elif (
+            metadata["age_group"] == "Ten-Year Ages"
+            and "Ten-Year Age Groups" in notes["age_group"]
         ):
             pass
         elif (
@@ -189,7 +202,7 @@ def validate_file(fp: pathlib.Path) -> None:
             raise ValueError(
                 f"Metadata age_group: '{metadata['age_group']}' does not match file contents: '{notes['age_group']}'."
             )
-    elif metadata["age_group"] in ["All", "Single-Year Ages"]:
+    elif metadata["age_group"] in ["All", "Single-Year Ages", "Ten-Year Ages"]:
         pass
     else:
         raise ValueError(
@@ -271,7 +284,8 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     downstream analysis. It performs the following:
     - Skips files intended for 'not stated' inflation factor calculation (files with
         'Not Stated' or 'All' in key fields).
-    - Filters out ages 85 and above.
+    - For SYA (Single-Year Ages) files: Filters out ages 85 and above.
+    - For TYA (Ten-Year Ages) files: Filters for only the 85+ age group.
     - Standardizes column names and values (e.g., race, sex, location, year).
     - For San Diego County 2022+ 5-year average files, converts deaths to annual counts
         for later merge with population data
@@ -281,8 +295,9 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         file_path (pathlib.Path): Path to the CDC WONDER mortality file.
 
     Returns:
-        pd.DataFrame: Processed DataFrame with columns standardized and filtered for
-            ages 0-84. Returns an empty DataFrame if the file is meant for 'not stated'
+        pd.DataFrame: Processed DataFrame with columns standardized. For SYA files,
+            returns ages 0-84. For TYA files, returns only 85+ group. Returns an empty
+            DataFrame if the file is meant for 'not stated'
             inflation factor calculation.
     """
 
@@ -305,7 +320,13 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             "CDC WONDER mortality data as they have been dealt with separately."
         )
 
-    # Ages to be excluded from dataset
+    # Determine if this is SYA or TYA file
+    is_tya = metadata["age_group"] == "Ten-Year Ages"
+
+    # Define age column name based on file type
+    age_col = "Ten-Year Age Groups Code" if is_tya else "Single-Year Ages Code"
+
+    # Ages to be excluded from dataset (only for SYA files)
     excluding_sya = [str(age) for age in range(85, 101)]
 
     df = (
@@ -316,6 +337,7 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             usecols=lambda col: col
             in [
                 "Single-Year Ages Code",
+                "Ten-Year Age Groups Code",
                 "Sex Code",
                 "Hispanic Origin",
                 "Year",
@@ -330,7 +352,7 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         .drop(columns=["Notes"])
         .rename(
             columns={
-                "Single-Year Ages Code": "age",
+                age_col: "age",
                 "Sex Code": "sex",
                 "Hispanic Origin": "hispanic origin",
                 "Year": "year",
@@ -341,7 +363,13 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             }
         )
         .assign(
-            race=lambda x: x["race"] if "race" in x.columns else "Hispanic",
+            # Determine race: Hispanic if hispanic origin is HIS, otherwise use race from CSV or metadata
+            # For TYA files, race column doesn't exist so we use metadata
+            race=lambda x: (
+                "Hispanic"
+                if metadata["hispanic"] == "Hispanic or Latino"
+                else (x["race"] if "race" in x.columns else metadata["race"])
+            ),
             location=metadata["location"],
             year=pd.to_numeric(metadata["year"], errors="coerce"),
             product=metadata["product"],
@@ -357,8 +385,20 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
                 else 1
             ),
         )
-        .loc[lambda x: (~x["age"].isin(excluding_sya))]
-        .replace(
+    )
+
+    # Filter ages based on file type
+    if is_tya:
+        # For TYA files, keep only 85+ group and convert to age 85
+        df = df.loc[lambda x: x["age"] == "85+"].assign(
+            age=lambda x: x["age"].replace({"85+": "85"})
+        )
+    else:
+        # For SYA files, exclude ages 85+
+        df = df.loc[lambda x: (~x["age"].isin(excluding_sya))]
+
+    df = (
+        df.replace(
             {
                 "Asian": "Asian alone",
                 "Asian or Pacific Islander": "Asian alone",
@@ -387,25 +427,33 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         and (metadata["sex"] != "All")
     ):
         df["race"] = "Hispanic"
+
     # Files with race="All" AND hispanic="Not Hispanic or Latino" will be marked as "All"
-    # and later duplicated into NHPI and MOR (races with insufficient data)
+    # Only needed for 2020 and before
     elif (
         (metadata["race"] == "All")
         and (metadata["hispanic"] == "Not Hispanic or Latino")
         and (metadata["sex"] != "All")
+        and (int(metadata["year"]) <= 2020)
     ):
         df["race"] = "All"
 
-    # Duplicate 'All' race rows into NHPI and MOR, keep other races
-    all_races = df[df["race"] == "All"]
-    result = pd.concat(
-        [
-            df[df["race"] != "All"],
-            all_races.assign(race="Native Hawaiian or Other Pacific Islander alone"),
-            all_races.assign(race="Two or More Races"),
-        ],
-        ignore_index=True,
-    )
+    # Duplicate 'All' race rows into NHPI and MOR for years <= 2020 only
+    # For years >= 2022, actual race-specific files with sufficient data exist
+    if int(metadata["year"]) <= 2020:
+        all_races = df[df["race"] == "All"]
+        result = pd.concat(
+            [
+                df[df["race"] != "All"],
+                all_races.assign(
+                    race="Native Hawaiian or Other Pacific Islander alone"
+                ),
+                all_races.assign(race="Two or More Races"),
+            ],
+            ignore_index=True,
+        )
+    else:
+        result = df
 
     return result
 
@@ -551,14 +599,16 @@ def deaths_recode(deaths: int, pop: int) -> float:
 def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     """Load files from a directory for a specific year and combine them by product.
 
+    This function processes both Single-Year Age (SYA) files for ages 0-84 and
+    Ten-Year Age (TYA) files for age 85 (85-99).
+
     Args:
         pop_df (pd.DataFrame): Population dataframe from CCM for 2018+ product
             population estimates.
         year (int): The year to load data for.
 
     Returns:
-        pd.DataFrame: A single DataFrame for the specified year with data for
-        ages 0-99 from the CDC.
+        pd.DataFrame: A single DataFrame for ages 0-85 with mortality rates.
     """
 
     all_data = []
@@ -598,32 +648,54 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
                     and meta["location"] == "San Diego County"
                     and pop_df is not None
                 ):
-                    df = df.merge(
-                        pop_df.assign(year=year)[["year", "age", "sex", "race", "pop"]],
-                        on=["year", "age", "sex", "race"],
-                        how="left",
-                    )
 
-                # Merge with inflation factors and inflate deaths/rates
-                df = (
-                    pd.merge(df, inflation_factor, on=["location", "sex"])
-                    .assign(
-                        deaths=lambda x: x["deaths"] * x["inflation_factor"],
-                        rates=lambda x: np.where(
-                            x["deaths"].isnull(), np.nan, x["deaths"] / x["pop"]
-                        ),
-                    )
-                    .drop(columns=["inflation_factor"])
-                )
+                    # For TYA files (age 85 = ages 85-99), sum population across age range
+                    if meta["age_group"] == "Ten-Year Ages":
+                        pop_85plus = (
+                            pop_df.loc[pop_df["age"].between(85, 99)][
+                                ["sex", "race", "pop"]
+                            ]
+                            .groupby(["sex", "race"], as_index=False)["pop"]
+                            .sum()
+                            .assign(age=85)
+                        )
+                        df = df.merge(
+                            pop_85plus,
+                            on=["age", "sex", "race"],
+                            how="left",
+                        )
+                    else:
+                        # For SYA files, use direct age match
+                        df = df.merge(
+                            pop_df[["age", "sex", "race", "pop"]],
+                            on=["age", "sex", "race"],
+                            how="left",
+                        )
 
+                # Combine both SYA and TYA data
                 all_data.append(df)
 
-    # Combine all data
-    all_data = pd.concat(all_data, ignore_index=True)
+    # Combine all data (SYA ages 0-84 and TYA age 85)
+    if not all_data:
+        raise ValueError(f"No data found for year {year}")
+
+    combined = pd.concat(all_data, ignore_index=True)
+
+    # Inflate deaths and calculate rates for all ages
+    combined = (
+        pd.merge(combined, inflation_factor, on=["location", "sex"])
+        .assign(
+            deaths=lambda x: x["deaths"] * x["inflation_factor"],
+            rates=lambda x: np.where(
+                x["deaths"].isnull(), np.nan, x["deaths"] / x["pop"]
+            ),
+        )
+        .drop(columns=["inflation_factor"])
+    )
 
     # Pivot by location to get county, state, national as separate columns
     pivoted = (
-        all_data.pivot_table(
+        combined.pivot_table(
             index=["year", "age", "race", "sex", "hispanic origin"],
             columns="location",
             values=["rates", "deaths", "pop"],
@@ -649,10 +721,12 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
         np.nan,
     )
 
-    # Geography Hierarchy for rates: County > State > National
+    # For NHPI, use State > National
+    # Mix of NHPI county and state level data causes discontinuity in rates
+    is_nhpi = pivoted["race"] == "Native Hawaiian or Other Pacific Islander alone"
+
     pivoted["rates"] = np.where(
-        (county.notna()) & (county > 0),
-        county,
+        is_nhpi,
         np.where(
             (state.notna()) & (state > 0),
             state,
@@ -660,6 +734,20 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
                 (national.notna()) & (national > 0),
                 national,
                 national_impute,
+            ),
+        ),
+        # For all other races: County > State > National hierarchy
+        np.where(
+            (county.notna()) & (county > 0),
+            county,
+            np.where(
+                (state.notna()) & (state > 0),
+                state,
+                np.where(
+                    (national.notna()) & (national > 0),
+                    national,
+                    national_impute,
+                ),
             ),
         ),
     )
@@ -685,7 +773,7 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
 
     Args:
         input_df (pd.DataFrame): DataFrame containing mortality rates with
-            columns 'age', 'rates', 'sex', 'race/ethnicity', and 'year'.
+            columns 'age', 'rates', 'sex', 'race', and 'year'.
         s (int): Smoothing factor for the spline. Higher values produce
             smoother curves. s=0 means no smoothing (interpolation).
         k (int): Degree of the spline polynomial (1 ≤ k ≤ 5). Common values:
@@ -706,7 +794,7 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
         >>> df_custom = smooth_rates(df, s=10, k=3, group_cols=["year", "region"])
     """
     # Validate required columns
-    required_cols = ["age", "rates", "sex", "race/ethnicity", "year"]
+    required_cols = ["age", "rates", "sex", "race", "year"]
     missing_cols = [col for col in required_cols if col not in input_df.columns]
     if missing_cols:
         raise ValueError(f"Missing required columns: {missing_cols}")
@@ -722,13 +810,9 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     df = input_df.copy()
 
     for sex in df["sex"].unique():
-        for race in df["race/ethnicity"].unique():
+        for race in df["race"].unique():
             for year in df["year"].unique():
-                mask = (
-                    (df["sex"] == sex)
-                    & (df["race/ethnicity"] == race)
-                    & (df["year"] == year)
-                )
+                mask = (df["sex"] == sex) & (df["race"] == race) & (df["year"] == year)
 
                 # Get subset and sort by age
                 subset = df.loc[mask, ["age", "rates"]].copy()
@@ -748,10 +832,119 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     return df
 
 
+def process_life_tables() -> pd.DataFrame:
+    """Processes male and female life table files (either survivors or life expectancy).
+
+    Data from the UN DESA will be used to calculate mortality rates for ages 85-99 due
+    to data from the CDC being unavailable and heavily suppressed for ages 85+. Data
+    will be filtered for years 1999-2023 to match CDC years, with age being cut off at
+    99 due to lack of data past 100+.
+
+    Raises:
+        ValueError: Raise error if incorrect file urls.
+
+    Returns:
+        pd.DataFrame: The rates table.
+    """
+
+    rates = []
+
+    for file in pathlib.Path("data/undesa").glob("*.xlsx"):
+        df = pd.read_excel(
+            file,
+            sheet_name="Estimates",
+            index_col=None,
+            header=16,
+        )
+
+        filename = file.name
+        if "_MALE" in filename:
+            sex = "M"
+        elif "_FEMALE" in filename:
+            sex = "F"
+        else:
+            raise ValueError("Unknown file type")
+
+        df = (
+            df.query(
+                "`Region, subregion, country or area *` == 'United States of America'"
+            )
+            .drop(
+                columns=[
+                    "Index",
+                    "Variant",
+                    "Region, subregion, country or area *",
+                    "Notes",
+                    "Location code",
+                    "ISO3 Alpha-code",
+                    "ISO2 Alpha-code",
+                    "SDMX code**",
+                    "Type",
+                    "Parent code",
+                ]
+            )
+            .rename(columns={"Year": "year", "Age": "age"})
+            .assign(year=lambda x: x["year"].astype(int))
+            .query("year >= 1999")
+            .melt(
+                id_vars="year",
+                var_name="age",
+                value_name="survivors",
+            )
+            .assign(sex=sex)
+            .sort_values(["year", "age"])
+            .reset_index(drop=True)
+        )
+
+        df = process_life_rates(df)
+        rates.append(df)
+
+    rates = pd.concat(rates, ignore_index=True)
+
+    return rates
+
+
+def process_life_rates(df: pd.DataFrame) -> pd.DataFrame:
+    """Create five-year moving average rate for each race/ethnicity in CDC WONDER.
+
+    The survivors dataset from UN DESA does not contain data for races nor does it have
+    any moving averages. To be appended to the CDC WONDER data, races are added into the
+    dataset and five-year moving averages are calculated for each rate.
+
+    Args:
+        df (pd.DataFrame): The cleaned Survivors Life Table dataset.
+
+    Returns:
+        pd.DataFrame: A DataFrame containing the five-year moving averaged rates and
+            races matching the CDC WONDER.
+    """
+
+    df = (
+        df.assign(
+            age=lambda x: x["age"].replace("100+", "100").astype("int64"),
+            deaths=lambda x: (
+                x["survivors"] - x.groupby(["year", "sex"])["survivors"].shift(-1)
+            ),
+        )
+        .assign(
+            deaths=lambda x: x.groupby(["sex", "age"])["deaths"]
+            .transform(lambda x: x.rolling(window=5, min_periods=5).sum())
+            .astype("float64"),
+            survivors=lambda x: x.groupby(["sex", "age"])["survivors"]
+            .transform(lambda x: x.rolling(window=5, min_periods=5).sum())
+            .astype("float64"),
+        )
+        .assign(rates=lambda x: (x["deaths"] / x["survivors"]).astype("float64"))
+        .query("year >= 2003 and age >= 85 and age < 100")
+        .reset_index(drop=True)
+    )
+
+    return df
+
+
 def get_death_rates(
     yr: int,
     launch_yr: int,
-    ss_life_tbl: pd.DataFrame,
     pop_df: pd.DataFrame,
     smooth_s: int = 5,
     smooth_k: int = 2,
@@ -764,52 +957,32 @@ def get_death_rates(
     of 4.5 and 0 raw deaths to values of 1. This strategy avoids missing value
     records and implausible 0% death rates.
 
-    For ages >= 85 the Social Security Actuarial Life Table is used,
-    substituting the 2019 dataset for base years 2020 and 2021 due to the
-    outsize impact of COVID-19 on geriatric death rates.
+    For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
+    rates by sex and age but not by race. To incorporate race-specific variation,
+    scaling factors are calculated using CDC TYA (Ten-Year Age) 85+ rates by race/sex.
+    The scaling factor for each race/sex combination equals the CDC 85+ rate divided
+    by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to each
+    individual UN DESA age (85-99) to produce race-specific rates that match CDC's
+    overall 85+ mortality pattern by race.
 
     The CDC WONDER dataset for 2021 is unavailable, so 2020 data is used
-    as a substitute for year 2021. Smoothing is applied ONLY to CDC data (ages 0-84)
-    to preserve the race-agnostic nature of the SS life table at ages 85+.
+    as a substitute for year 2021.
+
+    Smoothing is applied to the combined CDC and scaled UN DESA dataset.
 
     Args:
-        yr: Increment year
-        launch_yr: Launch year
-        ss_life_tbl (pd.DataFrame): Social Security Actuarial Life Table from
-            death_rates.load_ss_life_tbl
-        pop_df (pd.DataFrame): Population data for the year
+        yr: Increment year.
+        launch_yr: Launch year.
+        pop_df (pd.DataFrame): Population data for the year.
         smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
 
     Returns:
         pd.DataFrame: Death rates broken down by race, sex, and single year
-            of age
+            of age.
     """
     # Death rates calculated from year up to the launch year
     if yr <= launch_yr:
-        # For the Social Security Actuarial Life Table dataset
-        # If current year is not available grab the most recent available year
-        if yr not in ss_life_tbl["year"].unique():
-            ss_yr = ss_life_tbl["year"][ss_life_tbl["year"] <= yr].max()
-            logger.warning(
-                "Social Security Actuarial Life Table dataset unavailable for: "
-                + str(yr)
-                + " Default to most recent dataset: "
-                + str(ss_yr)
-            )
-        else:
-            ss_yr = yr
-
-        # Social Security Actuarial Life Table dataset
-        # Years 2020 and 2021 not used due to COVID-19 impact on geriatric death rates
-        # Default to 2019 data
-        if ss_yr in [2020, 2021]:
-            ss_yr = 2019
-            logger.warning(
-                "Social Security Actuarial Life Table dataset not used for 2020/2021. "
-                "Defaulting to 2019 data."
-            )
-
         # Load and process CDC WONDER mortality data
         # Determine which year's data to use (2021 uses 2020 data)
         cdc_yr = 2020 if yr == 2021 else yr
@@ -817,110 +990,79 @@ def get_death_rates(
             logger.warning("CDC WONDER data unavailable for 2021. Using 2020 data.")
 
         # Load mortality data for this specific year
-        cdc_rates = load_local_files(pop_df=pop_df, year=cdc_yr)[
+        cdc_data = load_local_files(pop_df=pop_df, year=cdc_yr)[
             ["race", "sex", "age", "rates"]
         ]
 
-        # Get unique race categories from CDC data
-        race_categories = cdc_rates["race"].unique()
+        # Load UNDESA data for ages 85-99
+        undesa_rates = process_life_tables()
 
-        # Filter Social Security Actuarial Life Table to chosen year and ages 85-99
-        ss_rates = ss_life_tbl.loc[
-            (ss_life_tbl["year"] == ss_yr)
-            & (ss_life_tbl["age"] >= 85)
-            & (ss_life_tbl["age"] < 100)
-        ][["age", "sex", "rate"]].rename(columns={"rate": "rates"})
-
-        # Expand SS rates to include all race categories
-        # (SS life table doesn't have race breakdown, so apply same rates to all races)
-        ss_expanded = []
-        for race in race_categories:
-            ss_race = ss_rates.copy()
-            ss_race["race"] = race
-            ss_expanded.append(ss_race)
-
-        ss_rates_expanded = pd.concat(ss_expanded, ignore_index=True)
-
-        # Apply smoothing to CDC data ONLY (ages 0-84)
-        if smooth_s is not None and smooth_k is not None:
-            # Prepare CDC DataFrame for smooth_rates function
-            cdc_for_smoothing = cdc_rates.copy()
-            cdc_for_smoothing["year"] = cdc_yr
-            cdc_for_smoothing = cdc_for_smoothing.rename(
-                columns={"race": "race/ethnicity"}
+        # UNDESA data only available through 2023. For years beyond 2023, use 2023 data
+        # Will need to update once 2024 data becomes available
+        undesa_yr = min(cdc_yr, 2023)
+        if cdc_yr > 2023:
+            logger.warning(
+                f"UN DESA data unavailable for {cdc_yr}. Using 2023 data for ages 85-99."
             )
+        undesa_rates = undesa_rates[undesa_rates["year"] == undesa_yr][
+            ["sex", "age", "rates", "deaths", "survivors"]
+        ]
 
-            # Apply smoothing
-            cdc_smoothed = smooth_rates(cdc_for_smoothing, s=smooth_s, k=smooth_k)
+        # Expand UNDESA rates to include all race categories
+        # UN DESA life table doesn't have race breakdown, so apply same rates to all
+        race_categories = cdc_data["race"].unique()
+        undesa_expanded = []
+        for race in race_categories:
+            undesa_race = undesa_rates.copy()
+            undesa_race["race"] = race
+            undesa_expanded.append(undesa_race)
+        undesa_rates = pd.concat(undesa_expanded, ignore_index=True)
 
-            # Update the existing rates column with smoothed values
-            cdc_rates["rates"] = cdc_smoothed["rates"].values
+        # Get CDC mortality rate for age 85 (from TYA 85+ group)
+        cdc_rate_85plus = cdc_data[cdc_data["age"] == 85][
+            ["race", "sex", "rates"]
+        ].rename(columns={"rates": "cdc_rate"})
 
-        # Combine CDC rates (ages 0-84) with SS rates (ages 85+)
-        rates = pd.concat([cdc_rates, ss_rates_expanded], ignore_index=True).rename(
-            columns={"rates": "rate_death"}
-        )
+        # Calculate UN DESA implied mortality rate and scaling factor
+        scaling_df = cdc_rate_85plus.merge(
+            undesa_rates.groupby(["sex", "race"], as_index=False)
+            .agg({"deaths": "sum", "survivors": "sum"})
+            .assign(undesa_rate=lambda x: x["deaths"] / x["survivors"])[
+                ["sex", "race", "undesa_rate"]
+            ],
+            on=["sex", "race"],
+            how="left",
+        ).assign(scaling_factor=lambda x: x["cdc_rate"] / x["undesa_rate"])
 
-        # Cap age at 99 to match maximum supported age
-        rates = rates[rates["age"] < 100]
+        # Merge scaling factor and apply to UNDESA mortality rates
+        undesa_rates = (
+            undesa_rates.merge(
+                scaling_df[["sex", "race", "scaling_factor"]],
+                on=["sex", "race"],
+                how="left",
+            )
+            .assign(rates=lambda x: x["rates"] * x["scaling_factor"])
+            .drop(columns=["scaling_factor"])
+        )[["sex", "age", "race", "rates"]]
+
+        cdc_rates = cdc_data[cdc_data["age"] < 85]
+
+        # Combine CDC rates (ages 0-84) with scaled UNDESA rates (ages 85-99)
+        combined_rates = pd.concat([cdc_rates, undesa_rates], ignore_index=True)
+
+        # Apply smoothing to the combined dataset (ages 0-99)
+        if smooth_s is not None and smooth_k is not None:
+            # Prepare combined DataFrame for smooth_rates function
+            combined_rates["year"] = cdc_yr
+
+            # Apply smoothing to full age range
+            combined_rates = smooth_rates(combined_rates, s=smooth_s, k=smooth_k)
+
+        # Rename to final column name
+        rates = combined_rates.rename(columns={"rates": "rate_death"})
 
         return rates[["race", "sex", "age", "rate_death"]]
 
     # Death rates are not calculated after the launch year
     else:
         raise ValueError("Death rates not calculated past launch year")
-
-
-def load_ss_life_tbl(file_path: str) -> pd.DataFrame:
-    """Load the Social Security Actuarial Life Table.
-
-    Args:
-        file_path: Path to Social Security Actuarial Life Table file
-
-    Returns:
-        pd.DataFrame: The Social Security Actuarial Life Table
-    """
-    # Load the Social Security Actuarial Life Table
-    df = pd.read_csv(
-        file_path,
-        usecols=[
-            "Year",
-            "Exact age",
-            "Male Death Probability",
-            "Male Number of lives",
-            "Female Death Probability",
-            "Female Number of lives",
-        ],
-        dtype={
-            "Year": int,
-            "Exact age": int,
-            "Male Death Probability": float,
-            "Male Number of lives": int,
-            "Female Death Probability": float,
-            "Female Number of lives": int,
-        },
-    ).rename(
-        columns={
-            "Year": "year",
-            "Exact age": "age",
-            "Male Death Probability": "rate-M",
-            "Male Number of lives": "lives-M",
-            "Female Death Probability": "rate-F",
-            "Female Number of lives": "lives-F",
-        }
-    )
-
-    # Transform DataFrame structure to long-format
-    df = pd.wide_to_long(
-        df=df,
-        stubnames="rate",
-        i=[
-            "year",
-            "age",
-        ],
-        j="sex",
-        sep="-",
-        suffix=r"\w+",
-    ).reset_index()
-
-    return df
