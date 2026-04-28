@@ -599,14 +599,16 @@ def deaths_recode(deaths: int, pop: int) -> float:
 def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     """Load files from a directory for a specific year and combine them by product.
 
+    This function processes both Single-Year Age (SYA) files for ages 0-84 and
+    Ten-Year Age (TYA) files for age 85 (85-99).
+
     Args:
         pop_df (pd.DataFrame): Population dataframe from CCM for 2018+ product
             population estimates.
         year (int): The year to load data for.
 
     Returns:
-        pd.DataFrame: A single DataFrame for the specified year with data for
-        ages 0-99 from the CDC.
+        pd.DataFrame: A single DataFrame for ages 0-85 with mortality rates.
     """
 
     all_data = []
@@ -646,32 +648,54 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
                     and meta["location"] == "San Diego County"
                     and pop_df is not None
                 ):
-                    df = df.merge(
-                        pop_df.assign(year=year)[["year", "age", "sex", "race", "pop"]],
-                        on=["year", "age", "sex", "race"],
-                        how="left",
-                    )
 
-                # Merge with inflation factors and inflate deaths/rates
-                df = (
-                    pd.merge(df, inflation_factor, on=["location", "sex"])
-                    .assign(
-                        deaths=lambda x: x["deaths"] * x["inflation_factor"],
-                        rates=lambda x: np.where(
-                            x["deaths"].isnull(), np.nan, x["deaths"] / x["pop"]
-                        ),
-                    )
-                    .drop(columns=["inflation_factor"])
-                )
+                    # For TYA files (age 85 = ages 85-99), sum population across age range
+                    if meta["age_group"] == "Ten-Year Ages":
+                        pop_85plus = (
+                            pop_df.loc[pop_df["age"].between(85, 99)][
+                                ["sex", "race", "pop"]
+                            ]
+                            .groupby(["sex", "race"], as_index=False)["pop"]
+                            .sum()
+                            .assign(age=85)
+                        )
+                        df = df.merge(
+                            pop_85plus,
+                            on=["age", "sex", "race"],
+                            how="left",
+                        )
+                    else:
+                        # For SYA files, use direct age match
+                        df = df.merge(
+                            pop_df[["age", "sex", "race", "pop"]],
+                            on=["age", "sex", "race"],
+                            how="left",
+                        )
 
+                # Combine both SYA and TYA data
                 all_data.append(df)
 
-    # Combine all data
-    all_data = pd.concat(all_data, ignore_index=True)
+    # Combine all data (SYA ages 0-84 and TYA age 85)
+    if not all_data:
+        raise ValueError(f"No data found for year {year}")
+
+    combined = pd.concat(all_data, ignore_index=True)
+
+    # Inflate deaths and calculate rates for all ages
+    combined = (
+        pd.merge(combined, inflation_factor, on=["location", "sex"])
+        .assign(
+            deaths=lambda x: x["deaths"] * x["inflation_factor"],
+            rates=lambda x: np.where(
+                x["deaths"].isnull(), np.nan, x["deaths"] / x["pop"]
+            ),
+        )
+        .drop(columns=["inflation_factor"])
+    )
 
     # Pivot by location to get county, state, national as separate columns
     pivoted = (
-        all_data.pivot_table(
+        combined.pivot_table(
             index=["year", "age", "race", "sex", "hispanic origin"],
             columns="location",
             values=["rates", "deaths", "pop"],
@@ -697,10 +721,12 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
         np.nan,
     )
 
-    # Geography Hierarchy for rates: County > State > National
+    # For NHPI, use State > National
+    # Mix of NHPI county and state level data causes discontinuity in rates
+    is_nhpi = pivoted["race"] == "Native Hawaiian or Other Pacific Islander alone"
+
     pivoted["rates"] = np.where(
-        (county.notna()) & (county > 0),
-        county,
+        is_nhpi,
         np.where(
             (state.notna()) & (state > 0),
             state,
@@ -708,6 +734,20 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
                 (national.notna()) & (national > 0),
                 national,
                 national_impute,
+            ),
+        ),
+        # For all other races: County > State > National hierarchy
+        np.where(
+            (county.notna()) & (county > 0),
+            county,
+            np.where(
+                (state.notna()) & (state > 0),
+                state,
+                np.where(
+                    (national.notna()) & (national > 0),
+                    national,
+                    national_impute,
+                ),
             ),
         ),
     )
