@@ -45,7 +45,12 @@ def parse_filename(fp: pathlib.Path) -> dict:
         "product": {"order": 1, "map": {"1999-2020": "1999-2020", "2018+": "2018+"}},
         "age_group": {
             "order": 2,
-            "map": {"SYA": "Single-Year Ages", "NS": "Not Stated", "ALL": "All"},
+            "map": {
+                "SYA": "Single-Year Ages",
+                "TYA": "Ten-Year Ages",
+                "NS": "Not Stated",
+                "ALL": "All",
+            },
         },
         "sex": {"order": 3, "map": {"F": "Female", "M": "Male", "ALL": "All"}},
         "hispanic": {
@@ -141,6 +146,8 @@ def validate_file(fp: pathlib.Path) -> None:
                 notes["year"] = line.split(":")[1].strip()
             elif line.startswith("Single-Year Ages"):
                 notes["age_group"] = line
+            elif line.startswith("Ten-Year Age Groups"):
+                notes["age_group"] = line
             else:
                 pass
 
@@ -171,14 +178,20 @@ def validate_file(fp: pathlib.Path) -> None:
     else:
         raise ValueError("Product metadata is missing from file contents.")
 
-    # Age group validation is done explicitly for Single Year Age and Not Stated
+    # Age group validation is done explicitly for Single Year Age, Ten Year Age, and Not Stated
     # The All category will have no notes information
     # Single-Year Ages may or may not have notes (depends on Group By parameters)
+    # Ten-Year Ages will have "Ten-Year Age Groups" in notes
     # Not Stated will have "Single-Year Ages: Not Stated" in notes
     if "age_group" in notes:
         if (
             metadata["age_group"] == "Single-Year Ages"
             and "Single-Year Ages" in notes["age_group"]
+        ):
+            pass
+        elif (
+            metadata["age_group"] == "Ten-Year Ages"
+            and "Ten-Year Age Groups" in notes["age_group"]
         ):
             pass
         elif (
@@ -189,7 +202,7 @@ def validate_file(fp: pathlib.Path) -> None:
             raise ValueError(
                 f"Metadata age_group: '{metadata['age_group']}' does not match file contents: '{notes['age_group']}'."
             )
-    elif metadata["age_group"] in ["All", "Single-Year Ages"]:
+    elif metadata["age_group"] in ["All", "Single-Year Ages", "Ten-Year Ages"]:
         pass
     else:
         raise ValueError(
@@ -271,7 +284,8 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     downstream analysis. It performs the following:
     - Skips files intended for 'not stated' inflation factor calculation (files with
         'Not Stated' or 'All' in key fields).
-    - Filters out ages 85 and above.
+    - For SYA (Single-Year Ages) files: Filters out ages 85 and above.
+    - For TYA (Ten-Year Ages) files: Filters for only the 85+ age group.
     - Standardizes column names and values (e.g., race, sex, location, year).
     - For San Diego County 2022+ 5-year average files, converts deaths to annual counts
         for later merge with population data
@@ -281,8 +295,9 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         file_path (pathlib.Path): Path to the CDC WONDER mortality file.
 
     Returns:
-        pd.DataFrame: Processed DataFrame with columns standardized and filtered for
-            ages 0-84. Returns an empty DataFrame if the file is meant for 'not stated'
+        pd.DataFrame: Processed DataFrame with columns standardized. For SYA files,
+            returns ages 0-84. For TYA files, returns only 85+ group. Returns an empty
+            DataFrame if the file is meant for 'not stated'
             inflation factor calculation.
     """
 
@@ -305,7 +320,13 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             "CDC WONDER mortality data as they have been dealt with separately."
         )
 
-    # Ages to be excluded from dataset
+    # Determine if this is SYA or TYA file
+    is_tya = metadata["age_group"] == "Ten-Year Ages"
+
+    # Define age column name based on file type
+    age_col = "Ten-Year Age Groups Code" if is_tya else "Single-Year Ages Code"
+
+    # Ages to be excluded from dataset (only for SYA files)
     excluding_sya = [str(age) for age in range(85, 101)]
 
     df = (
@@ -316,6 +337,7 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             usecols=lambda col: col
             in [
                 "Single-Year Ages Code",
+                "Ten-Year Age Groups Code",
                 "Sex Code",
                 "Hispanic Origin",
                 "Year",
@@ -330,7 +352,7 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         .drop(columns=["Notes"])
         .rename(
             columns={
-                "Single-Year Ages Code": "age",
+                age_col: "age",
                 "Sex Code": "sex",
                 "Hispanic Origin": "hispanic origin",
                 "Year": "year",
@@ -341,7 +363,13 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             }
         )
         .assign(
-            race=lambda x: x["race"] if "race" in x.columns else "Hispanic",
+            # Determine race: Hispanic if hispanic origin is HIS, otherwise use race from CSV or metadata
+            # For TYA files, race column doesn't exist so we use metadata
+            race=lambda x: (
+                "Hispanic"
+                if metadata["hispanic"] == "Hispanic or Latino"
+                else (x["race"] if "race" in x.columns else metadata["race"])
+            ),
             location=metadata["location"],
             year=pd.to_numeric(metadata["year"], errors="coerce"),
             product=metadata["product"],
@@ -357,8 +385,20 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
                 else 1
             ),
         )
-        .loc[lambda x: (~x["age"].isin(excluding_sya))]
-        .replace(
+    )
+
+    # Filter ages based on file type
+    if is_tya:
+        # For TYA files, keep only 85+ group and convert to age 85
+        df = df.loc[lambda x: x["age"] == "85+"].assign(
+            age=lambda x: x["age"].replace({"85+": "85"})
+        )
+    else:
+        # For SYA files, exclude ages 85+
+        df = df.loc[lambda x: (~x["age"].isin(excluding_sya))]
+
+    df = (
+        df.replace(
             {
                 "Asian": "Asian alone",
                 "Asian or Pacific Islander": "Asian alone",
@@ -387,25 +427,33 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         and (metadata["sex"] != "All")
     ):
         df["race"] = "Hispanic"
+
     # Files with race="All" AND hispanic="Not Hispanic or Latino" will be marked as "All"
-    # and later duplicated into NHPI and MOR (races with insufficient data)
+    # Only needed for 2020 and before
     elif (
         (metadata["race"] == "All")
         and (metadata["hispanic"] == "Not Hispanic or Latino")
         and (metadata["sex"] != "All")
+        and (int(metadata["year"]) <= 2020)
     ):
         df["race"] = "All"
 
-    # Duplicate 'All' race rows into NHPI and MOR, keep other races
-    all_races = df[df["race"] == "All"]
-    result = pd.concat(
-        [
-            df[df["race"] != "All"],
-            all_races.assign(race="Native Hawaiian or Other Pacific Islander alone"),
-            all_races.assign(race="Two or More Races"),
-        ],
-        ignore_index=True,
-    )
+    # Duplicate 'All' race rows into NHPI and MOR for years <= 2020 only
+    # For years >= 2022, actual race-specific files with sufficient data exist
+    if int(metadata["year"]) <= 2020:
+        all_races = df[df["race"] == "All"]
+        result = pd.concat(
+            [
+                df[df["race"] != "All"],
+                all_races.assign(
+                    race="Native Hawaiian or Other Pacific Islander alone"
+                ),
+                all_races.assign(race="Two or More Races"),
+            ],
+            ignore_index=True,
+        )
+    else:
+        result = df
 
     return result
 
@@ -724,11 +772,7 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     for sex in df["sex"].unique():
         for race in df["race"].unique():
             for year in df["year"].unique():
-                mask = (
-                    (df["sex"] == sex)
-                    & (df["race"] == race)
-                    & (df["year"] == year)
-                )
+                mask = (df["sex"] == sex) & (df["race"] == race) & (df["year"] == year)
 
                 # Get subset and sort by age
                 subset = df.loc[mask, ["age", "rates"]].copy()
