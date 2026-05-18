@@ -138,15 +138,11 @@ def validate_file(fp: pathlib.Path) -> None:
                 notes["sex"] = line.split(":")[1].strip()
             elif line.startswith("Hispanic Origin:"):
                 notes["hispanic"] = line.split(":")[1].strip()
-            elif line.startswith("Race:"):
-                notes["race"] = line.split(":")[1].strip()
-            elif line.startswith("Single Race 6:"):
+            elif line.startswith(("Race:", "Single Race 6:")):
                 notes["race"] = line.split(":")[1].strip()
             elif line.startswith("Year/Month:"):
                 notes["year"] = line.split(":")[1].strip()
-            elif line.startswith("Single-Year Ages"):
-                notes["age_group"] = line
-            elif line.startswith("Ten-Year Age Groups"):
+            elif line.startswith(("Single-Year Ages", "Ten-Year Age Groups")):
                 notes["age_group"] = line
             else:
                 pass
@@ -320,11 +316,12 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
             "CDC WONDER mortality data as they have been dealt with separately."
         )
 
-    # Determine if this is SYA or TYA file
-    is_tya = metadata["age_group"] == "Ten-Year Ages"
-
     # Define age column name based on file type
-    age_col = "Ten-Year Age Groups Code" if is_tya else "Single-Year Ages Code"
+    age_col = (
+        "Ten-Year Age Groups Code"
+        if metadata["age_group"] == "Ten-Year Ages"
+        else "Single-Year Ages Code"
+    )
 
     # Ages to be excluded from dataset (only for SYA files)
     excluding_sya = [str(age) for age in range(85, 101)]
@@ -388,14 +385,13 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
     )
 
     # Filter ages based on file type
-    if is_tya:
+    if metadata["age_group"] == "Ten-Year Ages":
         # For TYA files, keep only 85+ group and convert to age 85
-        df = df.loc[lambda x: x["age"] == "85+"].assign(
-            age=lambda x: x["age"].replace({"85+": "85"})
-        )
+        df = df[df["age"] == "85+"]
+        df["age"] = df["age"].replace({"85+": "85"})
     else:
         # For SYA files, exclude ages 85+
-        df = df.loc[lambda x: (~x["age"].isin(excluding_sya))]
+        df = df[~df["age"].isin(excluding_sya)]
 
     df = (
         df.replace(
@@ -723,10 +719,8 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
 
     # For NHPI, use State > National
     # Mix of NHPI county and state level data causes discontinuity in rates
-    is_nhpi = pivoted["race"] == "Native Hawaiian or Other Pacific Islander alone"
-
     pivoted["rates"] = np.where(
-        is_nhpi,
+        pivoted["race"] == "Native Hawaiian or Other Pacific Islander alone",
         np.where(
             (state.notna()) & (state > 0),
             state,
@@ -997,12 +991,12 @@ def get_death_rates(
         # Load UNDESA data for ages 85-99
         undesa_rates = process_life_tables()
 
-        # UNDESA data only available through 2023. For years beyond 2023, use 2023 data
-        # Will need to update once 2024 data becomes available
-        undesa_yr = min(cdc_yr, 2023)
-        if cdc_yr > 2023:
+        # Use the latest available year from UNDESA data
+        max_undesa_year = undesa_rates["year"].max()
+        undesa_yr = min(cdc_yr, max_undesa_year)
+        if cdc_yr > max_undesa_year:
             logger.warning(
-                f"UN DESA data unavailable for {cdc_yr}. Using 2023 data for ages 85-99."
+                f"UN DESA data unavailable for {cdc_yr}. Using {max_undesa_year} data for ages 85-99."
             )
         undesa_rates = undesa_rates[undesa_rates["year"] == undesa_yr][
             ["sex", "age", "rates", "deaths", "survivors"]
