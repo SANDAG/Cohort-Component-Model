@@ -18,7 +18,6 @@ configurations:  # other configuration files
 csv:  # locally stored datasets (manually entered)
   dmdc_location_report: "data/DMDC Website Location Report.csv"  # Department of Defense DMDC Report data
   sdmac_report: "data/SDMAC Report.csv"  # Military SDMAC Report data
-  ss_life_table: "data/Social Security Actuarial Life Table.csv"  # Social Security Life Table data
 interval:  # forecast interval (base is assumed from launch)
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
