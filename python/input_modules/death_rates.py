@@ -323,9 +323,6 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         else "Single-Year Ages Code"
     )
 
-    # Ages to be excluded from dataset (only for SYA files)
-    excluding_sya = [str(age) for age in range(85, 101)]
-
     df = (
         pd.read_csv(
             file_path,
@@ -391,7 +388,7 @@ def load_cdc_wonder(file_path: pathlib.Path) -> pd.DataFrame:
         df["age"] = df["age"].replace({"85+": "85"})
     else:
         # For SYA files, exclude ages 85+
-        df = df[~df["age"].isin(excluding_sya)]
+        df = df[~df["age"].isin([str(age) for age in range(85, 101)])]
 
     df = (
         df.replace(
