@@ -3,65 +3,46 @@ Crude death rates are calculated within race, sex, and single year of age for ea
 * **TBD - Utility to grow/decay death rates to meet horizon year expectations.**
 
 ## 2 Input Datasets
-* [Social Security Actuarial Life Table](https://www.ssa.gov/oact/STATS/table4c6.html)
+* [UN DESA Life Table Survivors](https://population.un.org/wpp/downloads?folder=Standard%20Projections&group=Mortality)
 * [CDC WONDER ucd-icd10: 1999-2020: Underlying Cause of Death by Bridged-Race Categories](https://wonder.cdc.gov/ucd-icd10.html)
-* [CDC WONDER ucd-icd10-expanded: 2018-2021: Underlying Cause of Death by Single-Race Categories](https://wonder.cdc.gov/ucd-icd10-expanded.html)
+* [CDC WONDER ucd-icd10-expanded: 2018-2024: Underlying Cause of Death by Single-Race Categories](https://wonder.cdc.gov/ucd-icd10-expanded.html)
 
 ## 3 Methods
-* Death rates are calculated for ages < 85 from CDC WONDER by simply dividing raw deaths by population for each race, sex, and single year of age category after setting "Suppressed" raw deaths (values < 10) to values of 4.5 and 0 raw deaths to values of 1. This strategy avoids missing value records and implausible 0% death rates. The CDC WONDER data sources used for each base/launch year within race/ethnicity categories is shown below.
-* For ages >= 85 the Social Security Actuarial Life Table is used for the chosen base/launch year, substituting the 2019 dataset for base/launch years 2020 and 2021 due to the outsize impact of COVID-19 on geriatric death rates. Note that there was no data published for 2012 or 2018 so those base/launch years default to the previous years of 2011 and 2017.
+* For ages under 85, death rates are calculated using CDC WONDER as deaths divided by population for each race, sex, and single year of age. The calculation starts with San Diego County data and, when a value is suppressed or zero, substitutes data from larger geographies (California, then the United States). This approach reduces missing records and avoids unrealistic 0% death rates. The CDC WONDER sources used for each base and launch year by race/ethnicity are listed below. Because 2021 data are missing, 2020 data are used instead.
+* For ages 85 and older, we use the United Nations Department of Economic and Social Affairs (UN DESA) Life Table Survivors dataset. Because this dataset is stratified only by age and sex, we apply a scaling factor to estimate age-, sex-, and race-specific mortality rates. We derive that scaling factor by comparing implied mortality rates for ages 85 and older from CDC WONDER and solving for the value that aligns the UN DESA implied rate with CDC WONDER.
 
 #### Table 1: CDC WONDER Exports
-_Note there is preference given to using actual race/ethnicity category data when available (in 2018 the ucd-icd10-expanded becomes available), 5-year rates, and never including both 2020 and 2021 datasets together due to the outsize impact of COVID-19; in that respective order._
+_Note each CDC product has different race reporting standards ([OMB SPD-15](https://spd15revision.gov/content/spd15revision/en/history.html)) and eligible datasets. The 1999-2020 product is missing `Non-Hispanic Native Hawaiian or Pacific Islander` and `Two or More Races` and uses the combined data for all races. Meanwhile, the 2018-2024 product is missing population at the county level and is substituted with population estimates from within CCM. There is not enough data in the 2018-2024 product to do a five-year moving average for 2021, and as such, 2020 data will be used instead. The `SYA` files consist of ages 0-84 while the `TYA` files represent 85+._
 | Increment Year | Race/Ethnicity | File |
 | :---------------:| :------------: | :--: |
-| 2010-2017 | Hispanic | Hispanic or Latino; ucd-icd10; (2006-2013)-(2010-2017); Five Counties.txt |
-| 2010-2017 | White alone | Non-Hispanic White; ucd-icd10; (2006-2013)-(2010-2017); California (06).txt |
-| 2010-2017 | Black or African American alone | Non-Hispanic Black or African American; ucd-icd10; (2006-2013)-(2010-2017); Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2010-2017 | American Indian or Alaska Native alone | Non-Hispanic American Indian or Alaska Native; ucd-icd10; (2006-2013)-(2010-2017); National.txt |
-| 2010-2017 | Asian alone | Non-Hispanic Asian or Pacific Islander; ucd-icd10; (2006-2013)-(2010-2017); Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2010-2017 | Native Hawaiian or Other Pacific Islander alone | All Origins and Races; ucd-icd10; (2006-2013)-(2010-2017); California (06).txt |
-| 2010-2017 | Two or More Races | All Origins and Races; ucd-icd10; (2006-2013)-(2010-2017); California (06).txt |
+| 2010-2020 | Hispanic | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); HIS; ALL; (2010-2020); 5Y.(txt-csv) |
+| 2010-2020 | American Indian or Alaska Native alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; AIAN; (2010-2020); 5Y.(txt-csv) |
+| 2010-2020 | Asian alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; ASIAN; (2010-2020); 5Y.(txt-csv) |
+| 2010-2020 | Black or African American alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; BAA; (2010-2020); 5Y.(txt-csv) |
+| 2010-2020 | Native Hawaiian or Other Pacific Islander alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; ALL; (2010-2020); 5Y.(txt-csv) |
+| 2010-2020 | White alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; WH; (2010-2020); 5Y.(txt-csv) |
+| 2010-2020 | Two or More Races | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; ALL; (2010-2020); 5Y.(txt-csv) |
 | | | |
-| 2018 | Hispanic | Hispanic or Latino; ucd-icd10; 2014-2018; Five Counties.txt |
-| 2018 | White alone | Non-Hispanic White; ucd-icd10; 2014-2018; California (06).txt |
-| 2018 | Black or African American alone | Non-Hispanic Black or African American; ucd-icd10; 2014-2018; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2018 | American Indian or Alaska Native alone | Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2014-2018; National.txt |
-| 2018 | Asian alone | Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2014-2018; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2018 | Native Hawaiian or Other Pacific Islander alone | Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018; National.txt |
-| 2018 | Two or More Races | Non-Hispanic More than one race; ucd-icd10-expanded; 2018; National.txt |
+| 2022-2024 | Hispanic | (SD-CA-US); 2018+; (SYA-TYA); (F-M); HIS; ALL; (2022-2024); 5Y.(txt-csv) |
+| 2022-2024 | American Indian or Alaska Native alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; AIAN; (2022-2024); 5Y.(txt-csv) |
+| 2022-2024 | Asian alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; ASIAN; (2022-2024); 5Y.(txt-csv) |
+| 2022-2024 | Black or African American alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; BAA; (2022-2024); 5Y.(txt-csv) |
+| 2022-2024 | Native Hawaiian or Other Pacific Islander alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; ALL; (2022-2024); 5Y.(txt-csv) |
+| 2022-2024 | White alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; WH; (2022-2024); 5Y.(txt-csv) |
+| 2022-2024 | Two or More Races | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; ALL; (2022-2024); 5Y.(txt-csv) |
 | | | |
-| 2019 | Hispanic | Hispanic or Latino; ucd-icd10; 2015-2019; Five Counties.txt |
-| 2019 | White alone | Non-Hispanic White; ucd-icd10; 2015-2019; California (06).txt |
-| 2019 | Black or African American alone | Non-Hispanic Black or African American; ucd-icd10; 2015-2019; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2019 | American Indian or Alaska Native alone | Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2015-2019; National.txt |
-| 2019 | Asian alone | Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2015-2019; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2019 | Native Hawaiian or Other Pacific Islander alone | Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2019; National.txt |
-| 2019 | Two or More Races | Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2019; National.txt |
+
+_Note each CDC product contains numerous instances of `Not Stated` categories where there are associated death counts but no population counts, making them unattributable to a specific demographic. To address this, we inflate the attributable deaths by this proportion and recalculate the rates based on the inflated death counts._
+| Increment Year | Not Stated Category | File |
+| :---------------:| :------------: | :--: |
+| 2010-2020 | Age | (SD-CA-US); 1999-2020; NS; ALL; ALL; ALL; (2010-2020); 5Y.csv |
+| 2010-2020 | Hispanic Origin | (SD-CA-US); 1999-2020; SYA; ALL; NS; ALL; (2010-2020); 5Y.csv |
+| 2010-2020 | None | (SD-CA-US); 1999-2020; SYA; ALL; ALL; ALL; (2010-2020); 5Y.csv |
 | | | |
-| 2020 | Hispanic | Hispanic or Latino; ucd-icd10; 2016-2020; Five Counties.txt |
-| 2020 | White alone | Non-Hispanic White; ucd-icd10; 2016-2020; California (06).txt |
-| 2020 | Black or African American alone | Non-Hispanic Black or African American; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2020 | American Indian or Alaska Native alone | Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2016-2020; National.txt |
-| 2020 | Asian alone | Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2020 | Native Hawaiian or Other Pacific Islander alone | Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2020; National.txt |
-| 2020 | Two or More Races | Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2020; National.txt |
+| 2022-2024 | Age | (SD-CA-US); 2018+; NS; ALL; ALL; ALL; (2022-2024); 5Y.csv |
+| 2022-2024 | Hispanic Origin | (SD-CA-US); 2018+; SYA; ALL; NS; ALL; (2022-2024); 5Y.csv |
+| 2022-2024 | None | (SD-CA-US); 2018+; SYA; ALL; ALL; ALL; (2022-2024); 5Y.csv |
 | | | |
-| 2021 | Hispanic | Hispanic or Latino; ucd-icd10; 2016-2020; Five Counties.txt |
-| 2021 | White alone | Non-Hispanic White; ucd-icd10; 2016-2020; California (06).txt |
-| 2021 | Black or African American alone | Non-Hispanic Black or African American; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2021 | American Indian or Alaska Native alone | Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2016-2020; National.txt |
-| 2021 | Asian alone | Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2021 | Native Hawaiian or Other Pacific Islander alone | Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2019, 2021; National.txt |
-| 2021 | Two or More Races | Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2019, 2021; National.txt |
-| | | |
-| 2022 | Hispanic | Hispanic or Latino; ucd-icd10; 2016-2020; Five Counties.txt |
-| 2022 | White alone | Non-Hispanic White; ucd-icd10; 2016-2020; California (06).txt |
-| 2022 | Black or African American alone | Non-Hispanic Black or African American; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2022 | American Indian or Alaska Native alone | Non-Hispanic American Indian or Alaska Native; ucd-icd10; 2016-2020; National.txt |
-| 2022 | Asian alone | Non-Hispanic Asian or Pacific Islander; ucd-icd10; 2016-2020; Arizona (04), California (06), Oregon (41), Washington (53).txt |
-| 2022 | Native Hawaiian or Other Pacific Islander alone | Non-Hispanic Native Hawaiian or Other Pacific Islander; ucd-icd10-expanded; 2018-2019, 2021-2022; National.txt |
-| 2022 | Two or More Races | Non-Hispanic More than one race; ucd-icd10-expanded; 2018-2019, 2021-2022; National.txt |
 
 ## 4 Repository Location
 The main classes, methods, and utilities associated with creating crude death rates are contained in **python/input_modules/death_rates.py**
