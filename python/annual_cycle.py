@@ -47,12 +47,12 @@ def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
             how="left",
             left_on=["race", "sex", "age_civ_surv"],
             right_on=["race", "sex", "age"],
-            suffixes=["", "_civ_surv"],
+            suffixes=["", "_civ"],
         )
         .assign(
             births=lambda x: round(
                 x["pop_mil"] * x["rate_birth"]
-                + x["pop_civ_surv"] * x["rate_birth_civ_surv"]
+                + x["pop_civ_surv"] * x["rate_birth_civ"]
             )
         )
         .fillna(0)
