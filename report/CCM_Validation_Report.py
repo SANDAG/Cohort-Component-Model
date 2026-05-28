@@ -2,7 +2,6 @@ import os
 import report_utils
 import yaml
 
-import pandas as pd
 import streamlit as st
 import sqlalchemy as sql
 
