@@ -41,6 +41,7 @@ def age_5y(age: float) -> str:
     for age_group, bounds in MAP_5Y_AGE_GROUPS.items():
         if bounds["low"] <= age <= bounds["high"]:
             return age_group
+    raise ValueError(f"Age out of supported range for 5-year grouping: {age}")
 
 
 def hh_metrics(category: str) -> str:
