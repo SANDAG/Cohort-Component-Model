@@ -6,8 +6,6 @@ import pandas as pd
 import streamlit as st
 import sqlalchemy as sql
 
-from typing import Union
-
 st.set_page_config(page_title="CCM Validation Report")
 
 # Create Title for landing page
