@@ -4,7 +4,6 @@ import os
 import sys
 
 import pandas as pd
-import plotly.express as px
 import sqlalchemy as sql
 
 from typing import List
