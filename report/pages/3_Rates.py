@@ -107,7 +107,7 @@ with tab2:
         )
 
         # Create sex selector and filter line chart
-        tab2_sex = st.pills(
+        sub_tab1_sex = st.pills(
             label="**Sex:**",
             options=["M", "F"],
             selection_mode="single",
@@ -115,7 +115,7 @@ with tab2:
             key="sub_tab1_sex",
         )
 
-        df = df.query("Year == @tab2_year & sex == @tab2_sex")
+        df = df.query("Year == @tab2_year & sex == @sub_tab1_sex")
 
         # Show mortality rates in a line chart
         fig = px.line(
@@ -143,7 +143,7 @@ with tab2:
         lfe_sd = report_utils.life_expectancy(
             q_x=(
                 st.session_state.components_data.query(
-                    "year == @tab2_year & sex == @tab2_sex"
+                    "year == @tab2_year & sex == @sub_tab1_sex"
                 )
                 .merge(
                     right=st.session_state.population_data,
@@ -183,7 +183,7 @@ with tab2:
         df = mortality.copy()
 
         # Create sex selector and filter line chart
-        tab2_sex = st.pills(
+        sub_tab2_sex = st.pills(
             label="**Sex:**",
             options=["M", "F"],
             selection_mode="single",
@@ -191,7 +191,7 @@ with tab2:
             key="sub_tab2_sex",
         )
 
-        df = df.query("sex == @tab2_sex")
+        df = df.query("sex == @sub_tab2_sex")
 
         # Calculate rate-based life expectancy for all race/ethnicity groups
         lfe = (
