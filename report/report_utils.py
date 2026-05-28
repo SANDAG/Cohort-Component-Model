@@ -118,8 +118,8 @@ def get_data(data_selector: str, run_id: int | None = None) -> dict:
                 try:
                     df = pd.read_csv(fp)
                     result[dataset] = {True: df}
-                except:
-                    result[dataset] = {False: f"Failed to read CSV: {fp}"}
+                except Exception as e:
+                    result[dataset] = {False: f"Failed to read CSV: {fp}: {e}"}
             else:
                 result[dataset] = {False: f"No CSV exists"}
         elif data_selector == "SQL Database":
