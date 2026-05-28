@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.express as px
 import sqlalchemy as sql
 
+from typing import List
 from sqlalchemy.engine import Engine
 from plotly.graph_objects import Figure
 
