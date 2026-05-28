@@ -13,7 +13,7 @@ with tab1:
     # Load fertility rate data
     fertility = (
         st.session_state.rates_data[["year", "race", "sex", "age", "rate_birth"]]
-        .query("age >= 15 & age <= 45")
+        .loc[lambda x: (x["age"] >= 15) & (x["age"] <= 45)]
         .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
     )
 
@@ -25,7 +25,7 @@ with tab1:
         key="tab1_year",
     )
 
-    fertility = fertility.query("Year == @tab1_year")
+    fertility = fertility.loc[fertility["Year"] == tab1_year]
 
     # Show fertility rates in a line chart
     fig = px.line(
@@ -52,7 +52,9 @@ with tab1:
 
     # Calculate implied TFR for San Diego County using the components of change
     tfr_sd = (
-        st.session_state.components_data.query("year == @tab1_year & sex == 'F'")
+        st.session_state.components_data.loc[
+            (st.session_state.components_data["year"] == tab1_year) & (st.session_state.components_data["sex"] == 'F')
+        ]
         .merge(
             right=st.session_state.population_data,
             on=["year", "race", "sex", "age"],
@@ -115,7 +117,7 @@ with tab2:
             key="sub_tab1_sex",
         )
 
-        df = df.query("Year == @tab2_year & sex == @sub_tab1_sex")
+        df = df.loc[(df["Year"] == tab2_year) & (df["sex"] == sub_tab1_sex)]
 
         # Show mortality rates in a line chart
         fig = px.line(
@@ -142,9 +144,9 @@ with tab2:
         # Calculate implied life expectancy for San Diego County using the components of change
         lfe_sd = report_utils.life_expectancy(
             q_x=(
-                st.session_state.components_data.query(
-                    "year == @tab2_year & sex == @sub_tab1_sex"
-                )
+                st.session_state.components_data.loc[
+                    (st.session_state.components_data["year"] == tab2_year) & (st.session_state.components_data["sex"] == sub_tab1_sex)
+                ]
                 .merge(
                     right=st.session_state.population_data,
                     on=["year", "race", "sex", "age"],
@@ -191,7 +193,7 @@ with tab2:
             key="sub_tab2_sex",
         )
 
-        df = df.query("sex == @sub_tab2_sex")
+        df = df.loc[df["sex"] == sub_tab2_sex]
 
         # Calculate rate-based life expectancy for all race/ethnicity groups
         lfe = (
@@ -243,7 +245,7 @@ with tab3:
         key="tab3_sex",
     )
 
-    migration = migration.query("Year == @tab3_year & sex == @tab3_sex")
+    migration = migration.loc[(migration["Year"] == tab3_year) & (migration["sex"] == tab3_sex)]
 
     # Show net migration rates in a line chart
     fig = px.line(
@@ -265,7 +267,9 @@ with tab3:
 
     # Display the Race/Ethnicity composition of migrants in a table
     migrants = (
-        st.session_state.components_data.query("year == @tab3_year & sex == @tab3_sex")
+        st.session_state.components_data.loc[
+            (st.session_state.components_data["year"] == tab3_year) & (st.session_state.components_data["sex"] == tab3_sex)
+        ]
         .groupby("race")[["ins", "outs"]]
         .sum()
         .assign(net=lambda x: x["ins"] - x["outs"])
