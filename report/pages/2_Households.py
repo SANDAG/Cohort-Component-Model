@@ -1,6 +1,7 @@
-import streamlit as st
-import plotly.express as px
 import report_utils
+
+import plotly.express as px
+import streamlit as st
 
 # Households
 # Load household output and summarize by year

@@ -1,9 +1,10 @@
-import streamlit as st
+import report_utils
+
+import numpy as np
+import plotly.graph_objs as go
 import pandas as pd
 import plotly.express as px
-import report_utils
-import plotly.graph_objs as go
-import numpy as np
+import streamlit as st
 
 # Population
 # Sub-tabs for population, components of change, and demographics

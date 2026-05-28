@@ -1,7 +1,8 @@
-import streamlit as st
+import report_utils
+
 import pandas as pd
 import plotly.express as px
-import report_utils
+import streamlit as st
 
 # Rates
 # Sub-tabs for fertility, mortality, and migration rates
