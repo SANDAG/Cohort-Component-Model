@@ -1,14 +1,13 @@
 """This module contains utility functions used in report generation."""
-
 import os
 import sys
 
 import pandas as pd
 import sqlalchemy as sql
 
-from typing import List
-from sqlalchemy.engine import Engine
 from plotly.graph_objects import Figure
+from sqlalchemy.engine import Engine
+from typing import List
 
 # Add the parent directory to sys.path
 sys.path.append(
