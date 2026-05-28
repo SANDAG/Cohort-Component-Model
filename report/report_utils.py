@@ -8,7 +8,6 @@ import plotly.express as px
 import sqlalchemy as sql
 
 from sqlalchemy.engine import Engine
-from sqlalchemy import text
 from typing import List, Union, Optional
 from plotly.graph_objects import Figure
 
