@@ -1,7 +1,6 @@
 import report_utils
 
 import streamlit as st
-import sqlalchemy as sql
 
 st.set_page_config(page_title="CCM Validation Report")
 
