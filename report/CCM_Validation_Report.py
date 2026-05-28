@@ -1,6 +1,5 @@
 import os
 import report_utils
-import yaml
 
 import streamlit as st
 import sqlalchemy as sql
