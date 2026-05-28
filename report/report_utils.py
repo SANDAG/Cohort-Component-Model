@@ -69,7 +69,7 @@ def hh_metrics(category: str) -> str:
         return "Pct of Total - Workers"
     elif category == "Persons per Household":
         return "Mean Household Size"
-    else:
+        raise ValueError(f"Unknown household category: {category}")
         ValueError(f"Unknown household category: {category}")
 
 
