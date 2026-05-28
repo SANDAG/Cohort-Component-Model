@@ -69,7 +69,7 @@ def hh_metrics(category: str) -> str:
     elif category == "Persons per Household":
         return "Mean Household Size"
     else:
-        ValueError(f"Unknown household category: {category}")
+        raise ValueError(f"Unknown household category: {category}")
 
 
 def life_expectancy(q_x: List[float], age: int) -> int:
