@@ -5,7 +5,6 @@ import sys
 import pandas as pd
 import sqlalchemy as sql
 
-from plotly.graph_objects import Figure
 from typing import List
 
 # Add the parent directory to sys.path
