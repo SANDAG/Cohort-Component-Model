@@ -143,14 +143,14 @@ def get_birth_rates(
         # More than one race folded into all categories (overstating all others)
         if 2010 <= yr <= 2017:
             avg_rates = (
-                birth_rates.groupby(["sex", "age"]).agg({"rate": "mean"}).reset_index()
+                rates.groupby(["sex", "age"]).agg({"rate": "mean"}).reset_index()
             )
 
             avg_rates["race"] = "More than one race"
-            birth_rates = pd.concat([birth_rates, avg_rates])
+            rates = pd.concat([rates, avg_rates])
 
             avg_rates["race"] = "Native Hawaiian or Other Pacific Islander alone"
-            birth_rates = pd.concat([birth_rates, avg_rates])
+            rates = pd.concat([rates, avg_rates])
         else:
             pass
 
