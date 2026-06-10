@@ -51,7 +51,10 @@ for k, v in config["output"]["files"].items():
 
 # Load csv data sources ----
 for k, v in config["csv"].items():
-    config["csv"][k] = pd.read_csv(v)
+    if v is None:
+        config["csv"][k] = None
+    else:
+        config["csv"][k] = pd.read_csv(v)
 
 
 # Load optional migration controls from csv ----

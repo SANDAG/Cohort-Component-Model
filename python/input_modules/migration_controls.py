@@ -18,7 +18,6 @@ def get_migration_controls(df: pd.DataFrame) -> dict:
             raise ValueError("Migration controls CSV contains missing year values")
 
         year = str(int(row["year"]))
-
         in_control = row["in"]
         out_control = row["out"]
 
