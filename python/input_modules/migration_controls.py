@@ -12,6 +12,9 @@ def get_migration_controls(df: pd.DataFrame) -> dict:
     if not required_cols.issubset(df.columns):
         raise ValueError("Migration controls CSV must contain columns: year, in, out")
 
+    if df["year"].dropna().duplicated().any():
+        raise ValueError("Migration controls CSV contains duplicate year values")
+
     controls = {}
     for _, row in df.iterrows():
         if pd.isna(row["year"]):
