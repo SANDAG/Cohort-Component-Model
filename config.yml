@@ -7,6 +7,7 @@ csv:
   dmdc_location_report: "data/DMDC Website Location Report.csv"
   sdmac_report: "data/SDMAC Report.csv"
   ss_life_table: "data/Social Security Actuarial Life Table.csv"
+  migration_controls: null
 interval:
   launch: 2022
   horizon: 2050

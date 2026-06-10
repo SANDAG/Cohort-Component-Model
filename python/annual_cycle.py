@@ -109,7 +109,12 @@ def calculate_deaths(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
     return df[["race", "sex", "age", "deaths"]]
 
 
-def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
+def calculate_migration(
+    pop_df: pd.DataFrame,
+    rate: pd.DataFrame,
+    yr: int,
+    migration_controls: dict | None = None,
+) -> pd.DataFrame:
     """Calculate migration by race, sex, and single year of age.
 
     Migration rates are applied to the survived civilian population. Note that
@@ -123,6 +128,9 @@ def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFram
             the total population and calculated deaths
         rate (pd.DataFrame): Migration rates by race, sex, and single year of
             age
+        yr: Increment year
+        migration_controls (dict | None): Optional yearly migration controls
+            with keys "in" and "out"
 
     Returns:
         pd.DataFrame: In/Out Migration by race, sex, and single year of age
@@ -158,6 +166,14 @@ def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFram
 
     # Ensure Outs <= Survived Population after Integerization
     df["outs"] = utils.reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
+
+    # Optionally control annual In/Out migration totals
+    df = utils.apply_migration_controls(
+        df=df,
+        yr=yr,
+        migration_controls=migration_controls,
+        generator=generator,
+    )
 
     return df[["race", "sex", "age", "ins", "outs"]]
 
@@ -197,7 +213,12 @@ def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
     return df[["race", "sex", "age", "pop"]]
 
 
-def increment_population(pop_df: pd.DataFrame, rates: dict) -> dict[str, pd.DataFrame]:
+def increment_population(
+    pop_df: pd.DataFrame,
+    rates: dict,
+    yr: int,
+    migration_controls: dict | None = None,
+) -> dict[str, pd.DataFrame]:
     """Calculate components of change and create input population for next
     increment.
 
@@ -207,6 +228,9 @@ def increment_population(pop_df: pd.DataFrame, rates: dict) -> dict[str, pd.Data
             the total population
         rates (dict): Dictionary containing death, birth, and migration rates
             by race, sex, and single year of age
+        yr: Increment year
+        migration_controls (dict | None): Optional yearly migration controls
+            with keys "in" and "out"
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary with two DataFrame elements. The
@@ -227,7 +251,12 @@ def increment_population(pop_df: pd.DataFrame, rates: dict) -> dict[str, pd.Data
     )
 
     pop_df = pop_df.merge(
-        right=calculate_migration(pop_df=pop_df, rate=rates["migration"]),
+        right=calculate_migration(
+            pop_df=pop_df,
+            rate=rates["migration"],
+            yr=yr,
+            migration_controls=migration_controls,
+        ),
         how="left",
         on=["race", "sex", "age"],
     )
