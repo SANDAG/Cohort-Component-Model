@@ -379,6 +379,66 @@ def integerize_1d(
         return rounded_data.astype(int)
 
 
+def apply_migration_controls(
+    df: pd.DataFrame,
+    yr: int,
+    migration_controls: dict | None,
+    generator: np.random.Generator,
+) -> pd.DataFrame:
+    """Apply optional yearly in/out migration control totals.
+
+    Args:
+        df (pd.DataFrame): Input DataFrame
+        yr (int): Year for which to apply migration controls
+        migration_controls (dict | None): Dictionary containing migration control totals
+        generator (np.random.Generator): Random number generator
+
+    Returns:
+        pd.DataFrame: DataFrame with applied migration controls
+    """
+    if migration_controls is None:
+        return df
+
+    year_controls = migration_controls.get(str(yr))
+    if not year_controls:
+        return df
+
+    control_in = year_controls.get("in")
+    control_out = year_controls.get("out")
+
+    if control_in is not None:
+        control_in = int(control_in)
+        if control_in < 0:
+            raise ValueError("Migration control totals must be non-negative")
+
+        df["ins"] = integerize_1d(
+            data=df["ins"],
+            control=control_in, 
+            generator=generator,
+        )
+
+    if control_out is not None:
+        control_out = int(control_out)
+        out_capacity = int(df["pop_civ_surv"].sum())
+        if control_out > out_capacity:
+            raise ValueError(
+                f"{yr}: out-migration control ({control_out}) exceeds survived civilian population ({out_capacity})"
+            )
+
+        if control_out < 0:
+            raise ValueError("Migration control totals must be non-negative")
+
+        df["outs"] = integerize_1d(
+            data=df["outs"],
+            control=control_out,
+            generator=generator,
+        )
+
+        df["outs"] = reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
+
+    return df
+
+
 def reallocate_integers(df: pd.DataFrame, subset: str, total: str) -> pd.Series:
     """Adjust subset column such that the columns does not exceed a column
     identified as the total numerical value. Use for positive integer values
