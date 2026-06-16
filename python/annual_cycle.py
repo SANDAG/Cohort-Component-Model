@@ -7,6 +7,8 @@ import pandas as pd
 
 import python.utils as utils
 
+from python.input_modules.migration_rates import apply_migration_controls
+
 generator = np.random.default_rng(utils.RANDOM_SEED)
 
 
@@ -168,7 +170,7 @@ def calculate_migration(
     df["outs"] = utils.reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
 
     # Optionally control annual In/Out migration totals
-    df = utils.apply_migration_controls(
+    df = apply_migration_controls(
         df=df,
         yr=yr,
         migration_controls=migration_controls,
@@ -233,9 +235,10 @@ def increment_population(
             with keys "in" and "out"
 
     Returns:
-        dict[str, pd.DataFrame]: Dictionary with two DataFrame elements. The
-        first containing the components of change for the current population.
-        The second containing the input population for the next increment.
+        dict[str, pd.DataFrame]: Dictionary with DataFrame elements including
+        components of change for the current population, effective migration
+        rates implied by final in/out migration, and the input population for
+        the next increment.
     """
     # Calculate Components of Change; Deaths, Births, and Migration
     pop_df = pop_df.merge(
@@ -260,6 +263,18 @@ def increment_population(
         how="left",
         on=["race", "sex", "age"],
     )
+
+    # Back-calculate effective migration rates from final ins/outs.
+    # This keeps rate output aligned with controlled migration counts.
+    migration_rates = (
+        pop_df.assign(pop_civ_surv=lambda x: x["pop"] - x["pop_mil"] - x["deaths"])
+        .assign(
+            rate_in=lambda x: np.where(x["pop_civ_surv"] > 0, x["ins"] / x["pop_civ_surv"], 0),
+            rate_out=lambda x: np.where(
+                x["pop_civ_surv"] > 0, x["outs"] / x["pop_civ_surv"], 0
+            ),
+        )
+    )[["race", "sex", "age", "rate_in", "rate_out"]]
 
     # Calculate the newborn population for the next increment
     newborns = create_newborns(pop_df=pop_df, male_pct=0.512)
@@ -291,5 +306,6 @@ def increment_population(
     # Return the Components of Change and the incremented Population
     return {
         "components": pop_df[["race", "sex", "age", "deaths", "births", "ins", "outs"]],
+        "migration_rates": migration_rates,
         "population": pop_inc[["race", "sex", "age", "pop", "pop_mil"]],
     }

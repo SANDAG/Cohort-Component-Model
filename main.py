@@ -20,7 +20,7 @@ from python.input_modules.birth_rates import get_birth_rates
 from python.input_modules.death_rates import get_death_rates
 from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
-from python.input_modules.migration_controls import get_migration_controls
+from python.input_modules.migration_rates import get_migration_controls
 from python.input_modules.migration_rates import get_migration_rates
 from python.output_data import write_df, write_rates
 from python.utils import SQL_ENGINE
@@ -61,7 +61,7 @@ for k, v in config["csv"].items():
 migration_controls = None
 if config["csv"].get("migration_controls") is not None:
     migration_controls = get_migration_controls(
-        config["csv"]["migration_controls"]
+        config["csv"]["migration_controls"],
     )
 
 
@@ -170,9 +170,8 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
 
     pop_df = integerize_population(pop_df=pop_df)
 
-    # Write out calculated households/population and rates ----
+    # Write out calculated households/population ----
     write_df(yr=increment, df=pop_df, fn=config["output"]["files"]["population"])
-    write_rates(yr=increment, rates=rates, fn=config["output"]["files"]["rates"])
 
     # Calculate Components of Change and create new population ----
     increment_data = increment_population(
@@ -181,6 +180,14 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         yr=increment,
         migration_controls=migration_controls,
     )
+
+    # If migration controls are used, write effective migration rates so
+    # rate output aligns with the controlled ins/outs in components.
+    if migration_controls is not None:
+        rates["migration"] = increment_data["migration_rates"]  # type: ignore
+
+    # Write out rates ----
+    write_rates(yr=increment, rates=rates, fn=config["output"]["files"]["rates"])
 
     # Write out components of change ----
     write_df(
