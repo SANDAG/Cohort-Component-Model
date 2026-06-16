@@ -1,6 +1,5 @@
 """Get migration rates by race, sex, and single year of age."""
 
-# TODO: (10-feature) Add function to allow for control totals at each increment for in/out migration.
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import pandas as pd
