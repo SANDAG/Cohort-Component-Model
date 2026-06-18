@@ -142,5 +142,3 @@ This repository contains a Streamlit app that generates reports for outputs stor
 ```cmd
 streamlit run report/CCM_Validation_Report.py
 ```
-
-
