@@ -154,10 +154,7 @@ def calculate_migration(
             right_on=["race", "sex", "age"],
             suffixes=["", "_y"],
         )
-    )
-
-    df = (
-        df.assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
+        .assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
         .assign(outs=lambda x: round(x["pop_civ_surv"] * x["rate_out"]))
         .sort_values(by=["race", "sex", "age"])
         .reset_index(drop=True)
