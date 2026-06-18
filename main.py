@@ -148,9 +148,15 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
             ),
         }
 
-    # TODO: (6,7,10-feature) adjustments to rates would be made post-launch year through horizon
     else:
-        pass
+        if config["csv"]["migration_controls"] is not None:
+            rates["migration"] = get_migration_rates(
+                yr=increment,
+                launch_yr=config["interval"]["launch"],
+                pop_df=pop_df,
+                pums_migrants=config["sql"]["queries"]["pums_migrants"],
+                engine=SQL_ENGINE,  # type: ignore
+            )
 
     # Calculate households/population for the increment ----
     pop_df = calculate_population(pop_df=pop_df, rates=rates)
@@ -163,7 +169,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
             pop_df=pop_df,
             sandag_estimates=config["configurations"]["controls"],
         )
-
+    
     # Integerize calculated households/population ----
     # Sort before integerizing to ensure consistent ordering
     pop_df = pop_df.sort_values(by=["race", "sex", "age"]).reset_index(drop=True)
@@ -180,11 +186,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         yr=increment,
         migration_controls=migration_controls,
     )
-
-    # If migration controls are used, write effective migration rates so
-    # rate output aligns with the controlled ins/outs in components.
-    if migration_controls is not None:
-        rates["migration"] = increment_data["migration_rates"]  # type: ignore
 
     # Write out rates ----
     write_rates(yr=increment, rates=rates, fn=config["output"]["files"]["rates"])

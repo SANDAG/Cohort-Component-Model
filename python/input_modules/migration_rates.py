@@ -7,8 +7,7 @@ import numpy as np
 import sqlalchemy as sql
 import yaml
 
-from python.utils import ROOT_FOLDER, integerize_1d, reallocate_integers
-
+from python.utils import ROOT_FOLDER
 
 def get_migration_rates(
     yr: int,
@@ -39,49 +38,146 @@ def get_migration_rates(
     """
     # Migration rates calculated from base year up to the launch year
     if yr <= launch_yr:
-        # Load SQL queries and apply checks to datasets
-        with engine.connect() as connection:
-            # Load ACS PUMS persons
-            with open(pums_migrants, "r") as query:
-                pums_migrants_df = pd.read_sql_query(
-                    query.read().format(yr=yr), connection
-                )
-            if len(pums_migrants_df.index) == 0:
-                raise ValueError(str(yr) + ": not in ACS PUMS in/out migrants")
-
-        # Merge base year and migrant datasets calculating crude migration rates
-        # Removing active-duty military population from the calculation
-        df = (
-            pop_df.merge(
-                right=pums_migrants_df,
-                how="left",
-                on=["race", "sex", "age"],
-            )
-            .assign(rate_in=lambda x: x["in"] / (x["pop"] - x["pop_mil"]))
-            .assign(rate_out=lambda x: x["out"] / (x["pop"] - x["pop_mil"]))
-            .fillna(0)  # fill NAs with 0s (0% migration rates)
+        return calculate_migration_rates(
+            yr=yr,
+            pop_df=pop_df,
+            pums_migrants=pums_migrants,
+            engine=engine,
+            cap_rates=True,
         )
 
+    # Migration rates are not calculated after the launch year
+    # Post-launch rates are controlled to annual migration totals when provided.
+    else:
+        return control_migration_rates(
+            yr=yr,
+            launch_yr=launch_yr,
+            pop_df=pop_df,
+            pums_migrants=pums_migrants,
+            engine=engine,
+        )
+
+def calculate_migration_rates(
+    yr: int,
+    pop_df: pd.DataFrame,
+    pums_migrants: str,
+    engine: sql.Engine,
+    cap_rates: bool = True,
+) -> pd.DataFrame:
+    """Calculate migration rates for a specific source year.
+
+    Args:
+        yr: Source year for ACS PUMS migrants query
+        pop_df (pd.DataFrame): Population data by race, sex, and age
+        pums_migrants (str): SQL query path for ACS PUMS in/out migrants
+        engine (sql.Engine): SQLAlchemy MSSQL connection engine
+        cap_rates: Whether to cap rates at 20%
+
+    Returns:
+        pd.DataFrame: Migration rates by race, sex, and age
+    """
+    with engine.connect() as connection:
+        with open(pums_migrants, "r") as query:
+            pums_migrants_df = pd.read_sql_query(query.read().format(yr=yr), connection)
+
+        if len(pums_migrants_df.index) == 0:
+            raise ValueError(str(yr) + ": not in ACS PUMS in/out migrants")
+
+    df = (
+        pop_df.merge(
+            right=pums_migrants_df,
+            how="left",
+            on=["race", "sex", "age"],
+        )
+        .assign(pop_civ=lambda x: x["pop"] - x["pop_mil"])
+        .assign(
+            rate_in=lambda x: np.where(
+                x["pop_civ"] > 0,
+                x["in"] / x["pop_civ"],
+                0,
+            )
+        )
+        .assign(
+            rate_out=lambda x: np.where(
+                x["pop_civ"] > 0,
+                x["out"] / x["pop_civ"],
+                0,
+            )
+        )
+        .fillna(0)
+    )
+
+    # Guard against division edge cases that can produce +/-inf.
+    df[["rate_in", "rate_out"]] = df[["rate_in", "rate_out"]].replace(
+        [np.inf, -np.inf], 0
+    )
+
+    if cap_rates:
         # Cap crude migration rates at 20%
         df["rate_in"] = np.where(df["rate_in"] > 0.2, 0.2, df["rate_in"])
         df["rate_out"] = np.where(df["rate_out"] > 0.2, 0.2, df["rate_out"])
 
-        return df[["race", "sex", "age", "rate_in", "rate_out"]]
+    return df[["race", "sex", "age", "rate_in", "rate_out"]]
 
-    # Migration rates are not calculated after the launch year
-    # TODO: (10-feature) Adjustments to migration rates would be made post-launch year through horizon
-    else:
-        raise ValueError("Migration rates not calculated past launch year")
+def control_migration_rates(
+    yr: int,
+    launch_yr: int,
+    pop_df: pd.DataFrame,
+    pums_migrants: str,
+    engine: sql.Engine,
+) -> pd.DataFrame:
+    """Get post-launch migration rates controlled to annual totals.
 
-def get_migration_controls(df: pd.DataFrame) -> dict:
-    """Convert migration controls CSV data into yearly control dictionary.
-
-    Expected columns are: year, in, out
+    Uses launch-year crude rates as baseline then scales to post-launch
+    migration control totals for the current year.
     """
     with open(ROOT_FOLDER / "config.yml") as f:
         config = yaml.safe_load(f)
 
-    start_yr = config["interval"]["launch"]
+    migration_controls_fp = config["csv"].get("migration_controls")
+    if migration_controls_fp is None:
+        raise ValueError("Migration rates not calculated past launch year")
+
+    migration_controls_df = pd.read_csv(migration_controls_fp)
+    migration_controls = get_migration_controls(migration_controls_df)
+
+    # Build launch-year baseline rates without capping; cap after control scaling.
+    base_rates = calculate_migration_rates(
+        yr=launch_yr,
+        pop_df=pop_df,
+        pums_migrants=pums_migrants,
+        engine=engine,
+        cap_rates=False,
+    )
+
+    df = (
+        pop_df[["race", "sex", "age", "pop", "pop_mil"]]
+        .merge(base_rates, how="left", on=["race", "sex", "age"])
+        .fillna(0)
+        .assign(pop_civ_surv=lambda x: x["pop"] - x["pop_mil"])
+    )
+
+    df = scale_migration_rates_to_controls(
+        df=df,
+        yr=yr,
+        migration_controls=migration_controls,
+    )
+
+    # Cap controlled migration rates at 20%
+    df["rate_in"] = np.where(df["rate_in"] > 0.2, 0.2, df["rate_in"])
+    df["rate_out"] = np.where(df["rate_out"] > 0.2, 0.2, df["rate_out"])
+
+    return df[["race", "sex", "age", "rate_in", "rate_out"]]
+
+def get_migration_controls(df: pd.DataFrame) -> dict:
+    """Convert migration controls CSV data into yearly control dictionary.
+
+    Expected columns are: year, ins, outs
+    """
+    with open(ROOT_FOLDER / "config.yml") as f:
+        config = yaml.safe_load(f)
+
+    start_yr = config["interval"]["launch"] + 1
     end_yr = config["interval"]["horizon"]
 
     if start_yr > end_yr:
@@ -89,7 +185,7 @@ def get_migration_controls(df: pd.DataFrame) -> dict:
 
     required_cols = {"year", "ins", "outs"}
     if not required_cols.issubset(df.columns):
-        raise ValueError("Migration controls CSV must contain columns: year, in, out")
+        raise ValueError("Migration controls CSV must contain columns: year, ins, outs")
 
     if df["year"].dropna().duplicated().any():
         raise ValueError("Migration controls CSV contains duplicate year values")
@@ -121,22 +217,15 @@ def get_migration_controls(df: pd.DataFrame) -> dict:
 
     return controls
 
-def apply_migration_controls(
+def scale_migration_rates_to_controls(
     df: pd.DataFrame,
     yr: int,
     migration_controls: dict | None,
-    generator: np.random.Generator,
 ) -> pd.DataFrame:
-    """Apply optional yearly in/out migration control totals.
+    """Scale migration rates to match optional yearly in/out control totals.
 
-    Args:
-        df (pd.DataFrame): Input DataFrame
-        yr (int): Year for which to apply migration controls
-        migration_controls (dict | None): Dictionary containing migration control totals
-        generator (np.random.Generator): Random number generator
-
-    Returns:
-        pd.DataFrame: DataFrame with applied migration controls
+    This applies scale factors to rate_in/rate_out using the same exposure
+    base used in the annual cycle (survived civilian population).
     """
     if migration_controls is None:
         return df
@@ -148,34 +237,42 @@ def apply_migration_controls(
     control_in = year_controls.get("in")
     control_out = year_controls.get("out")
 
+    exposure = df["pop_civ_surv"].astype(float)
+
     if control_in is not None:
         control_in = int(control_in)
         if control_in < 0:
             raise ValueError("Migration control totals must be non-negative")
 
-        df["ins"] = integerize_1d(
-            data=df["ins"],
-            control=control_in, 
-            generator=generator,
-        )
+        expected_in = float((exposure * df["rate_in"].astype(float)).sum())
+        if control_in > 0 and expected_in == 0:
+            raise ValueError(
+                f"{yr}: in-migration control ({control_in}) cannot be matched because expected in-migration is 0"
+            )
+
+        if expected_in > 0:
+            df["rate_in"] = df["rate_in"].astype(float) * (control_in / expected_in)
 
     if control_out is not None:
         control_out = int(control_out)
-        out_capacity = int(df["pop_civ_surv"].sum())
+        if control_out < 0:
+            raise ValueError("Migration control totals must be non-negative")
+
+        out_capacity = int(exposure.sum())
         if control_out > out_capacity:
             raise ValueError(
                 f"{yr}: out-migration control ({control_out}) exceeds survived civilian population ({out_capacity})"
             )
 
-        if control_out < 0:
-            raise ValueError("Migration control totals must be non-negative")
+        expected_out = float((exposure * df["rate_out"].astype(float)).sum())
+        if control_out > 0 and expected_out == 0:
+            raise ValueError(
+                f"{yr}: out-migration control ({control_out}) cannot be matched because expected out-migration is 0"
+            )
 
-        df["outs"] = integerize_1d(
-            data=df["outs"],
-            control=control_out,
-            generator=generator,
-        )
-
-        df["outs"] = reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
+        if expected_out > 0:
+            df["rate_out"] = df["rate_out"].astype(float) * (
+                control_out / expected_out
+            )
 
     return df

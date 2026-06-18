@@ -39,7 +39,7 @@ sql:  # SQL server options
   load_to_database: False # Set as True if output has to be loaded to database
 ```
 ### Migration Controls File Format
-If migration controls are provided, the CSV should include one row per year with optional in/out totals:
+If migration controls are provided, the CSV should include one row per year post launch year with ins/outs totals >= 0:
 
 ```csv
 year,ins,outs

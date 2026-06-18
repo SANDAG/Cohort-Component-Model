@@ -379,9 +379,6 @@ def integerize_1d(
         return rounded_data.astype(int)
 
 
-
-
-
 def reallocate_integers(df: pd.DataFrame, subset: str, total: str) -> pd.Series:
     """Adjust subset column such that the columns does not exceed a column
     identified as the total numerical value. Use for positive integer values

@@ -7,8 +7,6 @@ import pandas as pd
 
 import python.utils as utils
 
-from python.input_modules.migration_rates import apply_migration_controls
-
 generator = np.random.default_rng(utils.RANDOM_SEED)
 
 
@@ -156,26 +154,37 @@ def calculate_migration(
             right_on=["race", "sex", "age"],
             suffixes=["", "_y"],
         )
-        .assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
+    )
+
+    df = (
+        df.assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
         .assign(outs=lambda x: round(x["pop_civ_surv"] * x["rate_out"]))
         .sort_values(by=["race", "sex", "age"])
         .reset_index(drop=True)
     )
 
-    # Integerize preserving sums of Ins/Outs
-    df["ins"] = utils.integerize_1d(data=df["ins"], control=None, generator=generator)
-    df["outs"] = utils.integerize_1d(data=df["outs"], control=None, generator=generator)
+    # The controlling of the migration rates does not lead to perfect results so added
+    # a step in here to integerize preserving sums of Ins/Outs and match the controls 
+    # if they are provided. 
+    in_control = None
+    out_control = None
+    if migration_controls is not None:
+        year_controls = migration_controls.get(str(yr))
+        if year_controls:
+            if year_controls.get("in") is not None:
+                in_control = int(year_controls["in"])
+            if year_controls.get("out") is not None:
+                out_control = int(year_controls["out"])
+
+    df["ins"] = utils.integerize_1d(
+        data=df["ins"], control=in_control, generator=generator
+    )
+    df["outs"] = utils.integerize_1d(
+        data=df["outs"], control=out_control, generator=generator
+    )
 
     # Ensure Outs <= Survived Population after Integerization
     df["outs"] = utils.reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
-
-    # Optionally control annual In/Out migration totals
-    df = apply_migration_controls(
-        df=df,
-        yr=yr,
-        migration_controls=migration_controls,
-        generator=generator,
-    )
 
     return df[["race", "sex", "age", "ins", "outs"]]
 
@@ -236,9 +245,8 @@ def increment_population(
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary with DataFrame elements including
-        components of change for the current population, effective migration
-        rates implied by final in/out migration, and the input population for
-        the next increment.
+        components of change for the current population and the input
+        population for the next increment.
     """
     # Calculate Components of Change; Deaths, Births, and Migration
     pop_df = pop_df.merge(
@@ -263,18 +271,6 @@ def increment_population(
         how="left",
         on=["race", "sex", "age"],
     )
-
-    # Back-calculate effective migration rates from final ins/outs.
-    # This keeps rate output aligned with controlled migration counts.
-    migration_rates = (
-        pop_df.assign(pop_civ_surv=lambda x: x["pop"] - x["pop_mil"] - x["deaths"])
-        .assign(
-            rate_in=lambda x: np.where(x["pop_civ_surv"] > 0, x["ins"] / x["pop_civ_surv"], 0),
-            rate_out=lambda x: np.where(
-                x["pop_civ_surv"] > 0, x["outs"] / x["pop_civ_surv"], 0
-            ),
-        )
-    )[["race", "sex", "age", "rate_in", "rate_out"]]
 
     # Calculate the newborn population for the next increment
     newborns = create_newborns(pop_df=pop_df, male_pct=0.512)
@@ -306,6 +302,5 @@ def increment_population(
     # Return the Components of Change and the incremented Population
     return {
         "components": pop_df[["race", "sex", "age", "deaths", "births", "ins", "outs"]],
-        "migration_rates": migration_rates,
         "population": pop_inc[["race", "sex", "age", "pop", "pop_mil"]],
     }
