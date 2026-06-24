@@ -161,14 +161,14 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
             pop_df=pop_df,
             sandag_estimates=config["configurations"]["controls"],
         )
-    
+
     # Integerize calculated households/population ----
     # Sort before integerizing to ensure consistent ordering
     pop_df = pop_df.sort_values(by=["race", "sex", "age"]).reset_index(drop=True)
 
     pop_df = integerize_population(pop_df=pop_df)
 
-    # Write out calculated households/population and rates----
+    # Write out calculated households/population and rates ----
     write_df(yr=increment, df=pop_df, fn=config["output"]["files"]["population"])
     write_rates(yr=increment, rates=rates, fn=config["output"]["files"]["rates"])
 

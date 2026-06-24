@@ -197,10 +197,7 @@ def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
     return df[["race", "sex", "age", "pop"]]
 
 
-def increment_population(
-    pop_df: pd.DataFrame,
-    rates: dict,
-) -> dict[str, pd.DataFrame]:
+def increment_population(pop_df: pd.DataFrame, rates: dict,) -> dict[str, pd.DataFrame]:
     """Calculate components of change and create input population for next
     increment.
 
@@ -212,9 +209,9 @@ def increment_population(
             by race, sex, and single year of age
 
     Returns:
-        dict[str, pd.DataFrame]: Dictionary with DataFrame elements including
-        components of change for the current population and the input
-        population for the next increment.
+        dict[str, pd.DataFrame]: Dictionary with two DataFrame elements. The
+        first containing the components of change for the current population.
+        The second containing the input population for the next increment.
     """
     # Calculate Components of Change; Deaths, Births, and Migration
     pop_df = pop_df.merge(
@@ -230,10 +227,7 @@ def increment_population(
     )
 
     pop_df = pop_df.merge(
-        right=calculate_migration(
-            pop_df=pop_df,
-            rate=rates["migration"],
-        ),
+        right=calculate_migration(pop_df=pop_df, rate=rates["migration"]),
         how="left",
         on=["race", "sex", "age"],
     )

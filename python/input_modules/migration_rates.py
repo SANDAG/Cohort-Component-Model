@@ -58,7 +58,6 @@ def get_migration_rates(
     else:
         
         if controls is not None:
-        
             rates = calculate_migration_rates(
                 yr=launch_yr,
                 pop_df=pop_df,
