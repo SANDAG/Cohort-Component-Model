@@ -109,12 +109,7 @@ def calculate_deaths(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
     return df[["race", "sex", "age", "deaths"]]
 
 
-def calculate_migration(
-    pop_df: pd.DataFrame,
-    rate: pd.DataFrame,
-    yr: int,
-    migration_controls: dict | None = None,
-) -> pd.DataFrame:
+def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
     """Calculate migration by race, sex, and single year of age.
 
     Migration rates are applied to the survived civilian population. Note that
@@ -128,9 +123,6 @@ def calculate_migration(
             the total population and calculated deaths
         rate (pd.DataFrame): Migration rates by race, sex, and single year of
             age
-        yr: Increment year
-        migration_controls (dict | None): Optional yearly migration controls
-            with keys "in" and "out"
 
     Returns:
         pd.DataFrame: In/Out Migration by race, sex, and single year of age
@@ -160,25 +152,9 @@ def calculate_migration(
         .reset_index(drop=True)
     )
 
-    # The controlling of the migration rates does not lead to perfect results so added
-    # a step in here to integerize preserving sums of Ins/Outs and match the controls 
-    # if they are provided. 
-    in_control = None
-    out_control = None
-    if migration_controls is not None:
-        year_controls = migration_controls.get(str(yr))
-        if year_controls:
-            if year_controls.get("in") is not None:
-                in_control = int(year_controls["in"])
-            if year_controls.get("out") is not None:
-                out_control = int(year_controls["out"])
-
-    df["ins"] = utils.integerize_1d(
-        data=df["ins"], control=in_control, generator=generator
-    )
-    df["outs"] = utils.integerize_1d(
-        data=df["outs"], control=out_control, generator=generator
-    )
+    # TODO: Consider controlling to migration controls here if provided for almost perfect match
+    df["ins"] = utils.integerize_1d(data=df["ins"], control=None, generator=generator)
+    df["outs"] = utils.integerize_1d(data=df["outs"], control=None, generator=generator)
 
     # Ensure Outs <= Survived Population after Integerization
     df["outs"] = utils.reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
@@ -224,8 +200,6 @@ def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
 def increment_population(
     pop_df: pd.DataFrame,
     rates: dict,
-    yr: int,
-    migration_controls: dict | None = None,
 ) -> dict[str, pd.DataFrame]:
     """Calculate components of change and create input population for next
     increment.
@@ -236,9 +210,6 @@ def increment_population(
             the total population
         rates (dict): Dictionary containing death, birth, and migration rates
             by race, sex, and single year of age
-        yr: Increment year
-        migration_controls (dict | None): Optional yearly migration controls
-            with keys "in" and "out"
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary with DataFrame elements including
@@ -262,8 +233,6 @@ def increment_population(
         right=calculate_migration(
             pop_df=pop_df,
             rate=rates["migration"],
-            yr=yr,
-            migration_controls=migration_controls,
         ),
         how="left",
         on=["race", "sex", "age"],

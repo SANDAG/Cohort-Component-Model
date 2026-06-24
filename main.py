@@ -20,7 +20,6 @@ from python.input_modules.birth_rates import get_birth_rates
 from python.input_modules.death_rates import get_death_rates
 from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
-from python.input_modules.migration_rates import get_migration_controls
 from python.input_modules.migration_rates import get_migration_rates
 from python.output_data import write_df, write_rates
 from python.utils import SQL_ENGINE
@@ -32,7 +31,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(
     filename="log.txt", filemode="w", encoding="utf-8", level=logging.INFO
 )
-
 
 # Load configuration files ----
 with open("config.yml") as f:
@@ -55,14 +53,6 @@ for k, v in config["csv"].items():
         config["csv"][k] = None
     else:
         config["csv"][k] = pd.read_csv(v)
-
-
-# Load optional migration controls from csv ----
-migration_controls = None
-if config["csv"].get("migration_controls") is not None:
-    migration_controls = get_migration_controls(
-        config["csv"]["migration_controls"],
-    )
 
 
 # Initialize base year dataset -----------------------------------------------
@@ -129,6 +119,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 pop_df=pop_df,
                 pums_migrants=config["sql"]["queries"]["pums_migrants"],
                 engine=SQL_ENGINE,  # type: ignore
+                controls=config["csv"]["migration_controls"],
             ),
             # Crude Group Quarters and Household Formation Rates
             "formation_gq_hh": get_formation_rates(
@@ -156,6 +147,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 pop_df=pop_df,
                 pums_migrants=config["sql"]["queries"]["pums_migrants"],
                 engine=SQL_ENGINE,  # type: ignore
+                controls=config["csv"]["migration_controls"],
             )
 
     # Calculate households/population for the increment ----
@@ -176,19 +168,12 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
 
     pop_df = integerize_population(pop_df=pop_df)
 
-    # Write out calculated households/population ----
+    # Write out calculated households/population and rates----
     write_df(yr=increment, df=pop_df, fn=config["output"]["files"]["population"])
+    write_rates(yr=increment, rates=rates, fn=config["output"]["files"]["rates"])
 
     # Calculate Components of Change and create new population ----
-    increment_data = increment_population(
-        pop_df=pop_df,
-        rates=rates,
-        yr=increment,
-        migration_controls=migration_controls,
-    )
-
-    # Write out rates ----
-    write_rates(yr=increment, rates=rates, fn=config["output"]["files"]["rates"])
+    increment_data = increment_population(pop_df=pop_df, rates=rates)
 
     # Write out components of change ----
     write_df(
