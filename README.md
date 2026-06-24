@@ -18,6 +18,7 @@ configurations:  # other configuration files
 csv:  # locally stored datasets (manually entered)
   dmdc_location_report: "data/DMDC Website Location Report.csv"  # Department of Defense DMDC Report data
   sdmac_report: "data/SDMAC Report.csv"  # Military SDMAC Report data
+  migration_controls: null  # optional csv with columns: year,ins,outs. Null keeps default migration-rate logic
 interval:  # forecast interval (base is assumed from launch)
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
@@ -36,6 +37,14 @@ sql:  # SQL server options
     pums_migrants: "sql/pums_migrants.sql"  # San Diego County in/out migration
     pums_persons: "sql/pums_persons.sql"  # San Diego county population
   load_to_database: False # Set as True if output has to be loaded to database
+```
+### Migration Controls File Format
+If migration controls are provided, the CSV should include one row per year post launch year with ins/outs totals >= 0:
+
+```csv
+year,ins,outs
+2022,52000,47000
+2023,54000,50000
 ```
 
 ### Configuration of Private Data in secrets.yml

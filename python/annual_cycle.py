@@ -152,7 +152,7 @@ def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFram
         .reset_index(drop=True)
     )
 
-    # Integerize preserving sums of Ins/Outs
+    # TODO: Consider controlling to migration controls here if provided for almost perfect match
     df["ins"] = utils.integerize_1d(data=df["ins"], control=None, generator=generator)
     df["outs"] = utils.integerize_1d(data=df["outs"], control=None, generator=generator)
 
@@ -197,7 +197,7 @@ def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
     return df[["race", "sex", "age", "pop"]]
 
 
-def increment_population(pop_df: pd.DataFrame, rates: dict) -> dict[str, pd.DataFrame]:
+def increment_population(pop_df: pd.DataFrame, rates: dict,) -> dict[str, pd.DataFrame]:
     """Calculate components of change and create input population for next
     increment.
 

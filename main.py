@@ -49,7 +49,10 @@ for k, v in config["output"]["files"].items():
 
 # Load csv data sources ----
 for k, v in config["csv"].items():
-    config["csv"][k] = pd.read_csv(v)
+    if v is None:
+        config["csv"][k] = None
+    else:
+        config["csv"][k] = pd.read_csv(v)
 
 
 # Initialize base year dataset -----------------------------------------------
@@ -116,6 +119,7 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 pop_df=pop_df,
                 pums_migrants=config["sql"]["queries"]["pums_migrants"],
                 engine=SQL_ENGINE,  # type: ignore
+                controls=config["csv"]["migration_controls"],
             ),
             # Crude Group Quarters and Household Formation Rates
             "formation_gq_hh": get_formation_rates(
@@ -135,9 +139,16 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
             ),
         }
 
-    # TODO: (6,7,10-feature) adjustments to rates would be made post-launch year through horizon
     else:
-        pass
+        if config["csv"]["migration_controls"] is not None:
+            rates["migration"] = get_migration_rates(
+                yr=increment,
+                launch_yr=config["interval"]["launch"],
+                pop_df=pop_df,
+                pums_migrants=config["sql"]["queries"]["pums_migrants"],
+                engine=SQL_ENGINE,  # type: ignore
+                controls=config["csv"]["migration_controls"],
+            )
 
     # Calculate households/population for the increment ----
     pop_df = calculate_population(pop_df=pop_df, rates=rates)
