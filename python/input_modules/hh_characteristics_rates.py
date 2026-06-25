@@ -5,7 +5,6 @@
 import logging
 import numpy as np
 import pandas as pd
-import sqlalchemy as sql
 
 import python.utils as utils
 
@@ -17,7 +16,6 @@ def get_hh_characteristic_rates(
     launch_yr: int,
     pums_persons: str,
     sandag_estimates: dict,
-    engine: sql.Engine,
 ) -> pd.DataFrame:
     """Generate household characteristics rates broken down by race, sex, and
     single year of age.
@@ -39,7 +37,6 @@ def get_hh_characteristic_rates(
         pums_persons (str): 5-year ACS PUMS persons
         sandag_estimates (dict): loaded JSON control totals from historical
             SANDAG Estimates programs
-        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Household characteristics rates broken down by race,
@@ -47,7 +44,7 @@ def get_hh_characteristic_rates(
     """
     if yr <= launch_yr:
         # Load SQL queries and apply checks to datasets
-        with engine.connect() as connection:
+        with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
             with open(pums_persons, "r") as query:
                 pums_persons_df = pd.read_sql_query(

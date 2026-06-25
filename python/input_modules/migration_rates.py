@@ -4,7 +4,8 @@
 
 import numpy as np
 import pandas as pd
-import sqlalchemy as sql
+
+import python.utils as utils
 
 
 def get_migration_rates(
@@ -12,7 +13,6 @@ def get_migration_rates(
     launch_yr: int,
     pop_df: pd.DataFrame,
     pums_migrants: str,
-    engine: sql.Engine,
     controls: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Create migration rates broken down by race, sex, and single year of age.
@@ -33,7 +33,6 @@ def get_migration_rates(
             single year of age
         pums_migrants (str): query to get 5-year ACS PUMS in/out
             migrants for San Diego County
-        engine (sql.Engine): SQLAlchemy MSSQL connection engine
         controls (pd.DataFrame | None): Optional migration control totals for post-launch
             years. If provided, migration rates will be adjusted to match these
             totals for in/out migrants.
@@ -48,7 +47,6 @@ def get_migration_rates(
             yr=yr,
             pop_df=pop_df,
             pums_migrants=pums_migrants,
-            engine=engine,
             cap_rates=0.2,
         )
 
@@ -56,13 +54,12 @@ def get_migration_rates(
     # Post-launch rates are controlled to annual in/out totals if provided
     # TODO: Re-calculating every increment post launch is inefficient
     else:
-        
+
         if controls is not None:
             rates = calculate_migration_rates(
                 yr=launch_yr,
                 pop_df=pop_df,
                 pums_migrants=pums_migrants,
-                engine=engine,
                 cap_rates=0.2,
             )
 
@@ -72,11 +69,11 @@ def get_migration_rates(
 
     return rates
 
+
 def calculate_migration_rates(
     yr: int,
     pop_df: pd.DataFrame,
     pums_migrants: str,
-    engine: sql.Engine,
     cap_rates: float,
 ) -> pd.DataFrame:
     """Calculate migration rates for a specific source year.
@@ -85,7 +82,6 @@ def calculate_migration_rates(
         yr: Source year for ACS PUMS migrants query
         pop_df (pd.DataFrame): Population data by race, sex, and age
         pums_migrants (str): SQL query path for ACS PUMS in/out migrants
-        engine (sql.Engine): SQLAlchemy MSSQL connection engine
         cap_rates (float): Maximum allowed migration rate (e.g., 0.2 for 20%)
 
     Returns:
@@ -94,7 +90,7 @@ def calculate_migration_rates(
     if cap_rates <= 0 or cap_rates >= 1:
         raise ValueError("cap_rates parameter must be between 0 and 1")
 
-    with engine.connect() as connection:
+    with utils.SQL_ENGINE.connect() as connection:
         with open(pums_migrants, "r") as query:
             pums_migrants_df = pd.read_sql_query(query.read().format(yr=yr), connection)
         if len(pums_migrants_df.index) == 0:

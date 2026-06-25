@@ -1,7 +1,6 @@
 """Generate active-duty military population by race, sex, and single year of age."""
 
 import pandas as pd
-import sqlalchemy as sql
 
 import python.utils as utils
 
@@ -14,7 +13,6 @@ def get_active_duty_military(
     pums_ca_mil: str,
     dmdc_location_report: pd.DataFrame,
     sdmac_report: pd.DataFrame,
-    engine: sql.Engine,
 ) -> pd.DataFrame:
     """Get active-duty military population broken down by race, sex, and
     single year of age for the increment year. Note the active duty military
@@ -40,7 +38,6 @@ def get_active_duty_military(
             https://dwp.dmdc.osd.mil/dwp/app/dod-data-reports/workforce-reports
         sdmac_report (pd.DataFrame): SDMAC Annual EIR data
             https://sdmac.org/reports/past-sdmac-economic-impact-reports
-        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: The total population data with active-duty military
@@ -49,7 +46,7 @@ def get_active_duty_military(
     # Active-duty military population set and controlled up to the launch year
     if yr <= launch_yr:
         # Load SQL queries and apply checks to datasets
-        with engine.connect() as connection:
+        with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
             with open(pums_persons, "r") as query:
                 pums_persons_df = pd.read_sql_query(
@@ -74,7 +71,7 @@ def get_active_duty_military(
         # If increment year is prior to 2018 use DMDC Location Report
         if 2010 <= yr < 2018:
             # Load SQL queries and apply checks to datasets
-            with engine.connect() as connection:
+            with utils.SQL_ENGINE.connect() as connection:
                 # Load ACS Active-duty military for CA
                 with open(pums_ca_mil, "r") as query:
                     pums_ca_mil_df = pd.read_sql_query(query.read(), connection)

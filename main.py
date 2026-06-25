@@ -22,8 +22,6 @@ from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
 from python.input_modules.migration_rates import get_migration_rates
 from python.output_data import write_df, write_rates
-from python.utils import SQL_ENGINE
-
 
 # Set up configurations and datasets -----------------------------------------
 # Create log file ----
@@ -67,7 +65,6 @@ if 2020 <= config["interval"]["launch"] < 2030:
         dof_estimates=config["sql"]["queries"]["dof_estimates"],
         dof_projections=config["sql"]["queries"]["dof_projections"],
         census_p5=config["sql"]["queries"]["census_p5"],
-        engine=SQL_ENGINE,  # type: ignore
     )
 
     logger.info("Initialized: Base Year 2020")
@@ -93,7 +90,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         pums_ca_mil=config["sql"]["queries"]["pums_ca_mil"],
         dmdc_location_report=config["csv"]["dmdc_location_report"],
         sdmac_report=config["csv"]["sdmac_report"],
-        engine=SQL_ENGINE,  # type: ignore
     )
 
     # Calculate rates (rates calculated up to the launch year) ----
@@ -118,7 +114,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 pop_df=pop_df,
                 pums_migrants=config["sql"]["queries"]["pums_migrants"],
-                engine=SQL_ENGINE,  # type: ignore
                 controls=config["csv"]["migration_controls"],
             ),
             # Crude Group Quarters and Household Formation Rates
@@ -127,7 +122,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
-                engine=SQL_ENGINE,  # type: ignore
             ),
             # Household Characteristics Rates
             "hh_characteristics": get_hh_characteristic_rates(
@@ -135,7 +129,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
-                engine=SQL_ENGINE,  # type: ignore
             ),
         }
 
@@ -146,7 +139,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 launch_yr=config["interval"]["launch"],
                 pop_df=pop_df,
                 pums_migrants=config["sql"]["queries"]["pums_migrants"],
-                engine=SQL_ENGINE,  # type: ignore
                 controls=config["csv"]["migration_controls"],
             )
 
@@ -189,7 +181,6 @@ logger.info("Completed")
 if config["sql"]["load_to_database"]:
     # Run the ETL process
     run_etl(
-        engine=SQL_ENGINE,
         launch=config["interval"]["launch"],
         horizon=config["interval"]["horizon"],
         version=config["version"],
