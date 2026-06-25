@@ -12,7 +12,6 @@ def get_migration_rates(
     yr: int,
     launch_yr: int,
     pop_df: pd.DataFrame,
-    pums_migrants: str,
     controls: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Create migration rates broken down by race, sex, and single year of age.
@@ -31,8 +30,6 @@ def get_migration_rates(
         launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
-        pums_migrants (str): query to get 5-year ACS PUMS in/out
-            migrants for San Diego County
         controls (pd.DataFrame | None): Optional migration control totals for post-launch
             years. If provided, migration rates will be adjusted to match these
             totals for in/out migrants.
@@ -46,7 +43,6 @@ def get_migration_rates(
         rates = calculate_migration_rates(
             yr=yr,
             pop_df=pop_df,
-            pums_migrants=pums_migrants,
             cap_rates=0.2,
         )
 
@@ -59,7 +55,6 @@ def get_migration_rates(
             rates = calculate_migration_rates(
                 yr=launch_yr,
                 pop_df=pop_df,
-                pums_migrants=pums_migrants,
                 cap_rates=0.2,
             )
 
@@ -73,7 +68,6 @@ def get_migration_rates(
 def calculate_migration_rates(
     yr: int,
     pop_df: pd.DataFrame,
-    pums_migrants: str,
     cap_rates: float,
 ) -> pd.DataFrame:
     """Calculate migration rates for a specific source year.
@@ -81,7 +75,6 @@ def calculate_migration_rates(
     Args:
         yr: Source year for ACS PUMS migrants query
         pop_df (pd.DataFrame): Population data by race, sex, and age
-        pums_migrants (str): SQL query path for ACS PUMS in/out migrants
         cap_rates (float): Maximum allowed migration rate (e.g., 0.2 for 20%)
 
     Returns:
@@ -91,7 +84,7 @@ def calculate_migration_rates(
         raise ValueError("cap_rates parameter must be between 0 and 1")
 
     with utils.SQL_ENGINE.connect() as connection:
-        with open(pums_migrants, "r") as query:
+        with open(utils.SQL_FOLDER / "pums_migrants.sql", "r") as query:
             pums_migrants_df = pd.read_sql_query(query.read().format(yr=yr), connection)
         if len(pums_migrants_df.index) == 0:
             raise ValueError(str(yr) + ": not in ACS PUMS in/out migrants")

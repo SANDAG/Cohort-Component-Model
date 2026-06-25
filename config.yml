@@ -18,11 +18,4 @@ output:
     population: "output/population.csv"
     rates: "output/rates.csv"
 sql:
-  queries:
-    census_p5: "sql/census_p5.sql"
-    dof_estimates: "sql/dof_estimates.sql"
-    dof_projections: "sql/dof_projections.sql"
-    pums_ca_mil: "sql/pums_ca_mil.sql"
-    pums_migrants: "sql/pums_migrants.sql"
-    pums_persons: "sql/pums_persons.sql" 
-  load_to_database: False
+  load_to_database: True

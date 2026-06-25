@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 def get_formation_rates(
     yr: int,
     launch_yr: int,
-    pums_persons: str,
     sandag_estimates: dict,
 ) -> pd.DataFrame:
     """Generate group quarters and household formation rates broken
@@ -34,7 +33,6 @@ def get_formation_rates(
     Args:
         yr: Increment year
         launch_yr: Launch year
-        pums_persons (str): 5-year ACS PUMS persons query file
         sandag_estimates (dict): loaded JSON control totals from historical
             SANDAG Estimates programs
 
@@ -46,7 +44,7 @@ def get_formation_rates(
         # Load SQL queries and apply checks to datasets
         with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
-            with open(pums_persons, "r") as query:
+            with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
                 pums_persons_df = pd.read_sql_query(
                     query.read().format(yr=yr), connection
                 )

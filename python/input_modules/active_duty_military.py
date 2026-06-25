@@ -9,8 +9,6 @@ def get_active_duty_military(
     yr: int,
     launch_yr: int,
     pop_df: pd.DataFrame,
-    pums_persons: str,
-    pums_ca_mil: str,
     dmdc_location_report: pd.DataFrame,
     sdmac_report: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -31,9 +29,6 @@ def get_active_duty_military(
         launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
-        pums_persons (str): 5-year ACS PUMS persons query file
-        pums_ca_mil (str): Total active-duty military population for the State
-            of CA from 5-year ACS PUMS persons query file
         dmdc_location_report (pd.DataFrame): DMDC website location report
             https://dwp.dmdc.osd.mil/dwp/app/dod-data-reports/workforce-reports
         sdmac_report (pd.DataFrame): SDMAC Annual EIR data
@@ -48,7 +43,7 @@ def get_active_duty_military(
         # Load SQL queries and apply checks to datasets
         with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
-            with open(pums_persons, "r") as query:
+            with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
                 pums_persons_df = pd.read_sql_query(
                     query.read().format(yr=yr), connection
                 )
@@ -73,7 +68,7 @@ def get_active_duty_military(
             # Load SQL queries and apply checks to datasets
             with utils.SQL_ENGINE.connect() as connection:
                 # Load ACS Active-duty military for CA
-                with open(pums_ca_mil, "r") as query:
+                with open(utils.SQL_FOLDER / "pums_ca_mil.sql", "r") as query:
                     pums_ca_mil_df = pd.read_sql_query(query.read(), connection)
                     if yr not in pums_ca_mil_df["year"].unique():
                         raise ValueError("Increment year not in ACS 5-year PUMS")

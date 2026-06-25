@@ -14,10 +14,6 @@ logger = logging.getLogger(__name__)
 
 def get_base_yr_2020(
     launch_yr: int,
-    pums_persons: str,
-    dof_estimates: str,
-    dof_projections: str,
-    census_p5: str,
 ) -> pd.DataFrame:
     """Generate base year 2020 population data broken down by race, sex, and
     single year of age for launch years from 2020-2029. Due to issues with the
@@ -33,10 +29,6 @@ def get_base_yr_2020(
 
     Args:
         launch_yr (int): Launch year
-        pums_persons (str): 5-year ACS PUMS persons 2016-2020 query file
-        dof_estimates (str): CA DOF Population Estimates query file
-        dof_projections (str): CA DOF Population Projections query file
-        census_p5 (str): Census P5 table for 2020 query file
 
     Returns:
         pd.Dataframe: Base year 2020 population data broken down by race,
@@ -45,7 +37,7 @@ def get_base_yr_2020(
     # Load SQL queries and apply checks to datasets
     with utils.SQL_ENGINE.connect() as connection:
         # Load ACS PUMS persons
-        with open(pums_persons, "r") as query:
+        with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
             pums_persons_df = pd.read_sql_query(
                 query.read().format(yr=2020), connection
             )
@@ -53,13 +45,13 @@ def get_base_yr_2020(
                 raise ValueError("2020: not in ACS 5-year PUMS")
 
         # Load DOF Estimates
-        with open(dof_estimates, "r") as query:
+        with open(utils.SQL_FOLDER / "dof_estimates.sql", "r") as query:
             dof_estimates_df = pd.read_sql_query(query.read(), connection)
             if launch_yr not in dof_estimates_df["vintage"].astype(int).unique():
                 raise ValueError("Launch year not in DOF Estimates")
 
         # Load DOF Projections
-        with open(dof_projections, "r") as query:
+        with open(utils.SQL_FOLDER / "dof_projections.sql", "r") as query:
             dof_projections_df = pd.read_sql_query(query.read(), connection)
             dof_projections_yr = launch_yr
             if 2020 not in dof_projections_df["year"].unique():
@@ -81,7 +73,7 @@ def get_base_yr_2020(
                 )
 
         # Load 2020 Census P5 table
-        with open(census_p5, "r") as query:
+        with open(utils.SQL_FOLDER / "census_p5.sql", "r") as query:
             census_p5_df = pd.read_sql_query(query.read(), connection)
 
     # Create a blended estimate of the total population distribution for 2020

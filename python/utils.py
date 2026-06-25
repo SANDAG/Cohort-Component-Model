@@ -8,14 +8,15 @@ import pandas as pd
 import sqlalchemy as sql
 import yaml
 
-
 #########
 # PATHS #
 #########
 
 # Store project root folder
 ROOT_FOLDER = pathlib.Path(__file__).parent.resolve().parent
-
+DATA_FOLDER = ROOT_FOLDER / "data"
+OUTPUT_FOLDER = ROOT_FOLDER / "output"
+SQL_FOLDER = ROOT_FOLDER / "sql"
 
 #####################
 # SQL CONFIGURATION #

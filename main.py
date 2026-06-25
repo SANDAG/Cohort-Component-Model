@@ -59,14 +59,7 @@ logger.info("Initializing base year")
 # For launch years >= 2020 use the blended base year approach ----
 if 2020 <= config["interval"]["launch"] < 2030:
     base_yr = 2020
-    pop_df = get_base_yr_2020(
-        launch_yr=config["interval"]["launch"],
-        pums_persons=config["sql"]["queries"]["pums_persons"],
-        dof_estimates=config["sql"]["queries"]["dof_estimates"],
-        dof_projections=config["sql"]["queries"]["dof_projections"],
-        census_p5=config["sql"]["queries"]["census_p5"],
-    )
-
+    pop_df = get_base_yr_2020(launch_yr=config["interval"]["launch"])
     logger.info("Initialized: Base Year 2020")
 # For launch years >= 2010 (and < 2020) use the 2010 decennial Census ----
 elif 2010 <= config["interval"]["launch"] < 2020:
@@ -86,8 +79,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         yr=increment,
         launch_yr=config["interval"]["launch"],
         pop_df=pop_df,
-        pums_persons=config["sql"]["queries"]["pums_persons"],
-        pums_ca_mil=config["sql"]["queries"]["pums_ca_mil"],
         dmdc_location_report=config["csv"]["dmdc_location_report"],
         sdmac_report=config["csv"]["sdmac_report"],
     )
@@ -113,21 +104,18 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
                 pop_df=pop_df,
-                pums_migrants=config["sql"]["queries"]["pums_migrants"],
                 controls=config["csv"]["migration_controls"],
             ),
             # Crude Group Quarters and Household Formation Rates
             "formation_gq_hh": get_formation_rates(
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
-                pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
             ),
             # Household Characteristics Rates
             "hh_characteristics": get_hh_characteristic_rates(
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
-                pums_persons=config["sql"]["queries"]["pums_persons"],
                 sandag_estimates=config["configurations"]["controls"],
             ),
         }
@@ -138,7 +126,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
                 yr=increment,
                 launch_yr=config["interval"]["launch"],
                 pop_df=pop_df,
-                pums_migrants=config["sql"]["queries"]["pums_migrants"],
                 controls=config["csv"]["migration_controls"],
             )
 
