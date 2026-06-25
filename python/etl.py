@@ -2,6 +2,8 @@
 
 import getpass
 import logging
+import pathlib
+
 import pandas as pd
 import sqlalchemy as sql
 
@@ -20,7 +22,7 @@ def get_run_id() -> int:
         return result + 1 if result else 1
 
 
-def insert_csv(run_id: int, fp: str, tbl: str) -> None:
+def insert_csv(run_id: int, fp: pathlib.Path, tbl: str) -> None:
     """Insert output csv files into database."""
     df = pd.read_csv(fp)
     df["run_id"] = run_id
@@ -83,9 +85,9 @@ def run_etl(launch: int, horizon: int, version: str, comments: str) -> None:
     )
 
     output_files = {
-        "components": "output/components.csv",
-        "population": "output/population.csv",
-        "rates": "output/rates.csv",
+        "components": utils.OUTPUT_FOLDER / "components.csv",
+        "population": utils.OUTPUT_FOLDER / "population.csv",
+        "rates": utils.OUTPUT_FOLDER / "rates.csv",
     }
 
     for k, v in output_files.items():

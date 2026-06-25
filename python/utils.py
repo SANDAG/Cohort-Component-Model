@@ -1,12 +1,13 @@
 """This module contains generic utilities."""
 
-import pathlib
-
 import math
+import os.path
+import pathlib
+import yaml
+
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
-import yaml
 
 #########
 # PATHS #
@@ -585,3 +586,28 @@ def weighted_moving_average(
         result.append(cumsum)
 
     return result
+
+
+def write_df(yr: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
+    """Write DataFrame for increment year."""
+    df = df.sort_values(by=["race", "sex", "age"])
+    df.insert(0, "year", yr)
+
+    if os.path.isfile(fp):
+        df.to_csv(fp, mode="a", index=False, header=False)
+    else:
+        df.to_csv(fp, mode="w", index=False)
+
+
+def write_rates(yr: int, rates: dict, fp: pathlib.Path) -> None:
+    """Write calculated rates for increment year."""
+    output = None
+    for rate in rates:
+        if output is None:
+            output = rates[rate]
+        else:
+            output = output.merge(
+                right=rates[rate], how="outer", on=["race", "sex", "age"]
+            )
+
+    write_df(yr=yr, df=output, fp=fp)

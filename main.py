@@ -1,12 +1,12 @@
 """Entry point for running the Regional Cohort Component Model."""
 
 import logging
-import os
 import yaml
 
 import pandas as pd
 
-# User-defined modules
+import python.utils as utils
+
 from python.annual_cycle import increment_population
 from python.calculate_population import (
     apply_controls,
@@ -21,7 +21,6 @@ from python.input_modules.death_rates import get_death_rates
 from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
 from python.input_modules.migration_rates import get_migration_rates
-from python.output_data import write_df, write_rates
 
 # Set up configurations and datasets -----------------------------------------
 # Create log file ----
@@ -36,14 +35,6 @@ with open("config.yml") as f:
 for k, v in config["configurations"].items():
     with open(v) as f:
         config["configurations"][k] = yaml.safe_load(f)
-
-# Check if output files already exist ----
-for k, v in config["output"]["files"].items():
-    if os.path.isfile(v):
-        if config["output"]["overwrite"]:
-            os.remove(v)
-        else:
-            raise ValueError("Cannot overwrite existing output: " + v)
 
 # Load csv data sources ----
 for k, v in config["csv"].items():
@@ -144,21 +135,20 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
     # Integerize calculated households/population ----
     # Sort before integerizing to ensure consistent ordering
     pop_df = pop_df.sort_values(by=["race", "sex", "age"]).reset_index(drop=True)
-
     pop_df = integerize_population(pop_df=pop_df)
 
     # Write out calculated households/population and rates ----
-    write_df(yr=increment, df=pop_df, fn=config["output"]["files"]["population"])
-    write_rates(yr=increment, rates=rates, fn=config["output"]["files"]["rates"])
+    utils.write_df(yr=increment, df=pop_df, fp=utils.OUTPUT_FOLDER / "population.csv")
+    utils.write_rates(yr=increment, rates=rates, fp=utils.OUTPUT_FOLDER / "rates.csv")
 
     # Calculate Components of Change and create new population ----
     increment_data = increment_population(pop_df=pop_df, rates=rates)
 
     # Write out components of change ----
-    write_df(
+    utils.write_df(
         yr=increment,
         df=increment_data["components"],  # type: ignore
-        fn=config["output"]["files"]["components"],
+        fp=utils.OUTPUT_FOLDER / "components.csv",
     )
 
     # Set population for next increment and finish annual cycle ----

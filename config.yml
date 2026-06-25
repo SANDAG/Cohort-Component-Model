@@ -11,11 +11,5 @@ csv:
 interval:
   launch: 2022
   horizon: 2050
-output:
-  overwrite: true
-  files:
-    components: "output/components.csv"
-    population: "output/population.csv"
-    rates: "output/rates.csv"
 sql:
   load_to_database: True
