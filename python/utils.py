@@ -1,5 +1,6 @@
 """This module contains generic utilities."""
 
+import logging
 import math
 import os.path
 import pathlib
@@ -18,6 +19,34 @@ ROOT_FOLDER = pathlib.Path(__file__).parent.resolve().parent
 DATA_FOLDER = ROOT_FOLDER / "data"
 OUTPUT_FOLDER = ROOT_FOLDER / "output"
 SQL_FOLDER = ROOT_FOLDER / "sql"
+
+
+###########
+# LOGGING #
+###########
+
+# Create a console handler
+_console_handler = logging.StreamHandler()
+_console_handler.setLevel(logging.INFO)
+
+# Create a file handler
+_file_handler = logging.FileHandler(
+    filename=ROOT_FOLDER / "log.txt", mode="w", encoding="utf-8"
+)
+_file_handler.setLevel(logging.DEBUG)
+
+# Set up root logger
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[_console_handler, _file_handler],
+)
+
+# Create logger for this module
+logger = logging.getLogger(__name__)
+logger.info("Initialize log file")
+
 
 #####################
 # SQL CONFIGURATION #

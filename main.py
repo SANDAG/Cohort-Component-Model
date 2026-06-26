@@ -19,12 +19,7 @@ from python.input_modules.formation_rates import get_formation_rates
 from python.input_modules.hh_characteristics_rates import get_hh_characteristic_rates
 from python.input_modules.migration_rates import get_migration_rates
 
-# Set up configurations and datasets -----------------------------------------
-# Create log file ----
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    filename="log.txt", filemode="w", encoding="utf-8", level=logging.INFO
-)
 
 
 # Initialize base year dataset -----------------------------------------------
