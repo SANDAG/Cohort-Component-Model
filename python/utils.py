@@ -36,6 +36,42 @@ SQL_ENGINE = sql.create_engine(
 )
 
 
+#########################
+# RUNTIME CONFIGURATION #
+#########################
+try:
+    with open(ROOT_FOLDER / "config.yml", "r") as file:
+        config = yaml.safe_load(file)
+    for k, v in config["configurations"].items():
+        with open(v) as configurations_file:
+            config["configurations"][k] = yaml.safe_load(configurations_file)
+except IOError:
+    raise IOError("config.yml does not exist, see README.md")
+
+# TODO: Add input configuration parser
+
+# Get data from the parsed and validated configuration file
+VERSION = config["version"]
+COMMENTS = config["comments"]
+
+LAUNCH_YEAR = config["interval"]["launch"]
+if 2020 <= LAUNCH_YEAR < 2030:
+    BASE_YEAR = 2020
+else:
+    raise ValueError("Invalid launch year provided. Must be between 2020 and 2029.")
+HORIZON_YEAR = config["interval"]["horizon"]
+
+RATES_MAP = config["configurations"]["rates_map"]
+CONTROLS = config["configurations"]["controls"]
+
+if config["csv"]["migration_controls"] is not None:
+    MIGRATION_CONTROLS = pd.read_csv(config["csv"]["migration_controls"])
+else:
+    MIGRATION_CONTROLS = None
+
+LOAD_TO_DATABASE = config["sql"]["load_to_database"]
+
+
 ##############################
 # UTILITY LISTS AND MAPPINGS #
 ##############################

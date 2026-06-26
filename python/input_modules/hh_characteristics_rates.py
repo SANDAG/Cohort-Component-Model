@@ -11,11 +11,7 @@ import python.utils as utils
 logger = logging.getLogger(__name__)
 
 
-def get_hh_characteristic_rates(
-    yr: int,
-    launch_yr: int,
-    sandag_estimates: dict,
-) -> pd.DataFrame:
+def get_hh_characteristic_rates(yr: int) -> pd.DataFrame:
     """Generate household characteristics rates broken down by race, sex, and
     single year of age.
 
@@ -32,15 +28,12 @@ def get_hh_characteristic_rates(
 
     Args:
         yr: Increment year
-        launch_yr: Launch year
-        sandag_estimates (dict): loaded JSON control totals from historical
-            SANDAG Estimates programs
 
     Returns:
         pd.DataFrame: Household characteristics rates broken down by race,
             sex, and single year of age
     """
-    if yr <= launch_yr:
+    if yr <= utils.LAUNCH_YEAR:
         # Load SQL queries and apply checks to datasets
         with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
@@ -53,7 +46,7 @@ def get_hh_characteristic_rates(
 
         # Get SANDAG Estimates household controls for the increment
         # Year from the vintage associated with the launch year
-        controls = sandag_estimates[str(launch_yr)][str(yr)]["households"]
+        controls = utils.CONTROLS[str(utils.LAUNCH_YEAR)][str(yr)]["households"]
 
         # Create mapping of household attributes to ACS PUMS columns and SANDAG Estimates
         # Include whether attribute is controlled and whether to create crude rate

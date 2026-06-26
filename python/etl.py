@@ -38,13 +38,7 @@ def insert_csv(run_id: int, fp: pathlib.Path, tbl: str) -> None:
             )
 
 
-def insert_metadata(
-    run_id: int,
-    version: str,
-    comments: str,
-    launch: int,
-    horizon: int,
-) -> None:
+def insert_metadata(run_id: int) -> None:
     """Inserts run metadata to the database."""
     with utils.SQL_ENGINE.connect() as connection:
         pd.DataFrame(
@@ -52,11 +46,11 @@ def insert_metadata(
                 "run_id": run_id,
                 "user": getpass.getuser(),
                 "date": pd.Timestamp.now(),
-                "version": version,
-                "comments": comments,
+                "version": utils.VERSION,
+                "comments": utils.COMMENTS,
                 "loaded": 0,
-                "launch": launch,
-                "horizon": horizon,
+                "launch": utils.LAUNCH_YEAR,
+                "horizon": utils.HORIZON_YEAR,
             },
             index=[0],
         ).to_sql(
@@ -68,7 +62,7 @@ def insert_metadata(
         )
 
 
-def run_etl(launch: int, horizon: int, version: str, comments: str) -> None:
+def run_etl() -> None:
     """Runs the ETL process loading data into the database."""
 
     # Load the configuration to get the launch and horizon values
@@ -76,13 +70,7 @@ def run_etl(launch: int, horizon: int, version: str, comments: str) -> None:
     run_id = get_run_id()
 
     logger.info("Loading output files to database as [run_id]: " + str(run_id))
-    insert_metadata(
-        run_id=run_id,
-        version=version,
-        comments=comments,
-        launch=launch,
-        horizon=horizon,
-    )
+    insert_metadata(run_id=run_id)
 
     output_files = {
         "components": utils.OUTPUT_FOLDER / "components.csv",

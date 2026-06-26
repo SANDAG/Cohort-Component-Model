@@ -8,12 +8,7 @@ import pandas as pd
 import python.utils as utils
 
 
-def get_migration_rates(
-    yr: int,
-    launch_yr: int,
-    pop_df: pd.DataFrame,
-    controls: pd.DataFrame | None = None,
-) -> pd.DataFrame:
+def get_migration_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
     """Create migration rates broken down by race, sex, and single year of age.
 
     For each year up to launch, merge the population dataset with the 5-year
@@ -27,19 +22,15 @@ def get_migration_rates(
 
     Args:
         yr: Increment year
-        launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
-        controls (pd.DataFrame | None): Optional migration control totals for post-launch
-            years. If provided, migration rates will be adjusted to match these
-            totals for in/out migrants.
 
     Returns:
         pd.DataFrame: Migration rates broken down by race, sex, and single
             year of age.
     """
     # Migration rates calculated from base year up to the launch year
-    if yr <= launch_yr:
+    if yr <= utils.LAUNCH_YEAR:
         rates = calculate_migration_rates(
             yr=yr,
             pop_df=pop_df,
@@ -51,16 +42,14 @@ def get_migration_rates(
     # TODO: Re-calculating every increment post launch is inefficient
     else:
 
-        if controls is not None:
+        if utils.MIGRATION_CONTROLS is not None:
             rates = calculate_migration_rates(
-                yr=launch_yr,
+                yr=utils.LAUNCH_YEAR,
                 pop_df=pop_df,
                 cap_rates=0.2,
             )
 
-            rates = control_migration_rates(
-                yr=yr, pop_df=pop_df, rates=rates, controls=controls
-            )
+            rates = control_migration_rates(yr=yr, pop_df=pop_df, rates=rates)
 
     return rates
 
@@ -125,18 +114,18 @@ def calculate_migration_rates(
     return df[["race", "sex", "age", "rate_in", "rate_out"]]
 
 
-def check_migration_controls(yr: int, controls: pd.DataFrame) -> pd.DataFrame:
+def check_migration_controls(yr: int) -> pd.DataFrame:
     """Check migration control totals."""
     # Ensure controls DataFrame contains required columns
     required_cols = {"year", "ins", "outs"}
-    if not required_cols.issubset(controls.columns):
+    if not required_cols.issubset(utils.MIGRATION_CONTROLS.columns):
         raise ValueError("Migration controls must contain columns: (year, ins, outs)")
 
     # Check if increment year is provided in control totals and filter
-    if yr not in controls["year"].unique():
+    if yr not in utils.MIGRATION_CONTROLS["year"].unique():
         raise ValueError(f"Increment year {yr} not provided in migration controls")
     else:
-        controls = controls.loc[controls["year"] == yr]
+        controls = utils.MIGRATION_CONTROLS.loc[utils.MIGRATION_CONTROLS["year"] == yr]
 
     # Check control totals are >= 0
     if controls["ins"].sum() < 0 or controls["outs"].sum() < 0:
@@ -149,7 +138,6 @@ def control_migration_rates(
     yr: int,
     pop_df: pd.DataFrame,
     rates: pd.DataFrame,
-    controls: pd.DataFrame,
     cap_rates: float = 0.2,
 ) -> pd.DataFrame:
     """Control migration rates to in/out migration control totals.
@@ -167,7 +155,6 @@ def control_migration_rates(
         yr: Increment year
         pop_df (pd.DataFrame): Population data by race, sex, and age
         rates (pd.DataFrame): Migration rates by race, sex, and age
-        controls (pd.DataFrame): In/out migrant control totals
         cap_rates (float): Maximum allowed migration rate (e.g., 0.2 for 20%)
 
     Returns:
@@ -178,7 +165,7 @@ def control_migration_rates(
         raise ValueError("cap_rates parameter must be between 0 and 1")
 
     # Check the controls DataFrame is valid and return controls for the given year
-    controls = check_migration_controls(yr=yr, controls=controls)
+    controls = check_migration_controls(yr=yr)
 
     # Calculate the total in/out migrants from the rates and population
     # Note this uses the civilian population as opposed to the survived civilian population

@@ -7,12 +7,12 @@ import logging
 import pandas as pd
 import numpy as np
 
+import python.utils as utils
+
 logger = logging.getLogger(__name__)
 
 
-def get_birth_rates(
-    yr: int, launch_yr: int, pop_df: pd.DataFrame, rates_map: dict
-) -> pd.DataFrame:
+def get_birth_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
     """Create birth rates broken down by race and single year of age.
 
     Birth rates are calculated using CDC WONDER Natality births for 5-year age
@@ -29,22 +29,20 @@ def get_birth_rates(
 
     Args:
         yr: Increment year
-        launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
-        rates_map (dict): loaded JSON configuration birth/death rate map
 
     Returns:
         pd.DataFrame: Birth rates broken down by race and single year of age
     """
     # Birth rates calculated from base year up to the launch year
-    if yr <= launch_yr:
-        if str(yr) not in rates_map["births"].keys():
+    if yr <= utils.LAUNCH_YEAR:
+        if str(yr) not in utils.RATES_MAP["births"].keys():
             raise ValueError("No birth rate mapping for: " + str(yr))
 
         births = pd.DataFrame()
         # For each WONDER births file path in the chosen base year
-        for k, v in rates_map["births"][str(yr)].items():
+        for k, v in utils.RATES_MAP["births"][str(yr)].items():
             if v is not None:
                 fp = "data/births/" + str(yr) + "/" + v
 

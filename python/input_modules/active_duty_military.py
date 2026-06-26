@@ -7,7 +7,6 @@ import python.utils as utils
 
 def get_active_duty_military(
     yr: int,
-    launch_yr: int,
     pop_df: pd.DataFrame,
 ) -> pd.DataFrame:
     """Get active-duty military population broken down by race, sex, and
@@ -24,7 +23,6 @@ def get_active_duty_military(
 
     Args:
         yr: Increment year
-        launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
 
@@ -33,7 +31,7 @@ def get_active_duty_military(
             population total broken down by race, sex, and single year of age
     """
     # Active-duty military population set and controlled up to the launch year
-    if yr <= launch_yr:
+    if yr <= utils.LAUNCH_YEAR:
         # Load SQL queries and apply checks to datasets
         with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
@@ -69,7 +67,7 @@ def get_active_duty_military(
 
             # Load DMDC Location Report and apply checks to dataset
             dmdc_location_report = pd.read_csv(
-                utils.DATA_FOLDER / "dmdc_location_report.csv"
+                utils.DATA_FOLDER / "DMDC Website Location Report.csv"
             )
 
             # Must have DMDC Location report for the increment year
@@ -89,7 +87,7 @@ def get_active_duty_military(
         # If increment year is >= 2018
         elif 2018 <= yr:
             # Load SDMAC Report and apply checks to dataset
-            sdmac_report = pd.read_csv(utils.DATA_FOLDER / "sdmac_report.csv")
+            sdmac_report = pd.read_csv(utils.DATA_FOLDER / "SDMAC Report.csv")
 
             # Must have SDMAC report for the increment year
             if yr not in sdmac_report["report"].unique():
