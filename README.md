@@ -15,22 +15,15 @@ comments: "No Comments" # Add comments pertaining to the run
 configurations:  # other configuration files
   rates_map: "rates_map.yml"  # local birth/death rate files mapping
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
-csv:  # locally stored datasets (manually entered)
-  dmdc_location_report: "data/DMDC Website Location Report.csv"  # Department of Defense DMDC Report data
-  sdmac_report: "data/SDMAC Report.csv"  # Military SDMAC Report data
-  migration_controls: null  # optional csv with columns: year,ins,outs. Null keeps default migration-rate logic
+csv:
+  migration_controls: null  # optional csv with columns: (year,ins,outs)
 interval:  # forecast interval (base is assumed from launch)
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
-output:  # output files
-  overwrite: true  # boolean true/false switch to overwrite output files
-  files:  # path and names of output files to write
-    components: "output/components.csv"
-    population: "output/population.csv"
-    rates: "output/rates.csv"
 sql:  # SQL server options
   load_to_database: False # Set as True if output has to be loaded to database
 ```
+
 ### Migration Controls File Format
 If migration controls are provided, the CSV should include one row per year post launch year with ins/outs totals >= 0:
 

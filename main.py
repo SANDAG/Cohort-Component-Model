@@ -36,13 +36,6 @@ for k, v in config["configurations"].items():
     with open(v) as f:
         config["configurations"][k] = yaml.safe_load(f)
 
-# Load csv data sources ----
-for k, v in config["csv"].items():
-    if v is None:
-        config["csv"][k] = None
-    else:
-        config["csv"][k] = pd.read_csv(v)
-
 
 # Initialize base year dataset -----------------------------------------------
 logger.info("Initializing base year")
@@ -70,8 +63,6 @@ for increment in range(base_yr, config["interval"]["horizon"] + 1):
         yr=increment,
         launch_yr=config["interval"]["launch"],
         pop_df=pop_df,
-        dmdc_location_report=config["csv"]["dmdc_location_report"],
-        sdmac_report=config["csv"]["sdmac_report"],
     )
 
     # Calculate rates (rates calculated up to the launch year) ----

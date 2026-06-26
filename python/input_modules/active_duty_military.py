@@ -9,8 +9,6 @@ def get_active_duty_military(
     yr: int,
     launch_yr: int,
     pop_df: pd.DataFrame,
-    dmdc_location_report: pd.DataFrame,
-    sdmac_report: pd.DataFrame,
 ) -> pd.DataFrame:
     """Get active-duty military population broken down by race, sex, and
     single year of age for the increment year. Note the active duty military
@@ -29,10 +27,6 @@ def get_active_duty_military(
         launch_yr: Launch year
         pop_df (pd.DataFrame): Population data broken down by race, sex, and
             single year of age
-        dmdc_location_report (pd.DataFrame): DMDC website location report
-            https://dwp.dmdc.osd.mil/dwp/app/dod-data-reports/workforce-reports
-        sdmac_report (pd.DataFrame): SDMAC Annual EIR data
-            https://sdmac.org/reports/past-sdmac-economic-impact-reports
 
     Returns:
         pd.DataFrame: The total population data with active-duty military
@@ -73,6 +67,11 @@ def get_active_duty_military(
                     if yr not in pums_ca_mil_df["year"].unique():
                         raise ValueError("Increment year not in ACS 5-year PUMS")
 
+            # Load DMDC Location Report and apply checks to dataset
+            dmdc_location_report = pd.read_csv(
+                utils.DATA_FOLDER / "dmdc_location_report.csv"
+            )
+
             # Must have DMDC Location report for the increment year
             if yr not in dmdc_location_report["year"].unique():
                 raise ValueError("Increment year not in DMDC Location Report")
@@ -86,8 +85,12 @@ def get_active_duty_military(
                     ].iloc[0]
                     / pums_ca_mil_df[pums_ca_mil_df["year"] == yr]["pop_ca_mil"].iloc[0]
                 )
+
         # If increment year is >= 2018
         elif 2018 <= yr:
+            # Load SDMAC Report and apply checks to dataset
+            sdmac_report = pd.read_csv(utils.DATA_FOLDER / "sdmac_report.csv")
+
             # Must have SDMAC report for the increment year
             if yr not in sdmac_report["report"].unique():
                 raise ValueError("Increment year not in SDMAC Report dataset")
