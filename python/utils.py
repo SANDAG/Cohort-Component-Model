@@ -94,7 +94,7 @@ RATES_MAP = config["configurations"]["rates_map"]
 CONTROLS = config["configurations"]["controls"]
 
 if config["csv"]["migration_controls"] is not None:
-    MIGRATION_CONTROLS = pd.read_csv(config["csv"]["migration_controls"])
+    MIGRATION_CONTROLS = pd.read_csv(ROOT_FOLDER / config["csv"]["migration_controls"])
 else:
     MIGRATION_CONTROLS = None
 
