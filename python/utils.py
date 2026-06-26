@@ -72,7 +72,7 @@ try:
     with open(ROOT_FOLDER / "config.yml", "r") as file:
         config = yaml.safe_load(file)
     for k, v in config["configurations"].items():
-        with open(v) as configurations_file:
+        with open(ROOT_FOLDER / v, "r") as configurations_file:
             config["configurations"][k] = yaml.safe_load(configurations_file)
 except IOError:
     raise IOError("config.yml does not exist, see README.md")
