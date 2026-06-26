@@ -522,7 +522,7 @@ def parse_not_stated(year: int) -> pd.DataFrame:
                 else:
                     stated.append(df)
 
-            except ValueError, KeyError, IndexError:
+            except (ValueError, KeyError, IndexError):
                 # Skip files that don't match expected format
                 continue
 
