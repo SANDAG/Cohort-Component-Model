@@ -44,7 +44,7 @@ def get_birth_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
         # For each WONDER births file path in the chosen base year
         for k, v in utils.RATES_MAP["births"][str(yr)].items():
             if v is not None:
-                fp = "data/births/" + str(yr) + "/" + v
+                fp = utils.DATA_FOLDER / "births" / str(yr) / v
 
                 # Get WONDER births data
                 wonder_births = (

@@ -9,4 +9,4 @@ interval:
   launch: 2022
   horizon: 2050
 sql:
-  load_to_database: True
+  load_to_database: False

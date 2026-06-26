@@ -653,15 +653,16 @@ def weighted_moving_average(
     return result
 
 
-def wipe_csv_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
-    """Delete all CSV files in a folder and return count deleted."""
+def wipe_output_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
+    """Delete model output CSV files and return count deleted."""
     deleted = 0
-    for file_path in folder.glob("*.csv"):
+    for filename in ["components.csv", "population.csv", "rates.csv"]:
+        file_path = folder / filename
         if file_path.is_file():
             file_path.unlink()
             deleted += 1
 
-    logger.info("Deleted %s CSV file(s) from %s", deleted, folder)
+    logger.info("Deleted %s output file(s) from %s", deleted, folder)
     return deleted
 
 

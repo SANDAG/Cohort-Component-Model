@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 # Remove any existing output files from previous runs ------------------------
-utils.wipe_csv_files(utils.OUTPUT_FOLDER)
+utils.wipe_output_files()
 
 
 # Initialize base year dataset -----------------------------------------------
