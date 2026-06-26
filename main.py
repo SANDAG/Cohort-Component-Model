@@ -22,6 +22,10 @@ from python.input_modules.migration_rates import get_migration_rates
 logger = logging.getLogger(__name__)
 
 
+# Remove any existing output files from previous runs ------------------------
+utils.wipe_csv_files(utils.OUTPUT_FOLDER)
+
+
 # Initialize base year dataset -----------------------------------------------
 logger.info("Initializing base year")
 

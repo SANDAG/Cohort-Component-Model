@@ -653,6 +653,18 @@ def weighted_moving_average(
     return result
 
 
+def wipe_csv_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
+    """Delete all CSV files in a folder and return count deleted."""
+    deleted = 0
+    for file_path in folder.glob("*.csv"):
+        if file_path.is_file():
+            file_path.unlink()
+            deleted += 1
+
+    logger.info("Deleted %s CSV file(s) from %s", deleted, folder)
+    return deleted
+
+
 def write_df(yr: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
     """Write DataFrame for increment year."""
     df = df.sort_values(by=["race", "sex", "age"])
