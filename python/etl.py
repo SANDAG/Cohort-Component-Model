@@ -84,8 +84,7 @@ def run_etl() -> None:
     with utils.SQL_ENGINE.connect() as connection:
         with connection.begin():
             connection.execute(
-                sql.text(f"UPDATE metadata.run SET loaded = 1 WHERE run_id = {run_id}")
+                sql.text("UPDATE metadata.run SET loaded = 1 WHERE run_id = :run_id"),
+                {"run_id": run_id},
             )
-            connection.commit()
-
     logger.info("Output data loaded to database.")
