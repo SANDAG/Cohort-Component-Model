@@ -31,30 +31,22 @@ FIELD_MAP = {
 }
 
 
-def apply_controls(
-    yr: int,
-    launch_yr: int,
-    pop_df: pd.DataFrame,
-    sandag_estimates: dict,
-) -> pd.DataFrame:
+def apply_controls(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
     """Control the calculated population, group quarters, households, and
     household characteristics totals for each increment from the base year
     up to the launch year.
 
     Args:
         yr: Increment year
-        launch_yr: Launch year
         pop_df (pd.DataFrame): Household/Population data by race, sex, and
             single year of age, output from the calculate_population method
-        sandag_estimates (dict): loaded JSON control totals from historical
-            SANDAG Estimates programs
 
     Returns:
         pd.DataFrame: The controlled household/population data
     """
-    if yr <= launch_yr:
+    if yr <= utils.LAUNCH_YEAR:
         # Control column totals to SANDAG Estimates Controls
-        control_values = sandag_estimates[str(launch_yr)][str(yr)]
+        control_values = utils.CONTROLS[str(utils.LAUNCH_YEAR)][str(yr)]
         # For each household/population field
         for k, v in FIELD_MAP.items():
             # If the field is controlled get the control value
@@ -67,14 +59,18 @@ def apply_controls(
                     if v["control"] == "hh":
                         for sub_k, sub_v in FIELD_MAP.items():
                             if sub_v["group"] == "households":
-                                pop_df[sub_v["col"]] = round(pop_df[sub_v["col"]] * scale_pct)
+                                pop_df[sub_v["col"]] = round(
+                                    pop_df[sub_v["col"]] * scale_pct
+                                )
                     # Pass total population scaling to all related fields regardless if they are controlled or not
                     elif v["control"] == "pop":
                         for sub_k, sub_v in FIELD_MAP.items():
                             # Do not pass total population scaling to Military
                             if sub_k != "Military":
                                 if sub_v["group"] == "population":
-                                    pop_df[sub_v["col"]] = round(pop_df[sub_v["col"]] * scale_pct)
+                                    pop_df[sub_v["col"]] = round(
+                                        pop_df[sub_v["col"]] * scale_pct
+                                    )
                     else:
                         pop_df[v["col"]] = round(pop_df[v["col"]] * scale_pct)
                 else:

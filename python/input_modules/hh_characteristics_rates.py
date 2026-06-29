@@ -5,20 +5,13 @@
 import logging
 import numpy as np
 import pandas as pd
-import sqlalchemy as sql
 
 import python.utils as utils
 
 logger = logging.getLogger(__name__)
 
 
-def get_hh_characteristic_rates(
-    yr: int,
-    launch_yr: int,
-    pums_persons: str,
-    sandag_estimates: dict,
-    engine: sql.Engine,
-) -> pd.DataFrame:
+def get_hh_characteristic_rates(yr: int) -> pd.DataFrame:
     """Generate household characteristics rates broken down by race, sex, and
     single year of age.
 
@@ -35,21 +28,16 @@ def get_hh_characteristic_rates(
 
     Args:
         yr: Increment year
-        launch_yr: Launch year
-        pums_persons (str): 5-year ACS PUMS persons
-        sandag_estimates (dict): loaded JSON control totals from historical
-            SANDAG Estimates programs
-        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Household characteristics rates broken down by race,
             sex, and single year of age
     """
-    if yr <= launch_yr:
+    if yr <= utils.LAUNCH_YEAR:
         # Load SQL queries and apply checks to datasets
-        with engine.connect() as connection:
+        with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
-            with open(pums_persons, "r") as query:
+            with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
                 pums_persons_df = pd.read_sql_query(
                     query.read().format(yr=yr), connection
                 )
@@ -58,7 +46,7 @@ def get_hh_characteristic_rates(
 
         # Get SANDAG Estimates household controls for the increment
         # Year from the vintage associated with the launch year
-        controls = sandag_estimates[str(launch_yr)][str(yr)]["households"]
+        controls = utils.CONTROLS[str(utils.LAUNCH_YEAR)][str(yr)]["households"]
 
         # Create mapping of household attributes to ACS PUMS columns and SANDAG Estimates
         # Include whether attribute is controlled and whether to create crude rate

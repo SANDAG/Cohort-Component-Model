@@ -1,15 +1,20 @@
-""" This module runs the ETL process for cohort component model."""
+"""This module runs the ETL process for cohort component model."""
 
 import getpass
 import logging
+import pathlib
+
 import pandas as pd
 import sqlalchemy as sql
 
+import python.utils as utils
+
 logger = logging.getLogger(__name__)
-    
-def get_run_id(engine: sql.Engine) -> int:
+
+
+def get_run_id() -> int:
     """Get the next available run identifier from the database."""
-    with engine.connect() as connection:
+    with utils.SQL_ENGINE.connect() as connection:
         result = connection.execute(
             sql.text("SELECT COALESCE(MAX([run_id]), 0) AS [id] FROM [metadata].[run]")
         ).scalar()
@@ -17,12 +22,12 @@ def get_run_id(engine: sql.Engine) -> int:
         return result + 1 if result else 1
 
 
-def insert_csv(engine: sql.Engine, run_id: int, fp: str, tbl: str) -> None:
+def insert_csv(run_id: int, fp: pathlib.Path, tbl: str) -> None:
     """Insert output csv files into database."""
     df = pd.read_csv(fp)
     df["run_id"] = run_id
 
-    with engine.connect() as connection:
+    with utils.SQL_ENGINE.connect() as connection:
         with connection.begin():
             df.to_sql(
                 name=tbl,
@@ -33,26 +38,19 @@ def insert_csv(engine: sql.Engine, run_id: int, fp: str, tbl: str) -> None:
             )
 
 
-def insert_metadata(
-    engine: sql.Engine,
-    run_id: int,
-    version: str,
-    comments: str,
-    launch: int,
-    horizon: int
-) -> None:
+def insert_metadata(run_id: int) -> None:
     """Inserts run metadata to the database."""
-    with engine.connect() as connection:
+    with utils.SQL_ENGINE.connect() as connection:
         pd.DataFrame(
             {
                 "run_id": run_id,
                 "user": getpass.getuser(),
                 "date": pd.Timestamp.now(),
-                "version": version,
-                "comments": comments,
+                "version": utils.VERSION,
+                "comments": utils.COMMENTS,
                 "loaded": 0,
-                "launch": launch,
-                "horizon": horizon,
+                "launch": utils.LAUNCH_YEAR,
+                "horizon": utils.HORIZON_YEAR,
             },
             index=[0],
         ).to_sql(
@@ -64,30 +62,29 @@ def insert_metadata(
         )
 
 
-def run_etl(engine: sql.Engine, launch: int, horizon: int, version: str, comments: str) -> None:
+def run_etl() -> None:
     """Runs the ETL process loading data into the database."""
-    
+
     # Load the configuration to get the launch and horizon values
 
-    run_id = get_run_id(engine=engine)
+    run_id = get_run_id()
 
     logger.info("Loading output files to database as [run_id]: " + str(run_id))
-    insert_metadata(engine=engine, run_id=run_id, version=version, comments=comments, launch=launch, horizon=horizon)
+    insert_metadata(run_id=run_id)
 
     output_files = {
-        "components": "output/components.csv",
-        "population": "output/population.csv",
-        "rates": "output/rates.csv",
+        "components": utils.OUTPUT_FOLDER / "components.csv",
+        "population": utils.OUTPUT_FOLDER / "population.csv",
+        "rates": utils.OUTPUT_FOLDER / "rates.csv",
     }
 
     for k, v in output_files.items():
-        insert_csv(engine=engine, run_id=run_id, fp=v, tbl=k)
+        insert_csv(run_id=run_id, fp=v, tbl=k)
 
-    with engine.connect() as connection:
+    with utils.SQL_ENGINE.connect() as connection:
         with connection.begin():
             connection.execute(
-                sql.text(f"UPDATE metadata.run SET loaded = 1 WHERE run_id = {run_id}")
+                sql.text("UPDATE metadata.run SET loaded = 1 WHERE run_id = :run_id"),
+                {"run_id": run_id},
             )
-            connection.commit()
-
     logger.info("Output data loaded to database.")

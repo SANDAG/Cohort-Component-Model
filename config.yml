@@ -4,25 +4,9 @@ configurations:
   rates_map: "rates_map.yml"
   controls: "sandag_estimates.yml"
 csv:
-  dmdc_location_report: "data/DMDC Website Location Report.csv"
-  sdmac_report: "data/SDMAC Report.csv"
-  ss_life_table: "data/Social Security Actuarial Life Table.csv"
   migration_controls: null
 interval:
   launch: 2022
   horizon: 2050
-output:
-  overwrite: true
-  files:
-    components: "output/components.csv"
-    population: "output/population.csv"
-    rates: "output/rates.csv"
 sql:
-  queries:
-    census_p5: "sql/census_p5.sql"
-    dof_estimates: "sql/dof_estimates.sql"
-    dof_projections: "sql/dof_projections.sql"
-    pums_ca_mil: "sql/pums_ca_mil.sql"
-    pums_migrants: "sql/pums_migrants.sql"
-    pums_persons: "sql/pums_persons.sql" 
   load_to_database: False

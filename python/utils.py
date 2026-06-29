@@ -1,13 +1,14 @@
 """This module contains generic utilities."""
 
-import pathlib
-
+import logging
 import math
+import os.path
+import pathlib
+import yaml
+
 import numpy as np
 import pandas as pd
 import sqlalchemy as sql
-import yaml
-
 
 #########
 # PATHS #
@@ -15,6 +16,36 @@ import yaml
 
 # Store project root folder
 ROOT_FOLDER = pathlib.Path(__file__).parent.resolve().parent
+DATA_FOLDER = ROOT_FOLDER / "data"
+OUTPUT_FOLDER = ROOT_FOLDER / "output"
+SQL_FOLDER = ROOT_FOLDER / "sql"
+
+
+###########
+# LOGGING #
+###########
+
+# Create a console handler
+_console_handler = logging.StreamHandler()
+_console_handler.setLevel(logging.INFO)
+
+# Create a file handler
+_file_handler = logging.FileHandler(
+    filename=ROOT_FOLDER / "log.txt", mode="w", encoding="utf-8"
+)
+_file_handler.setLevel(logging.DEBUG)
+
+# Set up root logger
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[_console_handler, _file_handler],
+)
+
+# Create logger for this module
+logger = logging.getLogger(__name__)
+logger.info("Initialize log file")
 
 
 #####################
@@ -32,6 +63,42 @@ except IOError:
 SQL_ENGINE = sql.create_engine(
     "mssql+pymssql://" + _secrets["sql"]["server"] + "/" + _secrets["sql"]["database"]
 )
+
+
+#########################
+# RUNTIME CONFIGURATION #
+#########################
+try:
+    with open(ROOT_FOLDER / "config.yml", "r") as file:
+        config = yaml.safe_load(file)
+    for k, v in config["configurations"].items():
+        with open(ROOT_FOLDER / v, "r") as configurations_file:
+            config["configurations"][k] = yaml.safe_load(configurations_file)
+except IOError:
+    raise IOError("config.yml does not exist, see README.md")
+
+# TODO: Add input configuration parser
+
+# Get data from the parsed and validated configuration file
+VERSION = config["version"]
+COMMENTS = config["comments"]
+
+LAUNCH_YEAR = config["interval"]["launch"]
+if 2020 <= LAUNCH_YEAR < 2030:
+    BASE_YEAR = 2020
+else:
+    raise ValueError("Invalid launch year provided. Must be between 2020 and 2029.")
+HORIZON_YEAR = config["interval"]["horizon"]
+
+RATES_MAP = config["configurations"]["rates_map"]
+CONTROLS = config["configurations"]["controls"]
+
+if config["csv"]["migration_controls"] is not None:
+    MIGRATION_CONTROLS = pd.read_csv(ROOT_FOLDER / config["csv"]["migration_controls"])
+else:
+    MIGRATION_CONTROLS = None
+
+LOAD_TO_DATABASE = config["sql"]["load_to_database"]
 
 
 ##############################
@@ -584,3 +651,41 @@ def weighted_moving_average(
         result.append(cumsum)
 
     return result
+
+
+def wipe_output_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
+    """Delete model output CSV files and return count deleted."""
+    deleted = 0
+    for filename in ["components.csv", "population.csv", "rates.csv"]:
+        file_path = folder / filename
+        if file_path.is_file():
+            file_path.unlink()
+            deleted += 1
+
+    logger.info("Deleted %s output file(s) from %s", deleted, folder)
+    return deleted
+
+
+def write_df(yr: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
+    """Write DataFrame for increment year."""
+    df = df.sort_values(by=["race", "sex", "age"])
+    df.insert(0, "year", yr)
+
+    if os.path.isfile(fp):
+        df.to_csv(fp, mode="a", index=False, header=False)
+    else:
+        df.to_csv(fp, mode="w", index=False)
+
+
+def write_rates(yr: int, rates: dict, fp: pathlib.Path) -> None:
+    """Write calculated rates for increment year."""
+    output = None
+    for rate in rates:
+        if output is None:
+            output = rates[rate]
+        else:
+            output = output.merge(
+                right=rates[rate], how="outer", on=["race", "sex", "age"]
+            )
+
+    write_df(yr=yr, df=output, fp=fp)

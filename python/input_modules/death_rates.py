@@ -4,6 +4,8 @@ import scipy
 import numpy as np
 import pandas as pd
 
+import python.utils as utils
+
 logger = logging.getLogger(__name__)
 
 
@@ -935,7 +937,6 @@ def process_life_rates(df: pd.DataFrame) -> pd.DataFrame:
 
 def get_death_rates(
     yr: int,
-    launch_yr: int,
     pop_df: pd.DataFrame,
     smooth_s: int = 5,
     smooth_k: int = 2,
@@ -963,7 +964,6 @@ def get_death_rates(
 
     Args:
         yr: Increment year.
-        launch_yr: Launch year.
         pop_df (pd.DataFrame): Population data for the year.
         smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
@@ -973,7 +973,7 @@ def get_death_rates(
             of age.
     """
     # Death rates calculated from year up to the launch year
-    if yr <= launch_yr:
+    if yr <= utils.LAUNCH_YEAR:
         # Load and process CDC WONDER mortality data
         # Determine which year's data to use (2021 uses 2020 data)
         cdc_yr = 2020 if yr == 2021 else yr

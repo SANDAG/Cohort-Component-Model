@@ -1,25 +1,15 @@
 """Generate base year population by race, sex, and single year of age."""
 
-# TODO: Add 2010 base year generation using 2010 decennial Census.
-# TODO: Update 2020 base year methodology with 2020 decennial Census release.
-
 import logging
 import numpy as np
 import pandas as pd
-import sqlalchemy as sql
 
+import python.utils as utils
 
 logger = logging.getLogger(__name__)
 
 
-def get_base_yr_2020(
-    launch_yr: int,
-    pums_persons: str,
-    dof_estimates: str,
-    dof_projections: str,
-    census_p5: str,
-    engine: sql.Engine,
-) -> pd.DataFrame:
+def get_base_yr_2020() -> pd.DataFrame:
     """Generate base year 2020 population data broken down by race, sex, and
     single year of age for launch years from 2020-2029. Due to issues with the
     2020 Census a blended approach is used instead of just using the decennial
@@ -32,22 +22,14 @@ def get_base_yr_2020(
     Estimates for 2020 using the CA DOF Population Estimates vintage from the
     chosen launch year.
 
-    Args:
-        launch_yr (int): Launch year
-        pums_persons (str): 5-year ACS PUMS persons 2016-2020 query file
-        dof_estimates (str): CA DOF Population Estimates query file
-        dof_projections (str): CA DOF Population Projections query file
-        census_p5 (str): Census P5 table for 2020 query file
-        engine (sql.Engine): SQLAlchemy MSSQL connection engine
-
     Returns:
         pd.Dataframe: Base year 2020 population data broken down by race,
             sex, and single year of age
     """
     # Load SQL queries and apply checks to datasets
-    with engine.connect() as connection:
+    with utils.SQL_ENGINE.connect() as connection:
         # Load ACS PUMS persons
-        with open(pums_persons, "r") as query:
+        with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
             pums_persons_df = pd.read_sql_query(
                 query.read().format(yr=2020), connection
             )
@@ -55,24 +37,30 @@ def get_base_yr_2020(
                 raise ValueError("2020: not in ACS 5-year PUMS")
 
         # Load DOF Estimates
-        with open(dof_estimates, "r") as query:
+        with open(utils.SQL_FOLDER / "dof_estimates.sql", "r") as query:
             dof_estimates_df = pd.read_sql_query(query.read(), connection)
-            if launch_yr not in dof_estimates_df["vintage"].astype(int).unique():
+            if (
+                utils.LAUNCH_YEAR
+                not in dof_estimates_df["vintage"].astype(int).unique()
+            ):
                 raise ValueError("Launch year not in DOF Estimates")
 
         # Load DOF Projections
-        with open(dof_projections, "r") as query:
+        with open(utils.SQL_FOLDER / "dof_projections.sql", "r") as query:
             dof_projections_df = pd.read_sql_query(query.read(), connection)
-            dof_projections_yr = launch_yr
+            dof_projections_yr = utils.LAUNCH_YEAR
             if 2020 not in dof_projections_df["year"].unique():
                 raise ValueError("2020: not in DOF Projections")
             # If projections have not been released for the launch year
             # Use the most recent projection from the DOF and warn the user
-            elif launch_yr not in dof_projections_df["vintage"].astype(int).unique():
+            elif (
+                utils.LAUNCH_YEAR
+                not in dof_projections_df["vintage"].astype(int).unique()
+            ):
 
                 dof_projections_yr = max(
                     dof_projections_df["vintage"][
-                        dof_projections_df["vintage"] <= launch_yr
+                        dof_projections_df["vintage"] <= utils.LAUNCH_YEAR
                     ].astype(int)
                 )
 
@@ -83,7 +71,7 @@ def get_base_yr_2020(
                 )
 
         # Load 2020 Census P5 table
-        with open(census_p5, "r") as query:
+        with open(utils.SQL_FOLDER / "census_p5.sql", "r") as query:
             census_p5_df = pd.read_sql_query(query.read(), connection)
 
     # Create a blended estimate of the total population distribution for 2020
@@ -125,7 +113,7 @@ def get_base_yr_2020(
     # From the vintage associated with the chosen launch year
     scale_pop_pct = (
         dof_estimates_df[
-            (dof_estimates_df["vintage"].astype(int) == launch_yr)
+            (dof_estimates_df["vintage"].astype(int) == utils.LAUNCH_YEAR)
             & (dof_estimates_df["year"] == 2020)
         ]["pop"].iloc[0]
         / df["pop_blended"].sum()

@@ -4,20 +4,13 @@
 
 import logging
 import pandas as pd
-import sqlalchemy as sql
 
 import python.utils as utils
 
 logger = logging.getLogger(__name__)
 
 
-def get_formation_rates(
-    yr: int,
-    launch_yr: int,
-    pums_persons: str,
-    sandag_estimates: dict,
-    engine: sql.Engine,
-) -> pd.DataFrame:
+def get_formation_rates(yr: int) -> pd.DataFrame:
     """Generate group quarters and household formation rates broken
     down by race, sex, and single year of age.
 
@@ -35,21 +28,16 @@ def get_formation_rates(
 
     Args:
         yr: Increment year
-        launch_yr: Launch year
-        pums_persons (str): 5-year ACS PUMS persons query file
-        sandag_estimates (dict): loaded JSON control totals from historical
-            SANDAG Estimates programs
-        engine (sql.Engine): SQLAlchemy MSSQL connection engine
 
     Returns:
         pd.DataFrame: Group quarters and household formation rates broken down
             by race, sex, and single year of age
     """
-    if yr <= launch_yr:
+    if yr <= utils.LAUNCH_YEAR:
         # Load SQL queries and apply checks to datasets
-        with engine.connect() as connection:
+        with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
-            with open(pums_persons, "r") as query:
+            with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
                 pums_persons_df = pd.read_sql_query(
                     query.read().format(yr=yr), connection
                 )
@@ -66,7 +54,7 @@ def get_formation_rates(
         }
 
         for k, v in control_map.items():
-            control = sandag_estimates[str(launch_yr)][str(yr)][k][v["control"]]
+            control = utils.CONTROLS[str(utils.LAUNCH_YEAR)][str(yr)][k][v["control"]]
             if control is not None:
                 scale_pct = control / pums_persons_df[v["col"]].sum()
                 pums_persons_df[v["col"]] = pums_persons_df[v["col"]] * scale_pct
