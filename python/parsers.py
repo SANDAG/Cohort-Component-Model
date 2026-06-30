@@ -164,8 +164,14 @@ class InputParser:
         migration_controls_fp = self._config["csv"].get("migration_controls")
         if migration_controls_fp is None:
             return None
+
+        migration_controls_path = pathlib.Path(migration_controls_fp)
+        if not migration_controls_path.is_absolute():
+            migration_controls_path = (
+                pathlib.Path(__file__).resolve().parent.parent / migration_controls_path
+            )
         try:
-            with open(migration_controls_fp, "r") as f:
+            with open(migration_controls_path, "r") as f:
                 migration_controls = pd.read_csv(f)
         except FileNotFoundError:
             raise FileNotFoundError(
