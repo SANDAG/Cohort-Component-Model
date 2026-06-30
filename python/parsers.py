@@ -146,8 +146,11 @@ class InputParser:
         """Parse the controls mapping from the configuration file."""
         # Check the controls mapping file exists and is a valid YAML file
         controls_fp = self._config["configurations"]["controls"]
+        controls_path = pathlib.Path(controls_fp)
+        if not controls_path.is_absolute():
+            controls_path = pathlib.Path(__file__).resolve().parent.parent / controls_path
         try:
-            with open(controls_fp, "r") as f:
+            with open(controls_path, "r") as f:
                 controls = yaml.safe_load(f)
         except FileNotFoundError:
             raise FileNotFoundError(f"Controls file not found: {controls_fp}")
