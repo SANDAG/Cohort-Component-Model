@@ -10,6 +10,8 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 
+import python.parsers as parsers
+
 #########
 # PATHS #
 #########
@@ -68,37 +70,36 @@ SQL_ENGINE = sql.create_engine(
 #########################
 # RUNTIME CONFIGURATION #
 #########################
+
+# Load configuration YAML file
 try:
     with open(ROOT_FOLDER / "config.yml", "r") as file:
         config = yaml.safe_load(file)
-    for k, v in config["configurations"].items():
-        with open(ROOT_FOLDER / v, "r") as configurations_file:
-            config["configurations"][k] = yaml.safe_load(configurations_file)
 except IOError:
     raise IOError("config.yml does not exist, see README.md")
 
-# TODO: Add input configuration parser
+# Initialize input parser
+# Parse the configuration file and validate its contents
+input_parser = parsers.InputParser(config=config)
+input_parser.parse_config()
 
 # Get data from the parsed and validated configuration file
-VERSION = config["version"]
-COMMENTS = config["comments"]
+BASE_YEAR = input_parser.base_year
+LAUNCH_YEAR = input_parser.launch_year
+HORIZON_YEAR = input_parser.horizon_year
+VERSION = input_parser.version
+COMMENTS = input_parser.comments
+RATES_MAP = input_parser.rates_map
+CONTROLS = input_parser.controls
+MIGRATION_CONTROLS = input_parser.migration_controls
+LOAD_TO_DATABASE = input_parser.load_to_database
 
-LAUNCH_YEAR = config["interval"]["launch"]
-if 2020 <= LAUNCH_YEAR < 2030:
-    BASE_YEAR = 2020
-else:
-    raise ValueError("Invalid launch year provided. Must be between 2020 and 2029.")
-HORIZON_YEAR = config["interval"]["horizon"]
+logger.info(
+    f"Runtime configuration loaded: launch_year={LAUNCH_YEAR}, horizon_year={HORIZON_YEAR}"
+)
 
-RATES_MAP = config["configurations"]["rates_map"]
-CONTROLS = config["configurations"]["controls"]
-
-if config["csv"]["migration_controls"] is not None:
-    MIGRATION_CONTROLS = pd.read_csv(ROOT_FOLDER / config["csv"]["migration_controls"])
-else:
-    MIGRATION_CONTROLS = None
-
-LOAD_TO_DATABASE = config["sql"]["load_to_database"]
+if MIGRATION_CONTROLS is not None:
+    logger.info("Migration controls loaded from configuration file")
 
 
 ##############################
