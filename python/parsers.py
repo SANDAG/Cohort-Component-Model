@@ -1,4 +1,5 @@
 import cerberus
+import pathlib
 import yaml
 
 import pandas as pd
@@ -132,7 +133,9 @@ class InputParser:
         rates_map_fp = self._config["configurations"]["rates_map"]
         rates_map_path = pathlib.Path(rates_map_fp)
         if not rates_map_path.is_absolute():
-            rates_map_path = pathlib.Path(__file__).resolve().parent.parent / rates_map_path
+            rates_map_path = (
+                pathlib.Path(__file__).resolve().parent.parent / rates_map_path
+            )
         try:
             with open(rates_map_path, "r") as f:
                 rates_map = yaml.safe_load(f)
@@ -151,7 +154,9 @@ class InputParser:
         controls_fp = self._config["configurations"]["controls"]
         controls_path = pathlib.Path(controls_fp)
         if not controls_path.is_absolute():
-            controls_path = pathlib.Path(__file__).resolve().parent.parent / controls_path
+            controls_path = (
+                pathlib.Path(__file__).resolve().parent.parent / controls_path
+            )
         try:
             with open(controls_path, "r") as f:
                 controls = yaml.safe_load(f)
