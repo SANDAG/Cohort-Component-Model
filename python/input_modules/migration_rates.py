@@ -114,26 +114,6 @@ def calculate_migration_rates(
     return df[["race", "sex", "age", "rate_in", "rate_out"]]
 
 
-def check_migration_controls(yr: int) -> pd.DataFrame:
-    """Check migration control totals."""
-    # Ensure controls DataFrame contains required columns
-    required_cols = {"year", "ins", "outs"}
-    if not required_cols.issubset(utils.MIGRATION_CONTROLS.columns):
-        raise ValueError("Migration controls must contain columns: (year, ins, outs)")
-
-    # Check if increment year is provided in control totals and filter
-    if yr not in utils.MIGRATION_CONTROLS["year"].unique():
-        raise ValueError(f"Increment year {yr} not provided in migration controls")
-    else:
-        controls = utils.MIGRATION_CONTROLS.loc[utils.MIGRATION_CONTROLS["year"] == yr]
-
-    # Check control totals are >= 0
-    if controls["ins"].sum() < 0 or controls["outs"].sum() < 0:
-        raise ValueError(f"Migration control totals for increment year {yr} are <0")
-
-    return controls
-
-
 def control_migration_rates(
     yr: int,
     pop_df: pd.DataFrame,
@@ -165,7 +145,7 @@ def control_migration_rates(
         raise ValueError("cap_rates parameter must be between 0 and 1")
 
     # Check the controls DataFrame is valid and return controls for the given year
-    controls = check_migration_controls(yr=yr)
+    controls = utils.MIGRATION_CONTROLS.loc[utils.MIGRATION_CONTROLS["year"] == yr]
 
     # Calculate the total in/out migrants from the rates and population
     # Note this uses the civilian population as opposed to the survived civilian population
