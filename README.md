@@ -10,7 +10,7 @@ Set the configuration file **config.yml** parameters specific to the model run o
 ## Configuration File Settings
 *Note that the configuration file contains datasets stored on a SQL server instance accessed at runtime through queries. It is possible to provide query results as local datasets and migrate the SQL datasets to the **csv** section of the configuration file to remove the dependency on the SQL instance.*
 ```yaml
-version: "v0.0.1"
+version: "0.0.0-dev"
 comments: "No Comments" # Add comments pertaining to the run
 configurations:  # other configuration files
   rates_map: "rates_map.yml"  # local birth/death rate files mapping
