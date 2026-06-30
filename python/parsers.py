@@ -130,8 +130,11 @@ class InputParser:
         """Parse the rates mapping from the configuration file."""
         # Check the rates mapping file exists and is a valid YAML file
         rates_map_fp = self._config["configurations"]["rates_map"]
+        rates_map_path = pathlib.Path(rates_map_fp)
+        if not rates_map_path.is_absolute():
+            rates_map_path = pathlib.Path(__file__).resolve().parent.parent / rates_map_path
         try:
-            with open(rates_map_fp, "r") as f:
+            with open(rates_map_path, "r") as f:
                 rates_map = yaml.safe_load(f)
         except FileNotFoundError:
             raise FileNotFoundError(f"Rates map file not found: {rates_map_fp}")
