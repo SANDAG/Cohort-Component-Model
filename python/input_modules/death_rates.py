@@ -403,7 +403,6 @@ def get_death_rates(
 
     # Use the latest available year from UNDESA data
     max_undesa_year = undesa_rates["year"].max()
-    undesa_yr = min(cdc_yr, max_undesa_year)
     if cdc_yr > max_undesa_year:
         logger.warning(
             f"UN DESA data unavailable for {cdc_yr}. Using {max_undesa_year} data for "
