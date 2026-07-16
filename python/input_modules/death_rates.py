@@ -12,15 +12,10 @@ logger = logging.getLogger(__name__)
 def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     """Load CDC WONDER mortality file from SQL and transform into a standardized DataFrame.
 
-    This function performs several key transformations to prepare the CDC WONDER 
-    mortality data for analysis:
-    - It locates the number of not stated deaths versus stated deaths for a specific 
-      year, separated by geography and sex, then calculates an inflation factor.
-    - Creates "Native Hawaiian or Other Pacific Islander alone" and "Two or More Races" 
-      from missing race records.
-    - Removes "Not Stated" records from the dataset.
-    - For the 2018+ product, replaces San Diego County population with CCM population to
-      fill in missing population values for the county.
+    This function loads mortality data from SQL and replaces San Diego County population
+    with CCM population for the 2018+ product to fill in missing population values for 
+    the county, and then inflates deaths using the inflation factor calculated from the 
+    number of "Not Stated" deaths.
 
     Args:
         pop_df (pd.DataFrame): Population DataFrame to merge with CDC WONDER data.
@@ -32,116 +27,31 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
 
     with utils.SQL_ENGINE.connect() as con:
         # Load CDC WONDER data from database for the specific year only
-        with open(utils.ROOT_FOLDER / "sql" / "cdc_wonder_mortality.sql") as file:
+        with open(utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality.sql") as file:
+            sql_query = file.read()
+            # Replace the year parameter in the SQL query
+            sql_query = sql_query.replace("DECLARE @year INTEGER;", f"DECLARE @year INTEGER = {year};")
             cdc_wonder = pd.read_sql_query(
+                sql=sql_query,
+                con=con,
+            )
+            # Convert age to integer type
+            cdc_wonder["age"] = cdc_wonder["age"].astype(float)
+            print("CDC WONDER mortality data loaded from database:")
+        # Load inflation factors
+        with open(utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality_inflation.sql") as file:
+            inflation_factor = pd.read_sql_query(
                 sql=file.read(),
                 con=con,
             )
-            print("CDC WONDER mortality data loaded from database:")
-    
-    # Filter to specific year BEFORE calculating inflation factor
-    cdc_wonder = cdc_wonder[cdc_wonder["year"] == year]
-
-    cdc_wonder = cdc_wonder.assign(
-        # Convert sex to M/F early to match original code convention
-        sex=lambda x: x["sex"].replace({"Female": "F", "Male": "M"}),
-        # Files with race="All" & hispanic="Hispanic or Latino" represent Hispanic data
-        race=lambda x: np.where(
-            x["hispanic_origin"] == "Hispanic or Latino",
-            "Hispanic",
-            x["race"]
-        ),
-        # Convert 2022+ San Diego County 5-year average deaths to annual deaths
-        # Population for 2022+ county level is suppressed and will be replaced
-        # with yearly CCM population estimates which require annual death counts to
-        # calculate rates
-        deaths=lambda x: pd.to_numeric(x["deaths"], errors="coerce") / np.where(
-            (x["year"] >= 2022) & (x["location"] == "San Diego County"),
-            5,
-            1
-        ),
-    ).replace(
-            {
-                "Asian": "Asian alone",
-                "Asian or Pacific Islander": "Asian alone",
-                "Black or African American": "Black or African American alone",
-                "American Indian or Alaska Native": "American Indian or Alaska Native "
-                "alone",
-                "More than one race": "Two or More Races",
-                "White": "White alone",
-                "Native Hawaiian or Other Pacific Islander": "Native Hawaiian or Other "
-                "Pacific Islander alone",
-                "85+": 85
-            }
-    )
-    
-    # Separate not stated and stated records
-    ns = (
-        cdc_wonder[(cdc_wonder["age"] == "Not Stated") | (cdc_wonder["hispanic_origin"] 
-                                                          == "Not Stated")]
-        .groupby(["location", "sex"], as_index=False)["deaths"]
-        .sum()
-    )
-
-    stated = (
-        cdc_wonder[(cdc_wonder["age"] == "All Stated Ages")]
-        .groupby(["location", "sex"], as_index=False)["deaths"]
-        .sum()
-    )
-
-    # Merge and create inflation factor
-    inflation_factor = pd.merge(
-        ns,
-        stated,
-        on=["location", "sex"],
-        suffixes=("_not_stated", "_stated"),
-    ).assign(
-        inflation_factor=lambda x: 1 + (x["deaths_not_stated"] / x["deaths_stated"])
-    )[
-        ["location", "sex", "inflation_factor"]
-    ]
-
-    # Remove "Not Stated" records 
-    cdc_wonder = cdc_wonder[
-        (cdc_wonder["age"] != "Not Stated") &
-        (cdc_wonder["age"] != "All Stated Ages") &
-        (cdc_wonder["hispanic_origin"] != "Not Stated") 
-    ].reset_index(drop=True)
-
-    # Convert age to numeric after filtering out "Not Stated"
-    cdc_wonder["age"] = pd.to_numeric(cdc_wonder["age"])
-
-    # Duplicate 'All Races' records into NHPI and MOR for years <= 2020 only
-    # For years >= 2022, actual race-specific files with sufficient data exist
-    # Note: Records where race is "All Races" both represent aggregate data
-    all_races = cdc_wonder[cdc_wonder["race"] == "All Races"]
-    cdc_wonder = cdc_wonder[cdc_wonder["race"].notnull() & (cdc_wonder["race"] != 
-                                                            "All Races")]
-
-    # Only duplicate if THIS YEAR is <= 2020
-    if year <= 2020:
-        result = pd.concat(
-            [
-                cdc_wonder,
-                all_races.assign(
-                    race="Native Hawaiian or Other Pacific Islander alone"
-                ),
-                all_races.assign(race="Two or More Races"),
-            ],
-            ignore_index=True,
-        ) 
-    else:
-        result = cdc_wonder
-    
-    # Remove "All Races" category after using it to create NHPI and Two or More Races
-    result = result[result["race"] != "All Races"].reset_index(drop=True)
+            print("CDC WONDER mortality inflation factors loaded from database:")
 
     # For the 2018+ product, merge SD County deaths with CCM population
-    if (result["product"] == "2018+").any() and pop_df is not None:
+    if (cdc_wonder["product"] == "2018+").any() and pop_df is not None:
 
         # Separate SYA (ages 0-84) and TYA (age 85) records
-        sya_records = result[result["age"] < 85].copy()
-        tya_records = result[result["age"] == 85].copy()
+        sya_records = cdc_wonder[cdc_wonder["age"] < 85].copy()
+        tya_records = cdc_wonder[cdc_wonder["age"] == 85].copy()
         
         # For SYA records (ages 0-84), use direct age match
         if len(sya_records) > 0:
@@ -179,11 +89,11 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
             )
         
         # Combine back together
-        result = pd.concat([sya_records, tya_records], ignore_index=True)
-
+        cdc_wonder = pd.concat([sya_records, tya_records], ignore_index=True)
+    
     # Inflate deaths and calculate rates for all ages
     final = (
-        pd.merge(result, inflation_factor, on=["location", "sex"])
+        pd.merge(cdc_wonder, inflation_factor, on=["location", "sex"])
         .assign(
             deaths=lambda x: x["deaths"] * x["inflation_factor"],
             rates=lambda x: np.where(
@@ -481,24 +391,15 @@ def get_death_rates(
 
     # Load UNDESA data for ages 85-99
     with utils.SQL_ENGINE.connect() as con:
-        with open(utils.ROOT_FOLDER / "sql" / "undesa_survivors.sql") as file:
-            undesa_data = pd.read_sql_query(
-                sql=file.read(),
+        with open(utils.ROOT_FOLDER / "sql" / "mortality" / "undesa_survivors.sql") as file:
+            sql_query = file.read()
+            # Replace the year parameter in the SQL query
+            sql_query = sql_query.replace("DECLARE @year INTEGER;", f"DECLARE @year INTEGER = {cdc_yr};")
+            undesa_rates = pd.read_sql_query(
+                sql=sql_query,
                 con=con,
-            ).loc[lambda df: df["year"] >= 1999].assign(
-                sex=lambda x: x["sex"].replace({"Female": "F", "Male": "M"})
             )
-    
-    # Convert age to numeric and sort
-    undesa_data = (
-        undesa_data
-        .assign(age=lambda x: x["age"].replace("100+", "100").astype("int64"))
-        .sort_values(["year", "sex", "age"])
-        .reset_index(drop=True)
-    )
-
-    # Process UNDESA data for ages 85-99
-    undesa_rates = process_life_rates(undesa_data)
+            print("UN DESA loaded from database:")
 
     # Use the latest available year from UNDESA data
     max_undesa_year = undesa_rates["year"].max()
@@ -508,9 +409,6 @@ def get_death_rates(
             f"UN DESA data unavailable for {cdc_yr}. Using {max_undesa_year} data for "
             f"ages 85-99."
         )
-    undesa_rates = undesa_rates[undesa_rates["year"] == undesa_yr][
-        ["sex", "age", "rates", "deaths", "survivors"]
-    ]
 
     # Expand UNDESA rates to include all race categories
     # UN DESA life table doesn't have race breakdown, so apply same rates to all
