@@ -63,9 +63,12 @@ except IOError:
 
 # Create SQLAlchemy engine(s)
 SQL_ENGINE = sql.create_engine(
-    "mssql+pymssql://" + _secrets["sql"]["server"] + "/" + _secrets["sql"]["database"]
+    "mssql+pyodbc://@" + _secrets["sql"]["server"] + "/" + _secrets["sql"]["database"] 
+    + "?trusted_connection=yes"
+        + "&driver=ODBC Driver 18 for SQL Server"
+        + "&TrustServerCertificate=yes",
+        fast_executemany=True,
 )
-
 
 #########################
 # RUNTIME CONFIGURATION #
