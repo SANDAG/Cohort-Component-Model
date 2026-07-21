@@ -1,6 +1,6 @@
 -- Get persons and household characteristics for San Diego County by age, sex, ethnicity.
 -- Household characteristics assigned to head of household record
-
+SET NOCOUNT ON;
 
 -- Create shell table of required race, sex, and age variables with necessary categories: Age: 0-99; Sex: F, M; Race: 7 Options
 DROP TABLE IF EXISTS [#tt_shell];
@@ -33,7 +33,7 @@ OPTION (MAXRECURSION 100);  -- Stop at 99
 
 
 -- Select ACS PUMS data based on input survey year (this is done to lower runtime)
-DECLARE @year integer = {yr};
+DECLARE @year integer = :yr;
 DECLARE @pums_qry nvarchar(max) =
 	CASE WHEN @year = 2010 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2006_2010_persons_sd]'
 		 WHEN @year = 2011 THEN 'SELECT [SERIALNO], [ST], [AGEP], [SEX], [HISP], [RAC1P], [MIL], NULL AS [RELSHIPP], [RELP], [SPORDER], [ESR], [PWGTP] FROM [acs].[pums].[vi_5y_2007_2011_persons_sd]'

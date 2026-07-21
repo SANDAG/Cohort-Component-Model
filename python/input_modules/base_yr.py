@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 import pandas as pd
+import sqlalchemy as sql
 
 import python.utils as utils
 
@@ -29,16 +30,16 @@ def get_base_yr_2020() -> pd.DataFrame:
     # Load SQL queries and apply checks to datasets
     with utils.SQL_ENGINE.connect() as connection:
         # Load ACS PUMS persons
-        with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
+        with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as file:
             pums_persons_df = pd.read_sql_query(
-                query.read().format(yr=2020), connection
+                sql.text(file.read()), connection, params={"yr": 2020}
             )
             if len(pums_persons_df.index) == 0:
                 raise ValueError("2020: not in ACS 5-year PUMS")
 
         # Load DOF Estimates
-        with open(utils.SQL_FOLDER / "dof_estimates.sql", "r") as query:
-            dof_estimates_df = pd.read_sql_query(query.read(), connection)
+        with open(utils.SQL_FOLDER / "dof_estimates.sql", "r") as file:
+            dof_estimates_df = pd.read_sql_query(sql.text(file.read()), connection)
             if (
                 utils.LAUNCH_YEAR
                 not in dof_estimates_df["vintage"].astype(int).unique()
@@ -46,8 +47,8 @@ def get_base_yr_2020() -> pd.DataFrame:
                 raise ValueError("Launch year not in DOF Estimates")
 
         # Load DOF Projections
-        with open(utils.SQL_FOLDER / "dof_projections.sql", "r") as query:
-            dof_projections_df = pd.read_sql_query(query.read(), connection)
+        with open(utils.SQL_FOLDER / "dof_projections.sql", "r") as file:
+            dof_projections_df = pd.read_sql_query(sql.text(file.read()), connection)
             dof_projections_yr = utils.LAUNCH_YEAR
             if 2020 not in dof_projections_df["year"].unique():
                 raise ValueError("2020: not in DOF Projections")
@@ -71,8 +72,8 @@ def get_base_yr_2020() -> pd.DataFrame:
                 )
 
         # Load 2020 Census P5 table
-        with open(utils.SQL_FOLDER / "census_p5.sql", "r") as query:
-            census_p5_df = pd.read_sql_query(query.read(), connection)
+        with open(utils.SQL_FOLDER / "census_p5.sql", "r") as file:
+            census_p5_df = pd.read_sql_query(sql.text(file.read()), connection)
 
     # Create a blended estimate of the total population distribution for 2020
     # From the 5-year ACS PUMS persons file and the CA DOF population projections

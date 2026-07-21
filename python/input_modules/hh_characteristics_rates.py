@@ -3,8 +3,10 @@
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
 
 import logging
+
 import numpy as np
 import pandas as pd
+import sqlalchemy as sql
 
 import python.utils as utils
 
@@ -37,9 +39,9 @@ def get_hh_characteristic_rates(yr: int) -> pd.DataFrame:
         # Load SQL queries and apply checks to datasets
         with utils.SQL_ENGINE.connect() as connection:
             # Load ACS PUMS persons
-            with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as query:
+            with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as file:
                 pums_persons_df = pd.read_sql_query(
-                    query.read().format(yr=yr), connection
+                    sql.text(file.read()), connection, params={"yr": yr}
                 )
         if len(pums_persons_df.index) == 0:
             raise ValueError(str(yr) + ": not in ACS 5-year PUMS")
