@@ -3,6 +3,7 @@ import scipy
 
 import numpy as np
 import pandas as pd
+import sqlalchemy as sql
 
 import python.utils as utils
 
@@ -28,12 +29,10 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     with utils.SQL_ENGINE.connect() as con:
         # Load CDC WONDER data from database for the specific year only
         with open(utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality.sql") as file:
-            sql_query = file.read()
-            # Replace the year parameter in the SQL query
-            sql_query = sql_query.replace("DECLARE @year INTEGER;", f"DECLARE @year INTEGER = {year};")
             cdc_wonder = pd.read_sql_query(
-                sql=sql_query,
+                sql=sql.text(file.read()),
                 con=con,
+                params={"year": year}
             )
             # Convert age to integer type
             cdc_wonder["age"] = cdc_wonder["age"].astype(float)
@@ -41,13 +40,14 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
         # Load inflation factors
         with open(utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality_inflation.sql") as file:
             inflation_factor = pd.read_sql_query(
-                sql=file.read(),
+                sql=sql.text(file.read()),
                 con=con,
+                params={"year": year}
             )
             print("CDC WONDER mortality inflation factors loaded from database:")
 
-    # For the 2018+ product, merge SD County deaths with CCM population
-    if (cdc_wonder["product"] == "2018+").any() and pop_df is not None:
+    # For years >= 2022 (2018+ product), merge SD County deaths with CCM population
+    if year >= 2022 and pop_df is not None:
 
         # Separate SYA (ages 0-84) and TYA (age 85) records
         sya_records = cdc_wonder[cdc_wonder["age"] < 85].copy()
@@ -93,11 +93,13 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     
     # Inflate deaths and calculate rates for all ages
     final = (
-        pd.merge(cdc_wonder, inflation_factor, on=["location", "sex"])
+        pd.merge(cdc_wonder, inflation_factor, on=["year", "location", "sex"])
         .assign(
             deaths=lambda x: x["deaths"] * x["inflation_factor"],
             rates=lambda x: np.where(
-                x["deaths"].isnull(), np.nan, x["deaths"] / x["pop"]
+                (x["deaths"].isnull()) | (x["pop"] <= 0), 
+                np.nan, 
+                x["deaths"] / x["pop"]
             ),
         )
         .drop(columns=["inflation_factor"])
@@ -171,7 +173,7 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     # Pivot by location to get county, state, national as separate columns
     pivoted = (
         df.pivot_table(
-            index=["year", "age", "race", "sex", "hispanic_origin"],
+            index=["year", "age", "race", "sex"],
             columns="location",
             values=["rates", "deaths", "pop"],
             aggfunc="first",
@@ -378,34 +380,26 @@ def get_death_rates(
         pd.DataFrame: Death rates broken down by race, sex, and single year
             of age.
     """
-    # Load and process CDC WONDER mortality data
-    # Determine which year's data to use (2021 uses 2020 data)
-    cdc_yr = 2020 if yr == 2021 else yr
-    if yr == 2021:
-        logger.warning("CDC WONDER data unavailable for 2021. Using 2020 data.")
-
     # Load mortality data for this specific year
-    cdc_data = load_local_files(pop_df=pop_df, year=cdc_yr)[
+    cdc_data = load_local_files(pop_df=pop_df, year=yr)[
         ["race", "sex", "age", "rates"]
     ]
 
     # Load UNDESA data for ages 85-99
     with utils.SQL_ENGINE.connect() as con:
         with open(utils.ROOT_FOLDER / "sql" / "mortality" / "undesa_survivors.sql") as file:
-            sql_query = file.read()
-            # Replace the year parameter in the SQL query
-            sql_query = sql_query.replace("DECLARE @year INTEGER;", f"DECLARE @year INTEGER = {cdc_yr};")
             undesa_rates = pd.read_sql_query(
-                sql=sql_query,
+                sql=sql.text(file.read()),
                 con=con,
+                params={"year": yr}
             )
             print("UN DESA loaded from database:")
 
     # Use the latest available year from UNDESA data
     max_undesa_year = undesa_rates["year"].max()
-    if cdc_yr > max_undesa_year:
+    if yr > max_undesa_year:
         logger.warning(
-            f"UN DESA data unavailable for {cdc_yr}. Using {max_undesa_year} data for "
+            f"UN DESA data unavailable for {yr}. Using {max_undesa_year} data for "
             f"ages 85-99."
         )
 
@@ -424,20 +418,23 @@ def get_death_rates(
         ["race", "sex", "rates"]
     ].rename(columns={"rates": "cdc_rate"})
 
-    # Calculate UN DESA implied mortality rate and scaling factor
+    # Get UN DESA mortality rate for age 85+ (aggregate of ages 85-99)
+    undesa_rate_85plus = undesa_rates[undesa_rates["age"] == "85+"][
+        ["race", "sex", "rates"]
+    ].rename(columns={"rates": "undesa_rate"})
+
+    # Calculate scaling factor
     scaling_df = cdc_rate_85plus.merge(
-        undesa_rates.groupby(["sex", "race"], as_index=False)
-        .agg({"deaths": "sum", "survivors": "sum"})
-        .assign(undesa_rate=lambda x: x["deaths"] / x["survivors"])[
-            ["sex", "race", "undesa_rate"]
-        ],
+        undesa_rate_85plus,
         on=["sex", "race"],
         how="left",
     ).assign(scaling_factor=lambda x: x["cdc_rate"] / x["undesa_rate"])
 
     # Merge scaling factor and apply to UNDESA mortality rates
     undesa_rates = (
-        undesa_rates.merge(
+        undesa_rates[undesa_rates["age"] != "85+"]
+        .assign(age=lambda x: x["age"].astype(int))
+        .merge(
             scaling_df[["sex", "race", "scaling_factor"]],
             on=["sex", "race"],
             how="left",
@@ -454,7 +451,7 @@ def get_death_rates(
     # Apply smoothing to the combined dataset (ages 0-99)
     if smooth_s is not None and smooth_k is not None:
         # Prepare combined DataFrame for smooth_rates function
-        combined_rates["year"] = cdc_yr
+        combined_rates["year"] = yr
 
         # Apply smoothing to full age range
         combined_rates = smooth_rates(combined_rates, s=smooth_s, k=smooth_k)
