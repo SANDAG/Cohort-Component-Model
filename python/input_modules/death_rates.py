@@ -14,8 +14,8 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     """Load CDC WONDER mortality file from SQL and transform into a standardized DataFrame.
 
     This function loads mortality data from SQL and replaces San Diego County population
-    with CCM population for the 2018+ product to fill in missing population values for 
-    the county, and then inflates deaths using the inflation factor calculated from the 
+    with CCM population for the 2018+ product to fill in missing population values for
+    the county, and then inflates deaths using the inflation factor calculated from the
     number of "Not Stated" deaths.
 
     Args:
@@ -28,21 +28,30 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
 
     with utils.SQL_ENGINE.connect() as con:
         # Load CDC WONDER data from database for the specific year only
-        with open(utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality.sql") as file:
-            cdc_wonder = pd.read_sql_query(
+        with open(
+            utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality.sql"
+        ) as file:
+            cdc_wonder = utils.read_sql_query_fallback(
+                max_lookback=1,
                 sql=sql.text(file.read()),
                 con=con,
-                params={"year": year}
+                params={"year": year},
             )
             # Convert age to integer type
             cdc_wonder["age"] = cdc_wonder["age"].astype(float)
             print("CDC WONDER mortality data loaded from database:")
         # Load inflation factors
-        with open(utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality_inflation.sql") as file:
-            inflation_factor = pd.read_sql_query(
+        with open(
+            utils.ROOT_FOLDER
+            / "sql"
+            / "mortality"
+            / "cdc_wonder_mortality_inflation.sql"
+        ) as file:
+            inflation_factor = utils.read_sql_query_fallback(
+                max_lookback=1,
                 sql=sql.text(file.read()),
                 con=con,
-                params={"year": year}
+                params={"year": year},
             )
             print("CDC WONDER mortality inflation factors loaded from database:")
 
@@ -52,54 +61,62 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
         # Separate SYA (ages 0-84) and TYA (age 85) records
         sya_records = cdc_wonder[cdc_wonder["age"] < 85].copy()
         tya_records = cdc_wonder[cdc_wonder["age"] == 85].copy()
-        
+
         # For SYA records (ages 0-84), use direct age match
         if len(sya_records) > 0:
             sya_records = (
-                sya_records.merge(pop_df[["age", "sex", "race", "pop"]], on=["age", 
-                                "sex", "race"], how="left", suffixes=("", "_ccm"))
-                .assign(pop=lambda x: np.where(
-                    x["location"] == "San Diego County",
-                    x["pop_ccm"].fillna(x["pop"]),
-                    x["pop"]
-                ))
+                sya_records.merge(
+                    pop_df[["age", "sex", "race", "pop"]],
+                    on=["age", "sex", "race"],
+                    how="left",
+                    suffixes=("", "_ccm"),
+                )
+                .assign(
+                    pop=lambda x: np.where(
+                        x["location"] == "San Diego County",
+                        x["pop_ccm"].fillna(x["pop"]),
+                        x["pop"],
+                    )
+                )
                 .drop(columns=["pop_ccm"])
             )
-        
+
         # For TYA records (age 85 = ages 85-99), sum population across age range
         if len(tya_records) > 0:
             pop_85plus = (
-                pop_df.loc[pop_df["age"].between(85, 99)][
-                    ["sex", "race", "pop"]
-                ]
+                pop_df.loc[pop_df["age"].between(85, 99)][["sex", "race", "pop"]]
                 .groupby(["sex", "race"], as_index=False)["pop"]
                 .sum()
                 .assign(age=85)
             )
 
             tya_records = (
-                tya_records.merge(pop_85plus, on=["age", "sex", "race"], how="left", 
-                                  suffixes=("", "_ccm"))
-                .assign(pop=lambda x: np.where(
-                    x["location"] == "San Diego County",
-                    x["pop_ccm"].fillna(x["pop"]),
-                    x["pop"]
-                ))
+                tya_records.merge(
+                    pop_85plus,
+                    on=["age", "sex", "race"],
+                    how="left",
+                    suffixes=("", "_ccm"),
+                )
+                .assign(
+                    pop=lambda x: np.where(
+                        x["location"] == "San Diego County",
+                        x["pop_ccm"].fillna(x["pop"]),
+                        x["pop"],
+                    )
+                )
                 .drop(columns=["pop_ccm"])
             )
-        
+
         # Combine back together
         cdc_wonder = pd.concat([sya_records, tya_records], ignore_index=True)
-    
+
     # Inflate deaths and calculate rates for all ages
     final = (
         pd.merge(cdc_wonder, inflation_factor, on=["year", "location", "sex"])
         .assign(
             deaths=lambda x: x["deaths"] * x["inflation_factor"],
             rates=lambda x: np.where(
-                (x["deaths"].isnull()) | (x["pop"] <= 0), 
-                np.nan, 
-                x["deaths"] / x["pop"]
+                (x["deaths"].isnull()) | (x["pop"] <= 0), np.nan, x["deaths"] / x["pop"]
             ),
         )
         .drop(columns=["inflation_factor"])
@@ -166,10 +183,10 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
 
     if year == 2021:
         logger.warning("CDC WONDER data unavailable for 2021. Using 2020 data.")
-    
+
     if df.empty:
         raise ValueError(f"No CDC WONDER data found for year {year}")
-    
+
     # Pivot by location to get county, state, national as separate columns
     pivoted = (
         df.pivot_table(
@@ -343,6 +360,7 @@ def process_life_rates(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
+
 def get_death_rates(
     yr: int,
     pop_df: pd.DataFrame,
@@ -381,17 +399,15 @@ def get_death_rates(
             of age.
     """
     # Load mortality data for this specific year
-    cdc_data = load_local_files(pop_df=pop_df, year=yr)[
-        ["race", "sex", "age", "rates"]
-    ]
+    cdc_data = load_local_files(pop_df=pop_df, year=yr)[["race", "sex", "age", "rates"]]
 
     # Load UNDESA data for ages 85-99
     with utils.SQL_ENGINE.connect() as con:
-        with open(utils.ROOT_FOLDER / "sql" / "mortality" / "undesa_survivors.sql") as file:
+        with open(
+            utils.ROOT_FOLDER / "sql" / "mortality" / "undesa_survivors.sql"
+        ) as file:
             undesa_rates = pd.read_sql_query(
-                sql=sql.text(file.read()),
-                con=con,
-                params={"year": yr}
+                sql=sql.text(file.read()), con=con, params={"year": yr}
             )
             print("UN DESA loaded from database:")
 
@@ -414,9 +430,9 @@ def get_death_rates(
     undesa_rates = pd.concat(undesa_expanded, ignore_index=True)
 
     # Get CDC mortality rate for age 85 (from TYA 85+ group)
-    cdc_rate_85plus = cdc_data[cdc_data["age"] == 85][
-        ["race", "sex", "rates"]
-    ].rename(columns={"rates": "cdc_rate"})
+    cdc_rate_85plus = cdc_data[cdc_data["age"] == 85][["race", "sex", "rates"]].rename(
+        columns={"rates": "cdc_rate"}
+    )
 
     # Get UN DESA mortality rate for age 85+ (aggregate of ages 85-99)
     undesa_rate_85plus = undesa_rates[undesa_rates["age"] == "85+"][

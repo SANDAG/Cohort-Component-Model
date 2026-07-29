@@ -63,11 +63,14 @@ except IOError:
 
 # Create SQLAlchemy engine(s)
 SQL_ENGINE = sql.create_engine(
-    "mssql+pyodbc://@" + _secrets["sql"]["server"] + "/" + _secrets["sql"]["database"] 
+    "mssql+pyodbc://@"
+    + _secrets["sql"]["server"]
+    + "/"
+    + _secrets["sql"]["database"]
     + "?trusted_connection=yes"
-        + "&driver=ODBC Driver 18 for SQL Server"
-        + "&TrustServerCertificate=yes",
-        fast_executemany=True,
+    + "&driver=ODBC Driver 18 for SQL Server"
+    + "&TrustServerCertificate=yes",
+    fast_executemany=True,
 )
 
 #########################
@@ -693,3 +696,80 @@ def write_rates(yr: int, rates: dict, fp: pathlib.Path) -> None:
             )
 
     write_df(yr=yr, df=output, fp=fp)
+
+
+def read_sql_query_fallback(max_lookback: int = 1, **kwargs: dict) -> pd.DataFrame:
+    """Read SQL query allowing for dynamic year adjustment on SQL exceptions.
+
+    This function executes a SQL query using pandas read_sql_query allowing
+    for dynamic adjustment of the 'year' parameter in the query. If the query
+    raises an exception indicating that the year does not exist in the dataset,
+    it will automatically decrement the year by one and re-run the query.
+    This process will continue for up to max_lookback years back, or 1 year if not
+    specified.
+
+    Args:
+        max_lookback (int = 1): Maximum number of years to look back if data is not
+            found, defaults to 1
+        kwargs (dict): Keyword arguments for pd.read_sql_query
+
+    Returns:
+        pd.DataFrame: Result of the SQL query
+
+    Raises:
+        ValueError: If data is not found after max_lookback year is reached
+        Exception: If an unexpected SQL error occurs
+    """
+    # Ensure max_lookback is >= 0 to ensure at least 1 attempt is made
+    if max_lookback < 0:
+        raise ValueError(f"max_lookback must be >= 0, got {max_lookback}")
+
+    # Store original year for potential relabeling
+    original_year = kwargs["params"]["year"]
+
+    # Try up to max_lookback + 1 times
+    for attempt in range(max_lookback + 1):
+        try:
+            df = pd.read_sql_query(**kwargs)  # type: ignore
+
+            # If data is valid, re-label year column if it exists and year was adjusted
+            if "year" in df.columns and original_year is not None:
+                if kwargs["params"]["year"] != original_year:
+                    logger.info(
+                        f"Relabeling 'year' column from {kwargs['params']['year']} "
+                        f"to {original_year}"
+                    )
+                    df["year"] = original_year
+
+            return df
+
+        except Exception as e:
+            error_msg = str(e).lower()
+
+            # Check if error indicates missing year data
+            if "does not exist" in error_msg and "year" in kwargs["params"]:
+                # If we've exhausted all lookback attempts, raise error
+                if attempt >= max_lookback:
+                    raise ValueError(
+                        f"Data not found after {max_lookback} year lookback. "
+                        f"Original year: {original_year}, "
+                        f"Final attempted year: {kwargs['params']['year']}"
+                    ) from e
+
+                # Decrement year and try again
+                kwargs["params"]["year"] -= 1
+
+                logger.warning(
+                    f"Year {kwargs['params']['year'] + 1} data unavailable. "
+                    f"Retrying with year {kwargs['params']['year']} "
+                    f"(attempt {attempt + 2}/{max_lookback + 1})"
+                )
+
+                continue  # Continue to next iteration
+            else:
+                # Re-raise if it's an unexpected error
+                raise
+
+    raise ValueError(
+        f"Data not found for year={original_year} within max_lookback={max_lookback}."
+    )
