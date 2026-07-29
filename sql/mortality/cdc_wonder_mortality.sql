@@ -7,30 +7,19 @@
 */
 
 DECLARE @year INTEGER = :year;
+DECLARE @product NVARCHAR(9) = CASE
+    WHEN @year >= 2021 THEN '2018+'
+    WHEN @year <=2020 THEN '1999-2020'
+    ELSE NULL END;
 
--- 2021 data is unavailable, fall back to 2020
-IF @year = 2021 AND NOT EXISTS (
-    SELECT 1 FROM [socioec_data].[vital_statistics].[cdc_wonder_mortality] 
-    WHERE [year] = 2021
-)
 BEGIN
-	  SET @year = 2020;
-END
-ELSE
-BEGIN
-    -- For all other years, throw error if year doesn't exist
+    -- Throw error if year doesn't exist
     IF NOT EXISTS (
       SELECT 1 FROM [socioec_data].[vital_statistics].[cdc_wonder_mortality] 
       WHERE [year] = @year
     )
     THROW 50002, 'The provided year does not exist in the CDC WONDER mortality dataset', 1;
 END;
-
--- Determine product based on the actual year being used (after fallback)
-DECLARE @product NVARCHAR(9) = CASE
-    WHEN @year >= 2021 THEN '2018+'
-    WHEN @year <=2020 THEN '1999-2020'
-    ELSE NULL END;
 
 WITH [data] AS (
 	SELECT
@@ -101,7 +90,7 @@ SELECT
 	,[deaths]
 	,[pop]
 FROM [data]
-WHERE [race] != 'All Races' AND [year] = @year
+WHERE [race] != 'All Races' AND [year] = @year 
 
 -- Following UNION statements use the "All Races" "Not Hispanic or Latino"
 -- To create "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
@@ -116,8 +105,7 @@ SELECT
 	,[deaths]
 	,[pop]
 FROM [data]
-WHERE [race] = 'All Races' AND [year] = @year
-
+WHERE [race] = 'All Races' AND [year] = @year AND [year] <= 2020
 
 UNION ALL
 
@@ -130,8 +118,7 @@ SELECT
 	,[deaths]
 	,[pop]
 FROM [data]
-WHERE [race] = 'All Races' AND [year] = @year
-
+WHERE [race] = 'All Races' AND [year] = @year AND [year] <= 2020
 
 ORDER BY
 	[year]
