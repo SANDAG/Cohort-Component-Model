@@ -181,9 +181,6 @@ def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     # Use unified load_cdc_wonder function with year parameter
     df = load_cdc_wonder(pop_df, year)
 
-    if year == 2021:
-        logger.warning("CDC WONDER data unavailable for 2021. Using 2020 data.")
-
     if df.empty:
         raise ValueError(f"No CDC WONDER data found for year {year}")
 

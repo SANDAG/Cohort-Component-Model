@@ -727,48 +727,50 @@ def read_sql_query_fallback(max_lookback: int = 1, **kwargs: dict) -> pd.DataFra
     # Store original year for potential relabeling
     original_year = kwargs["params"]["year"]
 
+    # Messages that trigger year lookback
+    lookback_messages = ["Data for CDC WONDER mortality year does not exist"]
+
     # Try up to max_lookback + 1 times
     for attempt in range(max_lookback + 1):
-        try:
-            df = pd.read_sql_query(**kwargs)  # type: ignore
+        df = pd.read_sql_query(**kwargs)  # type: ignore
 
-            # If data is valid, re-label year column if it exists and year was adjusted
-            if "year" in df.columns and original_year is not None:
-                if kwargs["params"]["year"] != original_year:
-                    logger.info(
-                        f"Relabeling 'year' column from {kwargs['params']['year']} "
-                        f"to {original_year}"
-                    )
-                    df["year"] = original_year
+        # Check if returned DataFrame contains SQL message
+        if df.columns.tolist() == ["msg"]:
+            msg = df["msg"].values[0]
 
-            return df
-
-        except Exception as e:
-            error_msg = str(e).lower()
-
-            # Check if error indicates missing year data
-            if "does not exist" in error_msg and "year" in kwargs["params"]:
+            # Check if message is in the lookback list and year parameter exists
+            if msg in lookback_messages and "year" in kwargs["params"]:
                 # If we've exhausted all lookback attempts, raise error
                 if attempt >= max_lookback:
                     raise ValueError(
                         f"Data not found after {max_lookback} year lookback. "
                         f"Original year: {original_year}, "
                         f"Final attempted year: {kwargs['params']['year']}"
-                    ) from e
+                    )
 
                 # Decrement year and try again
                 kwargs["params"]["year"] -= 1
 
                 logger.warning(
-                    f"Year {kwargs['params']['year'] + 1} data unavailable. "
-                    f"Retrying with year {kwargs['params']['year']} "
-                    f"(attempt {attempt + 2}/{max_lookback + 1})"
+                    f"Re-running SQL query with 'year' set to: "
+                    f"{kwargs['params']['year']} (attempt {attempt + 2}/{max_lookback + 1})"
                 )
 
                 continue  # Continue to next iteration
             else:
-                # Re-raise if it's an unexpected error
-                raise
+                # Raise error if the message is not expected
+                raise ValueError(f"SQL query returned an unexpected message: {msg}")
+
+        # If we got valid data, relabel year column if it exists and year was adjusted
+        if "year" in df.columns and original_year is not None:
+            if kwargs["params"]["year"] != original_year:
+                logger.info(
+                    f"Relabeling 'year' column from {kwargs['params']['year']} "
+                    f"to {original_year}"
+                )
+                df["year"] = original_year
+
+        return df
 
     raise ValueError(
         f"Data not found for year={original_year} within max_lookback={max_lookback}."
