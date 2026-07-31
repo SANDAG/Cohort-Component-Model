@@ -1,3 +1,5 @@
+"""Get death rates by race, sex, and single year of age."""
+
 import logging
 import scipy
 
