@@ -53,7 +53,8 @@ with tab1:
     # Calculate implied TFR for San Diego County using the components of change
     tfr_sd = (
         st.session_state.components_data.loc[
-            (st.session_state.components_data["year"] == tab1_year) & (st.session_state.components_data["sex"] == 'F')
+            (st.session_state.components_data["year"] == tab1_year) &
+              (st.session_state.components_data["sex"] == 'F')
         ]
         .merge(
             right=st.session_state.population_data,
@@ -94,7 +95,8 @@ with tab2:
     # Load mortality rate data
     mortality = st.session_state.rates_data[
         ["year", "race", "sex", "age", "rate_death"]
-    ].rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
+    ].rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"}
+             ).sort_values(by=["Year", "Race/Ethnicity", "Age"])
 
     with sub_tab1:
 
@@ -141,11 +143,13 @@ with tab2:
             .reset_index(0)
         ).rename(columns={"rate_death": "Life Expectancy"})
 
-        # Calculate implied life expectancy for San Diego County using the components of change
+        # Calculate implied life expectancy for San Diego County using the 
+        # components of change
         lfe_sd = report_utils.life_expectancy(
             q_x=(
                 st.session_state.components_data.loc[
-                    (st.session_state.components_data["year"] == tab2_year) & (st.session_state.components_data["sex"] == sub_tab1_sex)
+                    (st.session_state.components_data["year"] == tab2_year) & 
+                    (st.session_state.components_data["sex"] == sub_tab1_sex)
                 ]
                 .merge(
                     right=st.session_state.population_data,
@@ -216,7 +220,6 @@ with tab2:
         )
         st.plotly_chart(fig)
 
-
 # Migration Rates
 with tab3:
     # Load migration rate data
@@ -245,7 +248,8 @@ with tab3:
         key="tab3_sex",
     )
 
-    migration = migration.loc[(migration["Year"] == tab3_year) & (migration["sex"] == tab3_sex)]
+    migration = migration.loc[(migration["Year"] == tab3_year) & 
+                              (migration["sex"] == tab3_sex)]
 
     # Show net migration rates in a line chart
     fig = px.line(
@@ -268,7 +272,8 @@ with tab3:
     # Display the Race/Ethnicity composition of migrants in a table
     migrants = (
         st.session_state.components_data.loc[
-            (st.session_state.components_data["year"] == tab3_year) & (st.session_state.components_data["sex"] == tab3_sex)
+            (st.session_state.components_data["year"] == tab3_year) &
+              (st.session_state.components_data["sex"] == tab3_sex)
         ]
         .groupby("race")[["ins", "outs"]]
         .sum()

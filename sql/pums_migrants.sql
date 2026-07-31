@@ -6,9 +6,10 @@ The purpose of this script is to count migration in and out of San Diego County 
 -- Combine MIGSP05 and MIGSP12 variables, which are present 2008-2012 to 2011-2015, into MIGSP, which is present 2006-2010 to 2007-2011 and 2012-2016 to 2018-2022, because the code for CA (006/6) is the same throughout.
 -- Remove active-duty military and persons who did not migrate.
 */
+SET NOCOUNT ON;
 
 -- Select ACS PUMS data based on input survey year this is done to lower original runtime of approximately 20 minutes to 1-4 minutes
-DECLARE @year integer = {yr};
+DECLARE @year integer = :yr;
 DECLARE @pums_qry nvarchar(max) =
     CASE WHEN @year = 2010 THEN 'SELECT [ST], [PUMA] AS [PUMA00], NULL AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [MIG], [MIGSP], [MIGPUMA] AS [MIGPUMA00], NULL AS [MIGPUMA10], NULL AS [MIGPUMA20], [PWGTP] FROM [acs].[pums].[5y_2006_2010_persons] WHERE [MIL] != ''1'' AND [MIG] IN (''2'', ''3'')'
          WHEN @year = 2011 THEN 'SELECT [ST], [PUMA] AS [PUMA00], NULL AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [MIG], [MIGSP], [MIGPUMA] AS [MIGPUMA00], NULL AS [MIGPUMA10], NULL AS [MIGPUMA20], [PWGTP] FROM [acs].[pums].[5y_2007_2011_persons] WHERE [MIL] != ''1'' AND [MIG] IN (''2'', ''3'')'

@@ -4,6 +4,7 @@
 
 import numpy as np
 import pandas as pd
+import sqlalchemy as sql
 
 import python.utils as utils
 
@@ -73,8 +74,9 @@ def calculate_migration_rates(
         raise ValueError("cap_rates parameter must be between 0 and 1")
 
     with utils.SQL_ENGINE.connect() as connection:
-        with open(utils.SQL_FOLDER / "pums_migrants.sql", "r") as query:
-            pums_migrants_df = pd.read_sql_query(query.read().format(yr=yr), connection)
+        with open(utils.SQL_FOLDER / "pums_migrants.sql", "r") as file:
+            pums_migrants_df = pd.read_sql_query(sql.text(file.read()), connection, 
+                                                 params={"yr": yr})
         if len(pums_migrants_df.index) == 0:
             raise ValueError(str(yr) + ": not in ACS PUMS in/out migrants")
 
