@@ -15,8 +15,6 @@ class InputParser:
         horizon_year (int): Used to store the horizon year of a new run
         version (str): The software version of the current run
         comments (str): Any comments associated with the current run
-        rates_map (dict): Mapping of local birth rate data files for each year
-            and race/ethnicity category
         controls (dict): Mapping of control totals for each year
         migration_controls (pd.DataFrame | None): Optional migration control totals (ins/outs)
             for each post-launch increment year. If not provided, set to None.
@@ -27,8 +25,6 @@ class InputParser:
         _validate_config(): Validate the configuration file
         _parse_years(): Parses the run launch and horizon years from the configuration
             file and sets the base year
-        _parse_rates_map(): Parses the rates mapping from the configuration file and
-            sets the rates_map attribute
         _parse_controls(): Parses the controls mapping from the configuration file and
             sets the controls attribute
         _parse_migration_controls(): Parses the migration controls mapping from the
@@ -43,7 +39,6 @@ class InputParser:
         self.horizon_year = None
         self.version = None
         self.comments = None
-        self.rates_map = {}
         self.controls = {}
         self.migration_controls = None
         self.load_to_database = None
@@ -53,8 +48,7 @@ class InputParser:
 
         First, the contents of the configuration file are validated. Then, the
         base, launch, and horizon years are set along with the software version
-        and any comments. Finally, the birth rates mapping, controls totals,
-        and optional migration control totals are parsed and set."""
+        and any comments. Finally, the controls totals and optional migration control totals are parsed and set."""
         self._validate_config()
         _interval = self._parse_interval()
         self.base_year = _interval["base_year"]
@@ -62,7 +56,6 @@ class InputParser:
         self.horizon_year = _interval["horizon_year"]
         self.comments = self._config.get("comments")
         self.version = self._config.get("version")
-        self.rates_map = self._parse_rates_map()
         self.controls = self._parse_controls()
         self.migration_controls = self._parse_migration_controls()
         self.load_to_database = self._config.get("sql", {}).get(
@@ -79,7 +72,6 @@ class InputParser:
             "configurations": {
                 "type": "dict",
                 "schema": {
-                    "rates_map": {"type": "string"},
                     "controls": {"type": "string"},
                 },
             },
@@ -126,27 +118,6 @@ class InputParser:
             "launch_year": launch_year,
             "horizon_year": horizon_year,
         }
-
-    def _parse_rates_map(self) -> dict:
-        """Parse the rates mapping from the configuration file."""
-        # Check the rates mapping file exists and is a valid YAML file
-        rates_map_fp = self._config["configurations"]["rates_map"]
-        rates_map_path = pathlib.Path(rates_map_fp)
-        if not rates_map_path.is_absolute():
-            rates_map_path = (
-                pathlib.Path(__file__).resolve().parent.parent / rates_map_path
-            )
-        try:
-            with open(rates_map_path, "r") as f:
-                rates_map = yaml.safe_load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Rates map file not found: {rates_map_fp}")
-        except yaml.YAMLError as e:
-            raise ValueError(f"Error parsing rates map YAML file: {e}")
-
-        # TODO: Normally we would validate the schema but this is soon to be removed.
-
-        return rates_map
 
     def _parse_controls(self) -> dict:
         """Parse the controls mapping from the configuration file."""

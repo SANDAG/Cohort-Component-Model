@@ -13,7 +13,6 @@ Set the configuration file **config.yml** parameters specific to the model run o
 version: "0.0.0-dev"
 comments: "No Comments" # Add comments pertaining to the run
 configurations:  # other configuration files
-  rates_map: "rates_map.yml"  # local birth/death rate files mapping
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
 csv:
   migration_controls: null  # optional csv with columns: (year,ins,outs)

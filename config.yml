@@ -1,7 +1,6 @@
 version: "0.0.0-dev"
 comments: "No Comments"
 configurations:
-  rates_map: "rates_map.yml"
   controls: "sandag_estimates.yml"
 csv:
   migration_controls: null
