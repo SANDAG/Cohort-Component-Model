@@ -1,11 +1,9 @@
 """Get birth rates by race and single year of age."""
 
-# TODO: (7-feature) Add function to allow for input % adjustments to birth rates.
-# TODO: (5-feature) Potentially implement smoothing function within race categories.
-
 import logging
 import pandas as pd
 import numpy as np
+import sqlalchemy as sql
 
 import python.utils as utils
 
@@ -17,8 +15,8 @@ def get_birth_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
 
     Birth rates are calculated using CDC WONDER Natality births for 5-year age
     groups ranging from ages 15 to 44 setting "Suppressed" raw births
-    (values < 10) to values of 4.5 and dividing the raw births by three, as
-    3-years of births are always from CDC WONDER. Births are merged with the
+    (values < 10) to values of 4.5 and dividing the raw births by five, as
+    5-years of births are always from CDC WONDER. Births are merged with the
     base/launch year population (aggregated to 5-year age groups), inflated to
     account for the % of births attributed to "unknown" race/ethnicity groups,
     and then QC'ed to ensure no race or 5-year age group contains 0 births or
@@ -37,124 +35,139 @@ def get_birth_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
     """
     # Birth rates calculated from base year up to the launch year
     if yr <= utils.LAUNCH_YEAR:
-        if str(yr) not in utils.RATES_MAP["births"].keys():
-            raise ValueError("No birth rate mapping for: " + str(yr))
 
-        births = pd.DataFrame()
-        # For each WONDER births file path in the chosen base year
-        for k, v in utils.RATES_MAP["births"][str(yr)].items():
-            if v is not None:
-                fp = utils.DATA_FOLDER / "births" / str(yr) / v
-
-                # Get WONDER births data
-                wonder_births = (
-                    pd.read_csv(
-                        fp,
-                        delimiter="\t",
-                        usecols=["Age of Mother 9 Code", "Births"],
-                        dtype={"Age of Mother 9 Code": str, "Births": str},
-                    )
-                    .rename(
-                        columns={"Age of Mother 9 Code": "age_5yr", "Births": "births"}
-                    )
-                    .dropna(subset=["age_5yr"])
-                    .assign(race=k)
-                    .replace({"births": {"Suppressed": "4.5"}})
-                    .astype({"births": "float"})
-                    .assign(births=lambda x: x["births"] / 3)
+        with utils.SQL_ENGINE.connect() as con:
+            # Load CDC WONDER data from database for the specific year only
+            with open(
+                utils.ROOT_FOLDER / "sql" / "fertility" / "cdc_wonder_fertility.sql"
+            ) as file:
+                births = pd.read_sql_query(
+                    sql=sql.text(file.read()), con=con, params={"year": yr}
                 )
+                print("CDC WONDER fertility data loaded from database:")
 
-                births = pd.concat([births, wonder_births])
-            else:
-                logger.warning("No birth data available for: " + v)
+            # Load inflation factors
+            with open(
+                utils.ROOT_FOLDER
+                / "sql"
+                / "fertility"
+                / "cdc_wonder_fertility_inflation.sql"
+            ) as file:
+                inflation_factor = pd.read_sql_query(
+                    sql=sql.text(file.read()), con=con, params={"year": yr}
+                )
+                print("CDC WONDER fertility inflation factors loaded from database:")
 
-        # Create lower/upper boundaries for the 5-year age groups
-        age_bounds = {
-            "15-19": {"lower": 15, "upper": 19},
-            "20-24": {"lower": 20, "upper": 24},
-            "25-29": {"lower": 25, "upper": 29},
-            "30-34": {"lower": 30, "upper": 34},
-            "35-39": {"lower": 35, "upper": 39},
-            "40-44": {"lower": 40, "upper": 44},
-        }
+        # === Merge births with location-specific populations ===
 
-        for k, v in age_bounds.items():
-            births.loc[births["age_5yr"] == k, "age_lower"] = v["lower"]
-            births.loc[births["age_5yr"] == k, "age_upper"] = v["upper"]
-
-        # Merge births with population
-        merged_births = (
-            births.merge(
+        # San Diego County: Use CCM population (pop_df)
+        sd_births = births[births["location"] == "San Diego County"].copy()
+        sd_merged = (
+            sd_births.merge(
                 right=pop_df.loc[
                     (pop_df["sex"] == "F") & (pop_df["age"].between(15, 44))
                 ][["race", "age", "pop"]],
-                on="race",
+                on=["race", "age"],
             )
-            .query("age >= age_lower & age <= age_upper")
-            .groupby(["race", "age_5yr", "age_lower", "age_upper"])
+            .groupby(["year", "location", "race", "age_group", "hispanic_origin"])
             .agg({"births": "max", "pop": "sum"})
             .reset_index()
         )
 
-        # Inflate births by the % of "unknown" race/ethnicity births
-        # Note: this is not done for births outside of the eligible age groups
-        inflation_factor = 1 + (
-            births.loc[births["race"].isin(["Missing Race", "Missing Ethnicity"])][
-                "births"
-            ].sum()
-            / merged_births["births"].sum()
-        )
+        # California: Use DOF P3 projections
+        ca_births = births[births["location"] == "California"].copy()
+        with utils.SQL_ENGINE.connect() as con:
+            with open(
+                utils.ROOT_FOLDER / "sql" / "fertility" / "dof_projections_p3.sql"
+            ) as file:
+                ca_pop = pd.read_sql_query(
+                    sql=sql.text(file.read()), con=con, params={"year": yr}
+                )
+                print("DOF P3 projections loaded from database:")
 
-        merged_births["births"] = merged_births["births"] * inflation_factor
-
-        # Do not allow 0 births
-        merged_births["births"] = np.where(
-            merged_births["births"] == 0, 1, merged_births["births"]
-        )
-
-        # Ensure values in births field do not exceed population
-        merged_births["births"] = np.where(
-            merged_births["births"] > merged_births["pop"],
-            merged_births["pop"],
-            merged_births["births"],
-        )
-
-        # Calculate birth rates by race, sex, and single year of age
-        rates = (
-            merged_births.assign(rate=lambda x: x["births"] / x["pop"])[
-                ["race", "age_lower", "age_upper", "rate"]
-            ]
-            .merge(
-                right=pop_df.loc[
-                    (pop_df["sex"] == "F") & (pop_df["age"].between(15, 44))
-                ],
-                on="race",
+        ca_merged = (
+            ca_births.merge(
+                right=ca_pop[["race", "age", "pop"]],
+                on=["race", "age"],
             )
-            .query("age >= age_lower & age <= age_upper")[
-                ["race", "sex", "age", "rate"]
-            ]
+            .groupby(["year", "location", "race", "age_group", "hispanic_origin"])
+            .agg({"births": "max", "pop": "sum"})
+            .reset_index()
         )
 
-        # If increment year is 2010-2017
-        # NHPI and More than one race birth rates do not exist, set to average
-        # NHPI births are folded into Asian (overstating Asian birth rates)
-        # More than one race folded into all categories (overstating all others)
-        if 2010 <= yr <= 2017:
-            avg_rates = (
-                rates.groupby(["sex", "age"]).agg({"rate": "mean"}).reset_index()
+        # Combine all locations
+        merged_births = pd.concat([sd_merged, ca_merged], ignore_index=True)
+
+        # Calculate rates for 5-year age groups
+        group_rates = pd.merge(
+            merged_births, inflation_factor, on=["location", "year"]
+        ).assign(
+            births=lambda x: np.where(
+                x["births"] * x["inflation_factor"] == 0,
+                1,  # Minimum 1 birth
+                np.minimum(
+                    x["births"] * x["inflation_factor"], x["pop"]  # Cap at population
+                ),
+            ),
+            rates=lambda x: x["births"] / x["pop"],
+        )[
+            ["location", "race", "age_group", "hispanic_origin", "rates"]
+        ]
+
+        # Merge group rates back to individual ages
+        final = (
+            births[["location", "race", "age", "age_group", "hispanic_origin"]]
+            .drop_duplicates()
+            .merge(group_rates, on=["location", "race", "age_group", "hispanic_origin"])
+            .drop(columns=["age_group"])
+        )
+
+        # Pivot by location to get county, state as separate columns
+        pivoted = (
+            final.pivot_table(
+                index=["race", "age", "hispanic_origin"],
+                columns="location",
+                values=["rates"],
+                aggfunc="first",
+            )
+            .pipe(lambda df: df.set_axis(["_".join(col) for col in df.columns], axis=1))
+            .reset_index()
+        )
+
+        # Retrieve fields
+        county, state = (
+            pivoted.get("rates_San Diego County", pd.Series(dtype=float)),
+            pivoted.get("rates_California", pd.Series(dtype=float)),
+        )
+
+        # Apply geographic hierarchy: County > State
+        pivoted["rates"] = np.where(
+            (county.notna()) & (county > 0),
+            county,
+            np.where(
+                (state.notna()) & (state > 0),
+                state,
+                np.nan,  # Use NaN for missing rates
+            ),
+        )
+
+        # Check for any null values in the rates column
+        # If California births are not availabe, add United States population and merge
+        # with United States births
+        if pivoted["rates"].isnull().any():
+            raise ValueError(
+                "Empty birth rates found after applying geographic"
+                "hierarchy. Verify rates are available for San Diego County and California."
             )
 
-            avg_rates["race"] = "More than one race"
-            rates = pd.concat([rates, avg_rates])
+        # Add sex column (all births are to females)
+        rates = pivoted[["race", "age", "rates"]].assign(sex="F")
 
-            avg_rates["race"] = "Native Hawaiian or Other Pacific Islander alone"
-            rates = pd.concat([rates, avg_rates])
-        else:
-            pass
+        result = rates.rename(columns={"rates": "rate_birth"})[
+            ["race", "sex", "age", "rate_birth"]
+        ].copy()
 
-        return rates.rename(columns={"rate": "rate_birth"})
+        return result
 
-    # Birth rates are not calcualted after the launch year
-    # TODO: (7-feature) Adjustments to birth rates would be made post-launch year through horizon
     else:
         raise ValueError("Birth rates not calculated past launch year")
