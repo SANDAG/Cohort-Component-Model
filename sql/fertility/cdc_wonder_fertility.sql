@@ -34,10 +34,14 @@ WITH [data] AS (
             ELSE [race]
         END AS [race]
         -- Divide by five to get annual average births
-        ,[births] / 5 AS [births]
+        ,[births] / 5.0 AS [births]
     FROM [socioec_data].[vital_statistics].[cdc_wonder_fertility] AS [fertility]
     -- For years >= 2022, actual race-specific files with sufficient data exist
-    WHERE [age] NOT IN ('Under 15 years', '50 years and over') AND [hispanic_origin] != 'Not Stated' AND [race] != 'Not Stated'
+    WHERE 
+        [age] NOT IN ('Under 15 years', '50 years and over') 
+        AND [hispanic_origin] != 'Not Stated' 
+        AND [race] != 'Not Stated'
+        AND [year] = @year
 ),
 [race_expanded] AS (
     SELECT 
@@ -48,7 +52,7 @@ WITH [data] AS (
         ,[race]
         ,[births]
     FROM [data]
-    -- Following UNION statements use the "All Races" "Not Hispanic or Latino"
+    -- Following UNION statements use the "All Races"
     -- To create "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
     UNION ALL
 
@@ -93,9 +97,7 @@ WITH [data] AS (
     ) AS [single_age]([age_group], [age])
     WHERE 
         [race_expanded].[age] = [single_age].[age_group]
-        AND [race_expanded].[year] = @year 
         AND [race_expanded].[race] != 'All Races'
-
     ORDER BY 
         [location] 
         ,[year]

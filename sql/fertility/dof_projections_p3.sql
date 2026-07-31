@@ -32,7 +32,8 @@ FROM [socioec_data].[ca_dof].[projections_p3]
 WHERE 
 -- Projections_id = 7 contains data for 2010-2019
 -- Projections_id = 16 contains data for 2020 and on
-    ([projections_id] = 7 OR [projections_id] = 16)
+    (([projections_id] = 7 AND [year] <= 2019) OR 
+        ([projections_id] = 16 AND [year] >= 2020))
     AND [sex] = 'Female' AND [age] BETWEEN 15 AND 44 
     AND [year] = @year
 GROUP BY [year], [race/ethnicity], [age]
