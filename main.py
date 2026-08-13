@@ -48,7 +48,7 @@ for increment in range(utils.BASE_YEAR, utils.HORIZON_YEAR + 1):
     if increment <= utils.LAUNCH_YEAR:
         rates = {
             # Crude Birth Rates
-            "births": get_birth_rates(yr=increment, pop_df=pop_df),
+            "births": get_birth_rates(yr=increment),
             # Crude Death Rates
             "deaths": get_death_rates(yr=increment, pop_df=pop_df),
             # Crude Migration Rates
