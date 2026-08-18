@@ -13,14 +13,9 @@ logger = logging.getLogger(__name__)
 def get_birth_rates(yr: int) -> pd.DataFrame:
     """Create birth rates broken down by race and single year of age.
 
-    Birth rates are calculated using CDC WONDER Natality births for 5-year age
-    groups ranging from ages 15 to 44 setting "Suppressed" raw births
-    (values < 10) to values of 4.5 and dividing the raw births by five, as
-    5-years of births are always from CDC WONDER. Births are merged with the
-    base/launch year population (aggregated to 5-year age groups), inflated to
-    account for the % of births attributed to "unknown" race/ethnicity groups,
-    and then QC'ed to ensure no race or 5-year age group contains 0 births or
-    births greater than the total population within the category.
+    Birth rates are provided using CDC WONDER Natality births for 5-year age
+    groups ranging from ages 15 to 44 then inflated to account for the % of births
+    attributed to "Unknown", "Not Stated", "Not Available", or "Not Reported" race/ethnicity groups.
 
     Note that no inflation factor is made to account for births assigned to
     under 15 or 45+ age groups that are excluded.
@@ -42,8 +37,7 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
                 births = pd.read_sql_query(
                     sql=sql.text(file.read()), con=con, params={"year": yr}
                 )
-                print("CDC WONDER fertility data loaded from database:")
-
+                logger.info("CDC WONDER fertility data loaded from database")
             # Load inflation factors
             with open(
                 utils.ROOT_FOLDER
@@ -54,35 +48,72 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
                 inflation_factor = pd.read_sql_query(
                     sql=sql.text(file.read()), con=con, params={"year": yr}
                 )
-                print("CDC WONDER fertility inflation factors loaded from database:")
+                logger.info(
+                    "CDC WONDER fertility inflation factors loaded from database"
+                )
 
-        # Calculate rates for 5-year age groups
-        group_rates = (
+        # Calculate inflated rates for individual ages
+        result = (
             pd.merge(births, inflation_factor, on=["location", "year"])
             .assign(
                 rate=lambda x: x["rate"] * x["inflation_factor"],
-            )[["location", "race", "age_group", "hispanic_origin", "rate"]]
-            .drop_duplicates()  # Remove duplicate rows for each age_group
+                sex="F",
+            )
+            .rename(columns={"rate": "rate_birth"})[
+                ["location", "race", "age", "hispanic_origin", "rate_birth", "sex"]
+            ]
         )
 
-        # Merge group rates back to individual ages
-        result = (
-            births[["location", "race", "age", "age_group", "hispanic_origin"]]
-            .merge(group_rates, on=["location", "race", "age_group", "hispanic_origin"])
-            .drop(columns=["age_group"])
-            .loc[lambda x: x["location"] == "San Diego County", ["race", "age", "rate"]]
-            .assign(sex="F")
-            .rename(columns={"rate": "rate_birth"})
+        # Pivot by location to get county, state, national as separate columns
+        pivoted = (
+            result.pivot_table(
+                index=["age", "race", "sex", "hispanic_origin"],
+                columns="location",
+                values=["rate_birth"],
+                aggfunc="first",
+            )
+            .pipe(lambda df: df.set_axis(["_".join(col) for col in df.columns], axis=1))
+            .reset_index()
+        )
+
+        # Retrieve fields
+        county, state, national = (
+            pivoted.get("rate_birth_San Diego County", pd.Series(dtype=float)),
+            pivoted.get("rate_birth_California", pd.Series(dtype=float)),
+            pivoted.get("rate_birth_United States", pd.Series(dtype=float)),
+        )
+
+        # Create Substitution methodology for null values based on geographic hierarchy
+        # County > State > National
+        pivoted["rate_birth"] = np.where(
+            (county.notna()) & (county > 0),
+            county,
+            np.where(
+                (state.notna()) & (state > 0),
+                state,
+                np.where(
+                    (national.notna()) & (national > 0),
+                    national,
+                    np.nan,
+                ),
+            ),
+        )
+
+        # Finalize combined dataset
+        df = (
+            pivoted[["age", "race", "sex", "rate_birth"]]
+            .sort_values(by=["sex", "race", "age"])
+            .reset_index(drop=True)
         )
 
         # Check for any null values in the rates column
-        if result["rate_birth"].isnull().any():
+        if df["rate_birth"].isnull().any():
             raise ValueError(
                 "Empty birth rates found after applying geographic"
-                "hierarchy. Verify rates are available for San Diego County."
+                "hierarchy. Verify rates are available for geographies."
             )
 
-        return result
+        return df
 
     else:
         raise ValueError("Birth rates not calculated past launch year")
