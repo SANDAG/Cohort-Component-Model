@@ -42,8 +42,9 @@ BEGIN
                 WHEN [product] = '2007-2019' AND [race] = 'All Races' THEN 'All Races'
                 ELSE [race]
             END AS [race]
-            -- Current provided rates are per 1,000
-            -- Divide by 1000 to get rate per 100,000
+            -- Source rates are expressed per 1,000 women 
+            -- (e.g., 50 births / 1,000 women = 0.05, but displayed as 50)
+            -- Divide by 1000 to convert back to decimal proportion
             ,[rate] / 1000.0 AS [rate]
         FROM [socioec_data].[vital_statistics].[cdc_wonder_fertility] AS [fertility]
         -- For years >= 2022, actual race-specific files with sufficient data exist
