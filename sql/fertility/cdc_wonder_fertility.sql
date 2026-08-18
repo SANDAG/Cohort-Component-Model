@@ -25,7 +25,6 @@ BEGIN
     WITH [data] AS (
         SELECT [product]
             ,[location]
-            ,[period]
             ,[year]
             ,[age]
             ,[hispanic_origin]
@@ -43,12 +42,16 @@ BEGIN
                 WHEN [product] = '2007-2019' AND [race] = 'All Races' THEN 'All Races'
                 ELSE [race]
             END AS [race]
-            -- Divide by five to get annual average births
+            -- Current provided rates are per 1,000
+            -- Divide by 1000 to get rate per 100,000
             ,[rate] / 1000.0 AS [rate]
         FROM [socioec_data].[vital_statistics].[cdc_wonder_fertility] AS [fertility]
         -- For years >= 2022, actual race-specific files with sufficient data exist
         WHERE 
-            [age] NOT IN ('Under 15 years', '50 years and over') 
+			[product] = @product
+			-- Five year rolling sums used
+			AND [period] = 'Five-Year'
+            AND [age] NOT IN ('Under 15 years', '45-49 years', '50 years and over')
             AND [hispanic_origin] != 'Not Stated' 
             AND [race] != 'Not Stated'
             AND [year] = @year
@@ -62,6 +65,7 @@ BEGIN
             ,[race]
             ,[rate]
         FROM [data]
+        WHERE [race] != 'All Races'
         -- Following UNION statements use the "All Races"
         -- To create "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
         UNION ALL
@@ -74,7 +78,7 @@ BEGIN
             ,'Two or More Races' AS [race]
             ,[rate]
         FROM [data]
-        WHERE [race] = 'All Races' AND [year] = @year AND [year] <= 2019
+        WHERE [race] = 'All Races' AND [year] <= 2019
 
         UNION ALL
 
@@ -86,7 +90,7 @@ BEGIN
             ,'Native Hawaiian or Other Pacific Islander alone' AS [race]
             ,[rate]
         FROM [data]
-        WHERE [race] = 'All Races' AND [year] = @year AND [year] <= 2019
+        WHERE [race] = 'All Races' AND [year] <= 2019
     )   SELECT 
             [location]
             ,[year]
@@ -107,7 +111,6 @@ BEGIN
         ) AS [single_age]([age_group], [age])
         WHERE 
             [race_expanded].[age] = [single_age].[age_group]
-            AND [race_expanded].[race] != 'All Races'
         ORDER BY 
             [location] 
             ,[year]

@@ -1,7 +1,19 @@
 /* 
     This query calculates the CDC WONDER mortality inflation factors that will be used to
-    inflate deaths. The inflation factor is calculated as 1 + (Not Stated Deaths / 
-    Total Deaths) for each year, location, and sex. 
+    inflate death counts for known demographic groups.
+    
+    Some records from the CDC WONDER mortality dataset contain incomplete demographic information 
+    (race/hispanic origin marked as "Not Stated"). These deaths still occurred but cannot be 
+    assigned to specific demographic groups. By inflating the counts for known groups, we 
+    proportionally distribute these unknown deaths so that the total modeled deaths matches the 
+    actual total deaths reported.
+    
+    The inflation factor is calculated as 1 + (Unknown Deaths / Total Deaths) for each year 
+    and location.
+    
+    Unknown deaths are defined as deaths that are:
+        1) assigned to "Not Stated" age
+        2) assigned to "Not Stated" hispanic origin
 */
 
 DECLARE @year INTEGER = :year;
@@ -32,20 +44,18 @@ BEGIN
             CASE
                 WHEN [age] = 'Not Stated' OR [hispanic_origin] = 'Not Stated' THEN [deaths]
                 ELSE 0
-            END) / SUM([deaths]) * 1.0 AS [inflation_factor]
+            END) 
+            / 
+            SUM(
+            CASE
+                WHEN [age] = 'All Stated Ages' AND [race] = 'All Races' THEN [deaths]
+                ELSE 0
+            END) * 1.0 AS [inflation_factor]
     FROM [socioec_data].[vital_statistics].[cdc_wonder_mortality]
     WHERE
         [product] = @product
         -- Five year rolling sums used
         AND [period] = 'Five-Year'
-        -- We load "All Stated Ages" specifically to capture "Not Stated" records in Hispanic Origin
-        -- As we do not want to load in single year of age data for "Not Stated" Hispanic Origin records
-        AND [age] IN ('All Stated Ages', 'Not Stated')
-        -- We load "Hispanic or Latino; Not Hispanic or Latino" to combine with "All Stated Ages"
-        -- To make the calculation of total deaths for stated categories easier
-        -- We load "All Origins" to combine with "Not Stated" age
-        AND [hispanic_origin] IN ('Hispanic or Latino; Not Hispanic or Latino', 'All Origins', 'Not Stated')
-        AND [race] = 'All Races'
         AND [year] = @year
     GROUP BY
         [year],
