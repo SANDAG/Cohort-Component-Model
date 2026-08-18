@@ -41,7 +41,7 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
             )
             # Convert age to integer type
             cdc_wonder["age"] = cdc_wonder["age"].astype(float)
-            print("CDC WONDER mortality data loaded from database:")
+            logger.info("CDC WONDER mortality data loaded from database:")
         # Load inflation factors
         with open(
             utils.ROOT_FOLDER
@@ -55,7 +55,7 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
                 con=con,
                 params={"year": year},
             )
-            print("CDC WONDER mortality inflation factors loaded from database:")
+            logger.info("CDC WONDER mortality inflation factors loaded from database:")
 
     # For years >= 2022 (2018+ product), merge SD County deaths with CCM population
     if year >= 2022 and pop_df is not None:
@@ -408,7 +408,7 @@ def get_death_rates(
             undesa_rates = pd.read_sql_query(
                 sql=sql.text(file.read()), con=con, params={"year": yr}
             )
-            print("UN DESA loaded from database:")
+            logger.info("UN DESA loaded from database:")
 
     # Use the latest available year from UNDESA data
     max_undesa_year = undesa_rates["year"].max()
