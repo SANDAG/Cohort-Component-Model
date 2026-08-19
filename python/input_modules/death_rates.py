@@ -29,10 +29,9 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
     """
 
     with utils.SQL_ENGINE.connect() as con:
+
         # Load CDC WONDER data from database for the specific year only
-        with open(
-            utils.ROOT_FOLDER / "sql" / "mortality" / "cdc_wonder_mortality.sql"
-        ) as file:
+        with open(utils.SQL_FOLDER / "mortality" / "cdc_wonder_mortality.sql") as file:
             cdc_wonder = utils.read_sql_query_fallback(
                 max_lookback=1,
                 sql=sql.text(file.read()),
@@ -42,12 +41,10 @@ def load_cdc_wonder(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
             # Convert age to integer type
             cdc_wonder["age"] = cdc_wonder["age"].astype(float)
             logger.info("CDC WONDER mortality data loaded from database:")
+
         # Load inflation factors
         with open(
-            utils.ROOT_FOLDER
-            / "sql"
-            / "mortality"
-            / "cdc_wonder_mortality_inflation.sql"
+            utils.SQL_FOLDER / "mortality" / "cdc_wonder_mortality_inflation.sql"
         ) as file:
             inflation_factor = utils.read_sql_query_fallback(
                 max_lookback=1,
@@ -402,9 +399,7 @@ def get_death_rates(
 
     # Load UNDESA data for ages 85-99
     with utils.SQL_ENGINE.connect() as con:
-        with open(
-            utils.ROOT_FOLDER / "sql" / "mortality" / "undesa_survivors.sql"
-        ) as file:
+        with open(utils.SQL_FOLDER / "mortality" / "undesa_survivors.sql") as file:
             undesa_rates = pd.read_sql_query(
                 sql=sql.text(file.read()), con=con, params={"year": yr}
             )

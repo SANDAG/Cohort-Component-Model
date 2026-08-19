@@ -15,10 +15,10 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
 
     Birth rates are provided using CDC WONDER Natality births for 5-year age
     groups ranging from ages 15 to 44 then inflated to account for the % of births
-    attributed to "Unknown", "Not Stated", "Not Available", or "Not Reported" race/ethnicity groups.
-
-    Note that no inflation factor is made to account for births assigned to
-    under 15 or 45+ age groups that are excluded.
+    attributed to:
+        1) Ages 15 and under
+        2) Ages 45 and over
+        3) "Unknown", "Not Stated", "Not Available", or "Not Reported" race/ethnicity groups
 
     Args:
         yr: Increment year
@@ -30,20 +30,19 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
     if yr <= utils.LAUNCH_YEAR:
 
         with utils.SQL_ENGINE.connect() as con:
+
             # Load CDC WONDER data from database for the specific year only
             with open(
-                utils.ROOT_FOLDER / "sql" / "fertility" / "cdc_wonder_fertility.sql"
+                utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility.sql"
             ) as file:
                 births = pd.read_sql_query(
                     sql=sql.text(file.read()), con=con, params={"year": yr}
                 )
                 logger.info("CDC WONDER fertility data loaded from database")
+
             # Load inflation factors
             with open(
-                utils.ROOT_FOLDER
-                / "sql"
-                / "fertility"
-                / "cdc_wonder_fertility_inflation.sql"
+                utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility_inflation.sql"
             ) as file:
                 inflation_factor = pd.read_sql_query(
                     sql=sql.text(file.read()), con=con, params={"year": yr}
