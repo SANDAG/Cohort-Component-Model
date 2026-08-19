@@ -11,38 +11,5 @@ Crude death rates are calculated within race, sex, and single year of age for ea
 * For ages under 85, death rates are calculated using CDC WONDER as deaths divided by population for each race, sex, and single year of age. The calculation starts with San Diego County data and, when a value is suppressed or zero, substitutes data from larger geographies (California, then the United States). This approach reduces missing records and avoids unrealistic 0% death rates. The CDC WONDER sources used for each base and launch year by race/ethnicity are listed below. Because 2021 data are missing, 2020 data are used instead.
 * For ages 85 and older, we use the United Nations Department of Economic and Social Affairs (UN DESA) Life Table Survivors dataset. Because this dataset is stratified only by age and sex, we apply a scaling factor to estimate age-, sex-, and race-specific mortality rates. We derive that scaling factor by comparing implied mortality rates for ages 85 and older from CDC WONDER and solving for the value that aligns the UN DESA implied rate with CDC WONDER.
 
-#### Table 1: CDC WONDER Exports
-_Note each CDC product has different race reporting standards ([OMB SPD-15](https://spd15revision.gov/content/spd15revision/en/history.html)) and eligible datasets. The 1999-2020 product is missing `Non-Hispanic Native Hawaiian or Pacific Islander` and `Two or More Races` and uses the combined data for all races. Meanwhile, the 2018-2024 product is missing population at the county level and is substituted with population estimates from within CCM. There is not enough data in the 2018-2024 product to do a five-year moving average for 2021, and as such, 2020 data will be used instead. The `SYA` files consist of ages 0-84 while the `TYA` files represent 85+._
-| Increment Year | Race/Ethnicity | File |
-| :---------------:| :------------: | :--: |
-| 2010-2020 | Hispanic | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); HIS; ALL; (2010-2020); 5Y.(txt-csv) |
-| 2010-2020 | American Indian or Alaska Native alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; AIAN; (2010-2020); 5Y.(txt-csv) |
-| 2010-2020 | Asian alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; ASIAN; (2010-2020); 5Y.(txt-csv) |
-| 2010-2020 | Black or African American alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; BAA; (2010-2020); 5Y.(txt-csv) |
-| 2010-2020 | Native Hawaiian or Other Pacific Islander alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; ALL; (2010-2020); 5Y.(txt-csv) |
-| 2010-2020 | White alone | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; WH; (2010-2020); 5Y.(txt-csv) |
-| 2010-2020 | Two or More Races | (SD-CA-US); 1999-2020; (SYA-TYA); (F-M); NON; ALL; (2010-2020); 5Y.(txt-csv) |
-| | | |
-| 2022-2024 | Hispanic | (SD-CA-US); 2018+; (SYA-TYA); (F-M); HIS; ALL; (2022-2024); 5Y.(txt-csv) |
-| 2022-2024 | American Indian or Alaska Native alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; AIAN; (2022-2024); 5Y.(txt-csv) |
-| 2022-2024 | Asian alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; ASIAN; (2022-2024); 5Y.(txt-csv) |
-| 2022-2024 | Black or African American alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; BAA; (2022-2024); 5Y.(txt-csv) |
-| 2022-2024 | Native Hawaiian or Other Pacific Islander alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; ALL; (2022-2024); 5Y.(txt-csv) |
-| 2022-2024 | White alone | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; WH; (2022-2024); 5Y.(txt-csv) |
-| 2022-2024 | Two or More Races | (SD-CA-US); 2018+; (SYA-TYA); (F-M); NON; ALL; (2022-2024); 5Y.(txt-csv) |
-| | | |
-
-_Note each CDC product contains numerous instances of `Not Stated` categories where there are associated death counts but no population counts, making them unattributable to a specific demographic. To address this, we inflate the attributable deaths by this proportion and recalculate the rates based on the inflated death counts._
-| Increment Year | Not Stated Category | File |
-| :---------------:| :------------: | :--: |
-| 2010-2020 | Age | (SD-CA-US); 1999-2020; NS; ALL; ALL; ALL; (2010-2020); 5Y.csv |
-| 2010-2020 | Hispanic Origin | (SD-CA-US); 1999-2020; SYA; ALL; NS; ALL; (2010-2020); 5Y.csv |
-| 2010-2020 | None | (SD-CA-US); 1999-2020; SYA; ALL; ALL; ALL; (2010-2020); 5Y.csv |
-| | | |
-| 2022-2024 | Age | (SD-CA-US); 2018+; NS; ALL; ALL; ALL; (2022-2024); 5Y.csv |
-| 2022-2024 | Hispanic Origin | (SD-CA-US); 2018+; SYA; ALL; NS; ALL; (2022-2024); 5Y.csv |
-| 2022-2024 | None | (SD-CA-US); 2018+; SYA; ALL; ALL; ALL; (2022-2024); 5Y.csv |
-| | | |
-
 ## 4 Repository Location
 The main classes, methods, and utilities associated with creating crude death rates are contained in **python/input_modules/death_rates.py**

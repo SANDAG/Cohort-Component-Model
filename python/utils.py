@@ -10,7 +10,10 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 
-import python.parsers as parsers
+try:
+    import python.parsers as parsers
+except ModuleNotFoundError:
+    import parsers
 
 #########
 # PATHS #
@@ -95,7 +98,6 @@ LAUNCH_YEAR = input_parser.launch_year
 HORIZON_YEAR = input_parser.horizon_year
 VERSION = input_parser.version
 COMMENTS = input_parser.comments
-RATES_MAP = input_parser.rates_map
 CONTROLS = input_parser.controls
 MIGRATION_CONTROLS = input_parser.migration_controls
 LOAD_TO_DATABASE = input_parser.load_to_database

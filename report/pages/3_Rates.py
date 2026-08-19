@@ -13,9 +13,9 @@ with tab1:
     # Load fertility rate data
     fertility = (
         st.session_state.rates_data[["year", "race", "sex", "age", "rate_birth"]]
-        .loc[lambda x: (x["age"] >= 15) & (x["age"] <= 45)]
+        .loc[lambda x: (x["sex"] == "F") & (x["age"] >= 15) & (x["age"] <= 45)]
         .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
-    )
+    ).sort_values(by=["Race/Ethnicity", "Age"])
 
     # Create year slider and filter dataset
     tab1_year = st.slider(
@@ -53,8 +53,8 @@ with tab1:
     # Calculate implied TFR for San Diego County using the components of change
     tfr_sd = (
         st.session_state.components_data.loc[
-            (st.session_state.components_data["year"] == tab1_year) &
-              (st.session_state.components_data["sex"] == 'F')
+            (st.session_state.components_data["year"] == tab1_year)
+            & (st.session_state.components_data["sex"] == "F")
         ]
         .merge(
             right=st.session_state.population_data,
@@ -93,10 +93,11 @@ with tab2:
     sub_tab1, sub_tab2 = st.tabs(["Mortality Rates", "Life Expectancy"])
 
     # Load mortality rate data
-    mortality = st.session_state.rates_data[
-        ["year", "race", "sex", "age", "rate_death"]
-    ].rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"}
-             ).sort_values(by=["Year", "Race/Ethnicity", "Age"])
+    mortality = (
+        st.session_state.rates_data[["year", "race", "sex", "age", "rate_death"]]
+        .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
+        .sort_values(by=["Year", "Race/Ethnicity", "Age"])
+    )
 
     with sub_tab1:
 
@@ -143,13 +144,13 @@ with tab2:
             .reset_index(0)
         ).rename(columns={"rate_death": "Life Expectancy"})
 
-        # Calculate implied life expectancy for San Diego County using the 
+        # Calculate implied life expectancy for San Diego County using the
         # components of change
         lfe_sd = report_utils.life_expectancy(
             q_x=(
                 st.session_state.components_data.loc[
-                    (st.session_state.components_data["year"] == tab2_year) & 
-                    (st.session_state.components_data["sex"] == sub_tab1_sex)
+                    (st.session_state.components_data["year"] == tab2_year)
+                    & (st.session_state.components_data["sex"] == sub_tab1_sex)
                 ]
                 .merge(
                     right=st.session_state.population_data,
@@ -248,8 +249,9 @@ with tab3:
         key="tab3_sex",
     )
 
-    migration = migration.loc[(migration["Year"] == tab3_year) & 
-                              (migration["sex"] == tab3_sex)]
+    migration = migration.loc[
+        (migration["Year"] == tab3_year) & (migration["sex"] == tab3_sex)
+    ]
 
     # Show net migration rates in a line chart
     fig = px.line(
@@ -272,8 +274,8 @@ with tab3:
     # Display the Race/Ethnicity composition of migrants in a table
     migrants = (
         st.session_state.components_data.loc[
-            (st.session_state.components_data["year"] == tab3_year) &
-              (st.session_state.components_data["sex"] == tab3_sex)
+            (st.session_state.components_data["year"] == tab3_year)
+            & (st.session_state.components_data["sex"] == tab3_sex)
         ]
         .groupby("race")[["ins", "outs"]]
         .sum()
