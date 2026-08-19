@@ -10,7 +10,10 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 
-import python.parsers as parsers
+try:
+    import python.parsers as parsers
+except ModuleNotFoundError:
+    import parsers
 
 #########
 # PATHS #
