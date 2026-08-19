@@ -21,7 +21,6 @@ IF NOT EXISTS (
 SELECT @msg AS [msg]
 ELSE
 BEGIN
-
     WITH [data] AS (
         SELECT [product]
             ,[location]
@@ -92,30 +91,31 @@ BEGIN
             ,[rate]
         FROM [data]
         WHERE [race] = 'All Races' AND [year] <= 2019
-    )   SELECT 
-            [location]
-            ,[year]
-            ,[single_age].[age_group]
-            ,[single_age].[age]
-            ,[hispanic_origin]
-            ,[race]
-            ,[rate]
-        FROM [race_expanded]
-        CROSS JOIN (
-            VALUES 
-                ('15-19 years', 15), ('15-19 years', 16), ('15-19 years', 17), ('15-19 years', 18), ('15-19 years', 19),
-                ('20-24 years', 20), ('20-24 years', 21), ('20-24 years', 22), ('20-24 years', 23), ('20-24 years', 24),
-                ('25-29 years', 25), ('25-29 years', 26), ('25-29 years', 27), ('25-29 years', 28), ('25-29 years', 29),
-                ('30-34 years', 30), ('30-34 years', 31), ('30-34 years', 32), ('30-34 years', 33), ('30-34 years', 34),
-                ('35-39 years', 35), ('35-39 years', 36), ('35-39 years', 37), ('35-39 years', 38), ('35-39 years', 39),
-                ('40-44 years', 40), ('40-44 years', 41), ('40-44 years', 42), ('40-44 years', 43), ('40-44 years', 44)
-        ) AS [single_age]([age_group], [age])
-        WHERE 
-            [race_expanded].[age] = [single_age].[age_group]
-        ORDER BY 
-            [location] 
-            ,[year]
-            ,[single_age].[age] 
-            ,[hispanic_origin]
-            ,[race] 
+    )
+    SELECT 
+        [location]
+        ,[year]
+        ,[single_age].[age_group]
+        ,[single_age].[age]
+        ,[hispanic_origin]
+        ,[race]
+        ,[rate]
+    FROM [race_expanded]
+    CROSS JOIN (
+        VALUES 
+            ('15-19 years', 15), ('15-19 years', 16), ('15-19 years', 17), ('15-19 years', 18), ('15-19 years', 19),
+            ('20-24 years', 20), ('20-24 years', 21), ('20-24 years', 22), ('20-24 years', 23), ('20-24 years', 24),
+            ('25-29 years', 25), ('25-29 years', 26), ('25-29 years', 27), ('25-29 years', 28), ('25-29 years', 29),
+            ('30-34 years', 30), ('30-34 years', 31), ('30-34 years', 32), ('30-34 years', 33), ('30-34 years', 34),
+            ('35-39 years', 35), ('35-39 years', 36), ('35-39 years', 37), ('35-39 years', 38), ('35-39 years', 39),
+            ('40-44 years', 40), ('40-44 years', 41), ('40-44 years', 42), ('40-44 years', 43), ('40-44 years', 44)
+    ) AS [single_age]([age_group], [age])
+    WHERE 
+        [race_expanded].[age] = [single_age].[age_group]
+    ORDER BY 
+        [location] 
+        ,[year]
+        ,[single_age].[age] 
+        ,[hispanic_origin]
+        ,[race] 
 END;

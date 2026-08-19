@@ -44,8 +44,7 @@ BEGIN
                     [age] IN ('Under 15 years' ,'45-49 years', '50 years and over')
                     AND [race] = 'All Races'
                     AND [hispanic_origin] = 'All Origins'
-                )              
-                OR [race] = 'Not Stated' OR [hispanic_origin] = 'Not Stated'  
+                ) OR [race] = 'Not Stated' OR [hispanic_origin] = 'Not Stated'  
                 THEN [births]
                 ELSE 0
             END) / SUM([births]) AS [inflation_factor]
