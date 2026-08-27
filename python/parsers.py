@@ -244,6 +244,10 @@ class InputParser:
                 "Mortality controls must contain columns: (race, sex, age, year, rate_death)"
             )
 
+        # Required mortality-control fields cannot be null
+        if mortality_controls[list(required_cols)].isna().any().any():
+            raise ValueError("Mortality controls must not contain null values")
+
         # Check mortality rates are >= 0 and <= 1
         if any(mortality_controls["rate_death"] < 0) or any(
             mortality_controls["rate_death"] > 1
