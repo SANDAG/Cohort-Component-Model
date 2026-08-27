@@ -16,6 +16,8 @@ configurations:  # other configuration files
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
 csv:
   migration_controls: null  # optional csv with columns: (year,ins,outs)
+  mortality_controls: null # option csv that requires running mortality_forecasting.py first, then setting to "output/mortality_forecast.csv"
+  mortality_forecast_year: 2023 # year after launch
 interval:  # forecast interval (base is assumed from launch)
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
@@ -31,6 +33,38 @@ year,ins,outs
 2022,52000,47000
 2023,54000,50000
 ```
+
+### Mortality Controls File Format
+If mortality controls are provided, the CSV should include one row per demographic group per year with death rates:
+
+```csv
+race,sex,age,year,rate_death
+White alone,F,1,2021,0.0002
+Asian alone,M,99,2021,0.78
+```
+
+### Generating Mortality Forecasts
+To use mortality forecasts in your model run:
+
+1. **Generate the forecast file** (one-time or when updating forecasts):
+   ```bash
+   uv run mortality_forecasting.py
+   ```
+   This creates `output/mortality_forecast.csv` using the Lee-Miller mortality forecasting model.
+
+2. **Enable mortality controls** in `config.yml` and set the desired forecast year:
+   ```yaml
+   csv:
+     death_rate_controls: "output/mortality_forecast.csv"
+     death_rate_forecast_year: 2050
+   ```
+
+3. **Run the main model** as usual:
+   ```bash
+   uv run main.py
+   ```
+
+The model will use the forecasted death rates for years beyond the launch year instead of holding rates constant.
 
 ### Configuration of Private Data in secrets.yml
 In order to avoid exposing certain data to the public this repository uses a secrets file to store sensitive configurations in addition to a standard configuration file. This file is stored in the root directory of the repository as `secrets.yml` and is included in the `.gitignore` intentionally to avoid it ever being committed to the repository.
