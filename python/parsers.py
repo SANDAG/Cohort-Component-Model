@@ -18,6 +18,8 @@ class InputParser:
         controls (dict): Mapping of control totals for each year
         migration_controls (pd.DataFrame | None): Optional migration control totals (ins/outs)
             for each post-launch increment year. If not provided, set to None.
+        mortality_controls (pd.DataFrame | None): Optional mortality rates by
+            race, sex, and age. If not provided, set to None.
         load_to_database (bool): Whether to load the run results into a database.
 
     Methods:
@@ -29,6 +31,8 @@ class InputParser:
             sets the controls attribute
         _parse_migration_controls(): Parses the migration controls mapping from the
             configuration file and sets the migration_controls attribute
+        _parse_mortality_controls(): Parses the mortality rate controls from the
+            configuration file and sets the mortality_controls attribute
     """
 
     def __init__(self, config: dict) -> None:
@@ -41,6 +45,8 @@ class InputParser:
         self.comments = None
         self.controls = {}
         self.migration_controls = None
+        self.mortality_controls = None
+        self.mortality_forecast_year = None
         self.load_to_database = None
 
     def parse_config(self) -> None:
@@ -48,7 +54,8 @@ class InputParser:
 
         First, the contents of the configuration file are validated. Then, the
         base, launch, and horizon years are set along with the software version
-        and any comments. Finally, the controls totals and optional migration control totals are parsed and set."""
+        and any comments. Finally, the controls totals and optional migration control totals are parsed and set.
+        """
         self._validate_config()
         _interval = self._parse_interval()
         self.base_year = _interval["base_year"]
@@ -58,6 +65,10 @@ class InputParser:
         self.version = self._config.get("version")
         self.controls = self._parse_controls()
         self.migration_controls = self._parse_migration_controls()
+        self.mortality_forecast_year = self._config.get("csv", {}).get(
+            "mortality_forecast_year", None
+        )
+        self.mortality_controls = self._parse_mortality_controls()
         self.load_to_database = self._config.get("sql", {}).get(
             "load_to_database", False
         )
@@ -77,7 +88,14 @@ class InputParser:
             },
             "csv": {
                 "type": "dict",
-                "schema": {"migration_controls": {"type": "string", "nullable": True}},
+                "schema": {
+                    "migration_controls": {"type": "string", "nullable": True},
+                    "mortality_controls": {"type": "string", "nullable": True},
+                    "mortality_forecast_year": {
+                        "type": "integer",
+                        "nullable": True,
+                    },
+                },
             },
             "interval": {
                 "type": "dict",
@@ -189,3 +207,79 @@ class InputParser:
             raise ValueError("Migration controls must contain all post-launch years")
 
         return migration_controls
+
+    def _parse_mortality_controls(self) -> pd.DataFrame | None:
+        """Parse the mortality controls CSV file from the configuration file.
+
+        The CSV file must contain mortality rates by race, sex, age, and year.
+
+        Returns:
+            pd.DataFrame | None: DataFrame with columns (race, sex, age, year, rate_death),
+                or None if no file is provided.
+        """
+        # Check if mortality controls file is provided
+        mortality_controls_fp = self._config["csv"].get("mortality_controls")
+        if mortality_controls_fp is None:
+            return None
+
+        mortality_controls_path = pathlib.Path(mortality_controls_fp)
+        if not mortality_controls_path.is_absolute():
+            mortality_controls_path = (
+                pathlib.Path(__file__).resolve().parent.parent / mortality_controls_path
+            )
+        try:
+            with open(mortality_controls_path, "r") as f:
+                mortality_controls = pd.read_csv(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Mortality controls file not found: {mortality_controls_fp}"
+            )
+        except pd.errors.ParserError as e:
+            raise ValueError(f"Error parsing mortality controls CSV file: {e}")
+
+        # Ensure DataFrame contains required columns
+        required_cols = {"race", "sex", "age", "year", "rate_death"}
+        if not required_cols.issubset(mortality_controls.columns):
+            raise ValueError(
+                "Mortality controls must contain columns: (race, sex, age, year, rate_death)"
+            )
+
+        # Check mortality rates are >= 0 and <= 1
+        if any(mortality_controls["rate_death"] < 0) or any(
+            mortality_controls["rate_death"] > 1
+        ):
+            raise ValueError("Mortality rates must be between 0 and 1")
+
+        # Check for duplicate race/sex/age/year combinations
+        if mortality_controls.duplicated(subset=["race", "sex", "age", "year"]).any():
+            raise ValueError(
+                "Duplicate race/sex/age/year combinations found in mortality controls"
+            )
+
+        # Check age range is valid (0-99)
+        if any(mortality_controls["age"] < 0) or any(mortality_controls["age"] > 99):
+            raise ValueError("Age values must be between 0 and 99")
+
+        # Validate year column
+        control_years = set(mortality_controls["year"].unique())
+
+        # If mortality_forecast_year is specified, only validate that year exists
+        if self.mortality_forecast_year is not None:
+            if self.mortality_forecast_year not in control_years:
+                available_years = sorted(control_years)
+                raise ValueError(
+                    f"mortality_forecast_year ({self.mortality_forecast_year}) not found in mortality controls. "
+                    f"Available years: {available_years[0]}-{available_years[-1]}"
+                )
+        else:
+            # If no forecast year specified, require all post-launch years (year-by-year mode)
+            post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
+            missing_years = set(post_launch_years) - control_years
+
+            if missing_years:
+                raise ValueError(
+                    f"Missing required years in mortality rate controls: {sorted(missing_years)}. "
+                    f"Required years: {list(post_launch_years)}"
+                )
+
+        return mortality_controls

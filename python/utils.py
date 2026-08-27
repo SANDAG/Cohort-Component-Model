@@ -100,6 +100,8 @@ VERSION = input_parser.version
 COMMENTS = input_parser.comments
 CONTROLS = input_parser.controls
 MIGRATION_CONTROLS = input_parser.migration_controls
+MORTALITY_CONTROLS = input_parser.mortality_controls
+MORTALITY_FORECAST_YEAR = input_parser.mortality_forecast_year
 LOAD_TO_DATABASE = input_parser.load_to_database
 
 logger.info(
@@ -109,6 +111,10 @@ logger.info(
 if MIGRATION_CONTROLS is not None:
     logger.info("Migration controls loaded from configuration file")
 
+if MORTALITY_CONTROLS is not None:
+    logger.info("Mortality controls loaded from configuration file")
+if MORTALITY_FORECAST_YEAR is not None:
+    logger.info(f"Mortality forecast year set to: {MORTALITY_FORECAST_YEAR}")
 
 ##############################
 # UTILITY LISTS AND MAPPINGS #
