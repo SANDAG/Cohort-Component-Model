@@ -208,16 +208,22 @@ with tab2:
             .rename(columns={"rate_death": "Life Expectancy", "sex": "Sex"})
         )[["Race/Ethnicity", "Year", "Sex", "Life Expectancy"]]
 
-        fig = px.line(
-            lfe,
-            x="Year",
-            y="Life Expectancy",
-            range_x=[lfe["Year"].min(), lfe["Year"].max() + 2],
-            color="Race/Ethnicity",
-            title="San Diego Region: Life Expectancy at Birth",
-            labels={"Race/Ethnicity": ""},
-        ).update_layout(
-            legend=dict(orientation="h", y=1.15),
+        fig = (
+            px.line(
+                lfe,
+                x="Year",
+                y="Life Expectancy",
+                color="Race/Ethnicity",
+                title="San Diego Region: Life Expectancy at Birth",
+                labels={"Race/Ethnicity": ""},
+            )
+            .update_layout(
+                legend=dict(orientation="h", y=1.15),
+            )
+            .update_xaxes(
+                range=[lfe["Year"].min() - 0.5, lfe["Year"].max() + 0.5],
+                dtick=1,
+            )
         )
         st.plotly_chart(fig)
 
