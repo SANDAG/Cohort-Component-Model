@@ -8,6 +8,7 @@ import pandas as pd
 import sqlalchemy as sql
 
 import python.utils as utils
+from python.tests import validate_data
 
 logger = logging.getLogger(__name__)
 
@@ -357,41 +358,41 @@ def process_life_rates(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def get_death_rates(
+def calculate_death_rates(
     yr: int,
     pop_df: pd.DataFrame,
     smooth_s: int = 5,
     smooth_k: int = 2,
 ) -> pd.DataFrame:
-    """Create death rates broken down by race, sex, and single year of age.
+    """Calculate mortality rates broken down by race, sex, and single year of age.
 
-    Death rates are calculated for ages < 85 from CDC WONDER by simply
+    Mortality rates are calculated for ages < 85 from CDC WONDER by simply
     dividing raw deaths by population for each race, sex, and single year of
     age category after setting "Suppressed" raw deaths (values < 10) to values
     of 4.5 and 0 raw deaths to values of 1. This strategy avoids missing value
-    records and implausible 0% death rates.
+    records and implausible 0% mortality rates.
 
     For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
     rates by sex and age but not by race. To incorporate race-specific variation,
-    scaling factors are calculated using CDC TYA (Ten-Year Age) 85+ rates by race/sex.
-    The scaling factor for each race/sex combination equals the CDC 85+ rate divided
+    scaling factors are calculated using CDC TYA (Ten-Year Age) 85+ mortality rates by race/sex.
+    The scaling factor for each race/sex combination equals the CDC 85+ mortality rate divided
     by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to each
-    individual UN DESA age (85-99) to produce race-specific rates that match CDC's
+    individual UN DESA age (85-99) to produce race-specific mortality rates that match CDC's
     overall 85+ mortality pattern by race.
 
-    The CDC WONDER dataset for 2021 is unavailable, so 2020 data is used
+    The CDC WONDER mortality dataset for 2021 is unavailable, so 2020 data is used
     as a substitute for year 2021.
 
     Smoothing is applied to the combined CDC and scaled UN DESA dataset.
 
     Args:
-        yr: Increment year.
+        yr (int): Increment year.
         pop_df (pd.DataFrame): Population data for the year.
         smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
 
     Returns:
-        pd.DataFrame: Death rates broken down by race, sex, and single year
+        pd.DataFrame: Mortality rates broken down by race, sex, and single year
             of age.
     """
     # Load mortality data for this specific year
@@ -468,5 +469,67 @@ def get_death_rates(
 
     # Rename to final column name
     rates = combined_rates.rename(columns={"rates": "rate_death"})
+
+    # Validate output has correct structure
+    validate_data(
+        table_name=f"Death Rates (year {yr})",
+        data=rates[["race", "sex", "age", "rate_death"]],
+        row_count={"key_columns": {"race", "sex", "age"}},
+        negative={"negative_ok": set()},
+        null={"null_ok": set()},
+    )
+
+    return rates[["race", "sex", "age", "rate_death"]]
+
+
+def get_death_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
+    """Create mortality rates broken down by race, sex, and single year of age.
+
+    For each year up to launch, calculate the crude death rate within race, sex, and single year of age.
+    For post-launch years, if mortality controls are provided, use the year-specific rates.
+
+    Args:
+        yr: Increment year
+        pop_df (pd.DataFrame): Population data broken down by race, sex, and
+            single year of age
+
+    Returns:
+        pd.DataFrame: Mortality rates broken down by race, sex, and single
+            year of age with columns (race, sex, age, rate_death).
+    """
+
+    # Death rates calculated from base year up to the launch year
+    if yr <= utils.LAUNCH_YEAR:
+        rates = calculate_death_rates(yr=yr, pop_df=pop_df)
+
+    # Post-launch year
+    else:
+        # If mortality controls are provided, use them
+        if utils.MORTALITY_CONTROLS is None:
+            raise ValueError(
+                f"No mortality controls provided for post-launch year {yr}. "
+                "Provide mortality_controls with year column in config."
+            )
+
+        # Use the forecast year if specified, otherwise use the current year
+        target_year = (
+            utils.MORTALITY_FORECAST_YEAR
+            if utils.MORTALITY_FORECAST_YEAR is not None
+            else yr
+        )
+
+        # Filter to the specific year
+        rates = utils.MORTALITY_CONTROLS.loc[
+            utils.MORTALITY_CONTROLS["year"] == target_year
+        ].copy()
+
+        if len(rates) == 0:
+            raise ValueError(
+                f"No mortality controls found for year {target_year}. "
+                f"Available years: {sorted(utils.MORTALITY_CONTROLS['year'].unique())}"
+            )
+
+        # Drop year column to match expected output format
+        rates = rates.drop(columns=["year"])
 
     return rates[["race", "sex", "age", "rate_death"]]

@@ -7,6 +7,8 @@ import sqlalchemy as sql
 
 import python.utils as utils
 
+from python.tests import validate_data
+
 logger = logging.getLogger(__name__)
 
 
@@ -111,6 +113,18 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
                 "Empty birth rates found after applying geographic"
                 "hierarchy. Verify rates are available for geographies."
             )
+
+        # Validate output has correct structure
+        validate_data(
+            table_name=f"Birth Rates (year {yr})",
+            # Rename columns to test against the expected naming convention for fertility data
+            data=df[["race", "sex", "age", "rate_birth"]].rename(
+                columns={"sex": "sex_births", "age": "age_births"}
+            ),
+            row_count={"key_columns": {"race", "sex_births", "age_births"}},
+            negative={"negative_ok": set()},
+            null={"null_ok": set()},
+        )
 
         return df
 
