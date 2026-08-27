@@ -171,12 +171,22 @@ def _validate_row_count(
                 f"corresponding value in the variable '_DISTINCT_COUNTS'"
             )
 
-    # Collect the number of unique values in each key column
+    # Verify cardinality for every key dimension
     unique_key_values = {}
     for column in key_columns:
-        unique_key_values[column] = _DISTINCT_COUNTS[column]
+        expected_count = _DISTINCT_COUNTS[column]
+        actual_count = data[column].nunique()
+        if actual_count != expected_count:
+            raise ValueError(
+                f"'{table_name}' should have {expected_count} distinct values in "
+                f"'{column}' but it has {actual_count}"
+            )
+        unique_key_values[column] = expected_count
 
-    # Check that the total number of rows is correct, using the CROSS JOIN of all key columns
+    if data.duplicated(subset=list(key_columns)).any():
+        raise ValueError(f"'{table_name}' contains duplicate key combinations")
+
+    # Check the total number of rows using the CROSS JOIN of all key columns
     n_rows = math.prod(unique_key_values.values())
     if data.shape[0] != n_rows:
         row_count_explanation = " x ".join(
