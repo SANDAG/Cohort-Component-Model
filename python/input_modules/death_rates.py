@@ -1,4 +1,4 @@
-"""Get death rates by race, sex, and single year of age."""
+"""Get death rates by single year of age, sex, and race."""
 
 import logging
 import scipy
@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 
+import python.tests as tests
 import python.utils as utils
-from python.tests import validate_data
 
 logger = logging.getLogger(__name__)
 
@@ -163,11 +163,11 @@ def deaths_recode(deaths: int, pop: int) -> float:
         return float(deaths)
 
 
-def load_local_files(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
-    """Load files from a directory for a specific year and combine them by product.
+def substitute_geographies(pop_df: pd.DataFrame, year: int) -> pd.DataFrame:
+    """Substitute missing or suppressed geographies with higher-level data.
 
-    This function performs the geography substitution, supplementing data from a higher
-    geography when data is missing or suppressed.
+    Supplements county-level data with state- or national-level equivalents
+    when values are unavailable or suppressed.
 
     Args:
         pop_df (pd.DataFrame): Population dataframe from CCM for 2018+ product
@@ -256,13 +256,13 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
 
     This function replaces mortality rates with smoothed values by applying
     spline interpolation across ages for each unique combination of grouping
-    variables (sex, race/ethnicity, year). The smoothing is applied to the
+    variables (sex, race, year). The smoothing is applied to the
     natural logarithm of the rates to ensure non-negativity and better handle
     the exponential nature of mortality rates.
 
     Args:
         input_df (pd.DataFrame): DataFrame containing mortality rates with
-            columns 'age', 'rates', 'sex', 'race', and 'year'.
+            columns 'year', 'age', 'sex', 'race', and 'rates'.
         s (int): Smoothing factor for the spline. Higher values produce
             smoother curves. s=0 means no smoothing (interpolation).
         k (int): Degree of the spline polynomial (1 ≤ k ≤ 5). Common values:
@@ -364,11 +364,11 @@ def calculate_death_rates(
     smooth_s: int = 5,
     smooth_k: int = 2,
 ) -> pd.DataFrame:
-    """Calculate mortality rates broken down by race, sex, and single year of age.
+    """Calculate mortality rates broken down by single year of age, sex, and race.
 
     Mortality rates are calculated for ages < 85 from CDC WONDER by simply
-    dividing raw deaths by population for each race, sex, and single year of
-    age category after setting "Suppressed" raw deaths (values < 10) to values
+    dividing raw deaths by population for each single year of age, sex, and race
+    category after setting "Suppressed" raw deaths (values < 10) to values
     of 4.5 and 0 raw deaths to values of 1. This strategy avoids missing value
     records and implausible 0% mortality rates.
 
@@ -392,11 +392,13 @@ def calculate_death_rates(
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
 
     Returns:
-        pd.DataFrame: Mortality rates broken down by race, sex, and single year
-            of age.
+        pd.DataFrame: Mortality rates broken down by single year of age, sex, and
+            race.
     """
     # Load mortality data for this specific year
-    cdc_data = load_local_files(pop_df=pop_df, year=yr)[["race", "sex", "age", "rates"]]
+    cdc_data = substitute_geographies(pop_df=pop_df, year=yr)[
+        ["race", "sex", "age", "rates"]
+    ]
 
     # Load UNDESA data for ages 85-99
     with utils.SQL_ENGINE.connect() as con:
@@ -471,8 +473,8 @@ def calculate_death_rates(
     rates = combined_rates.rename(columns={"rates": "rate_death"})
 
     # Validate output has correct structure
-    validate_data(
-        table_name=f"Death Rates (year {yr})",
+    tests.validate_data(
+        table_name=f"Mortality Rates (year {yr})",
         data=rates[["race", "sex", "age", "rate_death"]],
         row_count={"key_columns": {"race", "sex", "age"}},
         negative={"negative_ok": set()},
@@ -483,19 +485,20 @@ def calculate_death_rates(
 
 
 def get_death_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
-    """Create mortality rates broken down by race, sex, and single year of age.
+    """Create mortality rates broken down by single year of age, sex, and race.
 
-    For each year up to launch, calculate the crude death rate within race, sex, and single year of age.
-    For post-launch years, if mortality controls are provided, use the year-specific rates.
+    For each year up to launch, calculate the crude death rate within
+    single year of age, sex, and race. For post-launch years, if mortality rates
+    are provided, use the year-specific rates.
 
     Args:
-        yr: Increment year
-        pop_df (pd.DataFrame): Population data broken down by race, sex, and
-            single year of age
+        yr (int): Increment year
+        pop_df (pd.DataFrame): Population data broken down by single year of age,
+         sex, and race
 
     Returns:
-        pd.DataFrame: Mortality rates broken down by race, sex, and single
-            year of age with columns (race, sex, age, rate_death).
+        pd.DataFrame: Mortality rates broken down by single year of age, sex, and
+        race with columns (age, sex, race, rate_death).
     """
 
     # Death rates calculated from base year up to the launch year
@@ -504,25 +507,24 @@ def get_death_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
 
     # Post-launch year
     else:
-        # If mortality controls are provided, use them
-        if utils.MORTALITY_CONTROLS is None:
-            raise ValueError(
-                f"No mortality controls provided for post-launch year {yr}. "
-                "Provide mortality_controls with year column in config."
+        # If mortality rates are provided and contain this year, use them
+        if (
+            utils.MORTALITY_RATES is not None
+            and yr in utils.MORTALITY_RATES["year"].values
+        ):
+            # Filter to the specific year
+            rates = utils.MORTALITY_RATES.loc[
+                utils.MORTALITY_RATES["year"] == yr
+            ].copy()
+
+            # Drop year column to match expected output format
+            rates = rates.drop(columns=["year"])
+        else:
+            # No rates provided or year not in CSV - hold jump-off rates constant
+            logger.info(
+                f"No mortality rates found for year {yr}. "
+                f"Using launch year ({utils.LAUNCH_YEAR}) rates (held constant)."
             )
-
-        # Filter to the specific year
-        rates = utils.MORTALITY_CONTROLS.loc[
-            utils.MORTALITY_CONTROLS["year"] == yr
-        ].copy()
-
-        if len(rates) == 0:
-            raise ValueError(
-                f"No mortality controls found for year {yr}. "
-                f"Available years: {sorted(utils.MORTALITY_CONTROLS['year'].unique())}"
-            )
-
-        # Drop year column to match expected output format
-        rates = rates.drop(columns=["year"])
+            rates = calculate_death_rates(yr=utils.LAUNCH_YEAR, pop_df=pop_df)
 
     return rates[["race", "sex", "age", "rate_death"]]

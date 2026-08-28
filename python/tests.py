@@ -2,6 +2,7 @@ import inspect
 import logging
 import math
 import textwrap
+
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -18,9 +19,7 @@ _DISTINCT_COUNTS = {
     "age": 100,
     "race": 7,
     "sex": 2,
-    # Different naming convention because fertility only contains one sex (F) and 30 ages (15-44)
-    "age_births": 30,
-    "sex_births": 1,
+    "age_births": 30,  # Fertility limited to ages 15-44
 }
 
 #########
