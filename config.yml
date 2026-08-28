@@ -4,7 +4,7 @@ configurations:
   controls: "sandag_estimates.yml"
 csv:
   migration_controls: null
-  mortality_controls: null # Run mortality_forecasting.py first, then set to "output/mortality_forecast.csv"
+  mortality_rates: null
 interval:
   launch: 2022
   horizon: 2050
