@@ -511,21 +511,14 @@ def get_death_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
                 "Provide mortality_controls with year column in config."
             )
 
-        # Use the forecast year if specified, otherwise use the current year
-        target_year = (
-            utils.MORTALITY_FORECAST_YEAR
-            if utils.MORTALITY_FORECAST_YEAR is not None
-            else yr
-        )
-
         # Filter to the specific year
         rates = utils.MORTALITY_CONTROLS.loc[
-            utils.MORTALITY_CONTROLS["year"] == target_year
+            utils.MORTALITY_CONTROLS["year"] == yr
         ].copy()
 
         if len(rates) == 0:
             raise ValueError(
-                f"No mortality controls found for year {target_year}. "
+                f"No mortality controls found for year {yr}. "
                 f"Available years: {sorted(utils.MORTALITY_CONTROLS['year'].unique())}"
             )
 

@@ -46,7 +46,6 @@ class InputParser:
         self.controls = {}
         self.migration_controls = None
         self.mortality_controls = None
-        self.mortality_forecast_year = None
         self.load_to_database = None
 
     def parse_config(self) -> None:
@@ -65,9 +64,6 @@ class InputParser:
         self.version = self._config.get("version")
         self.controls = self._parse_controls()
         self.migration_controls = self._parse_migration_controls()
-        self.mortality_forecast_year = self._config.get("csv", {}).get(
-            "mortality_forecast_year", None
-        )
         self.mortality_controls = self._parse_mortality_controls()
         self.load_to_database = self._config.get("sql", {}).get(
             "load_to_database", False
@@ -91,10 +87,6 @@ class InputParser:
                 "schema": {
                     "migration_controls": {"type": "string", "nullable": True},
                     "mortality_controls": {"type": "string", "nullable": True},
-                    "mortality_forecast_year": {
-                        "type": "integer",
-                        "nullable": True,
-                    },
                 },
             },
             "interval": {
@@ -264,26 +256,15 @@ class InputParser:
         if any(mortality_controls["age"] < 0) or any(mortality_controls["age"] > 99):
             raise ValueError("Age values must be between 0 and 99")
 
-        # Validate year column
+        # Validate year column - require all post-launch years (year-by-year mode)
         control_years = set(mortality_controls["year"].unique())
+        post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
+        missing_years = set(post_launch_years) - control_years
 
-        # If mortality_forecast_year is specified, only validate that year exists
-        if self.mortality_forecast_year is not None:
-            if self.mortality_forecast_year not in control_years:
-                available_years = sorted(control_years)
-                raise ValueError(
-                    f"mortality_forecast_year ({self.mortality_forecast_year}) not found in mortality controls. "
-                    f"Available years: {available_years[0]}-{available_years[-1]}"
-                )
-        else:
-            # If no forecast year specified, require all post-launch years (year-by-year mode)
-            post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
-            missing_years = set(post_launch_years) - control_years
-
-            if missing_years:
-                raise ValueError(
-                    f"Missing required years in mortality rate controls: {sorted(missing_years)}. "
-                    f"Required years: {list(post_launch_years)}"
-                )
+        if missing_years:
+            raise ValueError(
+                f"Missing required years in mortality rate controls: {sorted(missing_years)}. "
+                f"Required years: {list(post_launch_years)}"
+            )
 
         return mortality_controls

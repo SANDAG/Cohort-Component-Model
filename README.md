@@ -16,8 +16,7 @@ configurations:  # other configuration files
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
 csv:
   migration_controls: null  # optional csv with columns: (year,ins,outs)
-  mortality_controls: null # option csv that requires running mortality_forecasting.py first, then setting to "output/mortality_forecast.csv"
-  mortality_forecast_year: 2023 # year after launch
+  mortality_controls: null # optional csv that requires running mortality_forecasting.py first, then setting to "output/mortality_forecast.csv"
 interval:  # forecast interval (base is assumed from launch)
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
@@ -52,11 +51,10 @@ To use mortality forecasts in your model run:
    ```
    This creates `output/mortality_forecast.csv` using the Lee-Miller mortality forecasting model.
 
-2. **Enable mortality controls** in `config.yml` and set the desired forecast year:
+2. **Enable mortality controls** in `config.yml`:
    ```yaml
    csv:
      death_rate_controls: "output/mortality_forecast.csv"
-     death_rate_forecast_year: 2050
    ```
 
 3. **Run the main model** as usual:
