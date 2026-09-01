@@ -46,6 +46,18 @@ year,age,sex,race,rate_death
 2025,99.0,M,White alone,0.16650980
 ```
 
+### Fertility Rates File Format
+If fertility rates are provided, the CSV should include one row per year, age, and race grouping with no null values in any of the columns. Each year should include each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone) and 30 ages (15-44) to create 210 rows per year:
+
+```csv
+year,age,race,rate_birth
+2023,15,American Indian or Alaska Native alone,0.01431606
+...
+2024,30,Hispanic,0.09667108
+...
+2025,45,White alone,0.01539245
+```
+
 ### Configuration of Private Data in secrets.yml
 In order to avoid exposing certain data to the public this repository uses a secrets file to store sensitive configurations in addition to a standard configuration file. This file is stored in the root directory of the repository as `secrets.yml` and is included in the `.gitignore` intentionally to avoid it ever being committed to the repository.
 
