@@ -1,10 +1,12 @@
-"""Get birth rates by race and single year of age."""
+"""Get birth rates by single year of age and race."""
 
 import logging
+
 import pandas as pd
 import numpy as np
 import sqlalchemy as sql
 
+import python.tests as tests
 import python.utils as utils
 
 logger = logging.getLogger(__name__)
@@ -111,6 +113,18 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
                 "Empty birth rates found after applying geographic"
                 "hierarchy. Verify rates are available for geographies."
             )
+
+        # Validate output has correct structure
+        tests.validate_data(
+            table_name=f"Birth Rates (year {yr})",
+            # Rename columns to test against the expected naming convention for fertility data
+            data=df[["race", "age", "rate_birth"]].rename(
+                columns={"age": "age_births"}
+            ),
+            row_count={"key_columns": {"race", "age_births"}},
+            negative={"negative_ok": set()},
+            null={"null_ok": set()},
+        )
 
         return df
 

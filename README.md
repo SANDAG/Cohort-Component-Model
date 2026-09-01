@@ -16,6 +16,7 @@ configurations:  # other configuration files
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
 csv:
   migration_controls: null  # optional csv with columns: (year,ins,outs)
+  mortality_rates: null # optional csv with columns: (year, age, sex, race, rate_death)
 interval:  # forecast interval (base is assumed from launch)
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
@@ -28,8 +29,21 @@ If migration controls are provided, the CSV should include one row per year post
 
 ```csv
 year,ins,outs
-2022,52000,47000
-2023,54000,50000
+2023,52000,47000
+2024,54000,50000
+2025,53250,49100
+```
+
+### Mortality Rates File Format
+If mortality rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include both sexes (M and F), each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone), and all 100 ages (0-99) to create 1400 rows per year:
+
+```csv
+year,age,sex,race,rate_death
+2023,0.0,F,American Indian or Alaska Native alone,0.0013964641191015427
+...
+2024,45.0,M,Hispanic,0.0022017810643757416
+...
+2025,99.0,M,White alone,0.16650980
 ```
 
 ### Configuration of Private Data in secrets.yml

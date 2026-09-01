@@ -62,6 +62,8 @@ for increment in range(utils.BASE_YEAR, utils.HORIZON_YEAR + 1):
     else:
         if utils.MIGRATION_CONTROLS is not None:
             rates["migration"] = get_migration_rates(yr=increment, pop_df=pop_df)
+        if utils.MORTALITY_RATES is not None:
+            rates["deaths"] = get_death_rates(yr=increment, pop_df=pop_df)
 
     # Calculate households/population for the increment ----
     pop_df = calculate_population(pop_df=pop_df, rates=rates)

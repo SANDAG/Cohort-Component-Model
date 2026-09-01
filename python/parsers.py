@@ -3,6 +3,7 @@ import pathlib
 import yaml
 
 import pandas as pd
+import python.tests as tests
 
 
 class InputParser:
@@ -18,6 +19,8 @@ class InputParser:
         controls (dict): Mapping of control totals for each year
         migration_controls (pd.DataFrame | None): Optional migration control totals (ins/outs)
             for each post-launch increment year. If not provided, set to None.
+        mortality_rates (pd.DataFrame | None): Optional mortality rates by
+            age, sex, and race. If not provided, set to None.
         load_to_database (bool): Whether to load the run results into a database.
 
     Methods:
@@ -29,6 +32,8 @@ class InputParser:
             sets the controls attribute
         _parse_migration_controls(): Parses the migration controls mapping from the
             configuration file and sets the migration_controls attribute
+        _parse_mortality_rates(): Parses the mortality rate controls from the
+            configuration file and sets the mortality_rates attribute
     """
 
     def __init__(self, config: dict) -> None:
@@ -41,6 +46,7 @@ class InputParser:
         self.comments = None
         self.controls = {}
         self.migration_controls = None
+        self.mortality_rates = None
         self.load_to_database = None
 
     def parse_config(self) -> None:
@@ -48,7 +54,8 @@ class InputParser:
 
         First, the contents of the configuration file are validated. Then, the
         base, launch, and horizon years are set along with the software version
-        and any comments. Finally, the controls totals and optional migration control totals are parsed and set."""
+        and any comments. Finally, the controls totals and optional migration control totals are parsed and set.
+        """
         self._validate_config()
         _interval = self._parse_interval()
         self.base_year = _interval["base_year"]
@@ -58,6 +65,7 @@ class InputParser:
         self.version = self._config.get("version")
         self.controls = self._parse_controls()
         self.migration_controls = self._parse_migration_controls()
+        self.mortality_rates = self._parse_mortality_rates()
         self.load_to_database = self._config.get("sql", {}).get(
             "load_to_database", False
         )
@@ -77,7 +85,10 @@ class InputParser:
             },
             "csv": {
                 "type": "dict",
-                "schema": {"migration_controls": {"type": "string", "nullable": True}},
+                "schema": {
+                    "migration_controls": {"type": "string", "nullable": True},
+                    "mortality_rates": {"type": "string", "nullable": True},
+                },
             },
             "interval": {
                 "type": "dict",
@@ -189,3 +200,83 @@ class InputParser:
             raise ValueError("Migration controls must contain all post-launch years")
 
         return migration_controls
+
+    def _parse_mortality_rates(self) -> pd.DataFrame | None:
+        """Parse the mortality rates CSV file from the configuration file.
+
+        The CSV file must contain mortality rates by year, age, sex, and race.
+
+        Returns:
+            pd.DataFrame | None: DataFrame with columns (year, age, sex, race, rate_death),
+                or None if no file is provided.
+        """
+        # Check if mortality rates file is provided
+        mortality_rates_fp = self._config["csv"].get("mortality_rates")
+        if mortality_rates_fp is None:
+            return None
+
+        mortality_rates_path = pathlib.Path(mortality_rates_fp)
+        if not mortality_rates_path.is_absolute():
+            mortality_rates_path = (
+                pathlib.Path(__file__).resolve().parent.parent / mortality_rates_path
+            )
+        try:
+            with open(mortality_rates_path, "r") as f:
+                mortality_rates = pd.read_csv(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Mortality rates file not found: {mortality_rates_fp}"
+            )
+        except pd.errors.ParserError as e:
+            raise ValueError(f"Error parsing mortality rates CSV file: {e}")
+
+        # Ensure DataFrame contains required columns
+        required_cols = {"year", "age", "sex", "race", "rate_death"}
+        if not required_cols.issubset(mortality_rates.columns):
+            raise ValueError(
+                "Mortality rates must contain columns: (year, age, sex, race, rate_death)"
+            )
+
+        # Required mortality-control fields cannot be null
+        if mortality_rates[list(required_cols)].isna().any().any():
+            raise ValueError("Mortality rates must not contain null values")
+
+        # Check mortality rates are >= 0 and <= 1
+        if any(mortality_rates["rate_death"] < 0) or any(
+            mortality_rates["rate_death"] > 1
+        ):
+            raise ValueError("Mortality rates must be between 0 and 1")
+
+        # Check for duplicate year/age/sex/race combinations
+        if mortality_rates.duplicated(subset=["year", "age", "sex", "race"]).any():
+            raise ValueError(
+                "Duplicate year/age/sex/race combinations found in mortality rates"
+            )
+
+        # Check age range is valid (0-99)
+        if any(mortality_rates["age"] < 0) or any(mortality_rates["age"] > 99):
+            raise ValueError("Age values must be between 0 and 99")
+
+        # Validate year column - require all post-launch years (year-by-year mode)
+        control_years = set(mortality_rates["year"].unique())
+        post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
+        missing_years = set(post_launch_years) - control_years
+
+        if missing_years:
+            raise ValueError(
+                f"Missing required years in mortality rates: {sorted(missing_years)}. "
+                f"Required years: {list(post_launch_years)}"
+            )
+
+        # Validate each year has the correct structure
+        for year in mortality_rates["year"].unique():
+            year_data = mortality_rates[mortality_rates["year"] == year]
+            tests.validate_data(
+                table_name=f"Mortality Rates (year {year})",
+                data=year_data[["race", "sex", "age", "rate_death"]],
+                row_count={"key_columns": {"race", "sex", "age"}},
+                negative={"negative_ok": set()},
+                null={"null_ok": set()},
+            )
+
+        return mortality_rates
