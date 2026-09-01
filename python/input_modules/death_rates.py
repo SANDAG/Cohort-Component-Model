@@ -507,11 +507,8 @@ def get_death_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
 
     # Post-launch year
     else:
-        # If mortality rates are provided and contain this year, use them
-        if (
-            utils.MORTALITY_RATES is not None
-            and yr in utils.MORTALITY_RATES["year"].values
-        ):
+        # If mortality rates are provided, use them
+        if utils.MORTALITY_RATES is not None:
             # Filter to the specific year
             rates = utils.MORTALITY_RATES.loc[
                 utils.MORTALITY_RATES["year"] == yr
@@ -521,10 +518,6 @@ def get_death_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
             rates = rates.drop(columns=["year"])
         else:
             # No rates provided or year not in CSV - hold jump-off rates constant
-            logger.info(
-                f"No mortality rates found for year {yr}. "
-                f"Using launch year ({utils.LAUNCH_YEAR}) rates (held constant)."
-            )
             rates = calculate_death_rates(yr=utils.LAUNCH_YEAR, pop_df=pop_df)
 
     return rates[["race", "sex", "age", "rate_death"]]
