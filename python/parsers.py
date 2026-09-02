@@ -251,11 +251,11 @@ class InputParser:
         if mortality_rates[list(required_cols)].isna().any().any():
             raise ValueError("Mortality rates must not contain null values")
 
-        # Check mortality rates are > 0 and <= 1
+        # Check mortality rates are > 0 and < 1
         if any(mortality_rates["rate_death"] < 0) or any(
             mortality_rates["rate_death"] > 1
         ):
-            raise ValueError("Mortality rates must be between 0 and 1")
+            raise ValueError("Mortality rates must be greater than 0 and less than 1")
 
         # Check for duplicate year/age/sex/race combinations
         if mortality_rates.duplicated(subset=["year", "age", "sex", "race"]).any():
@@ -328,11 +328,11 @@ class InputParser:
                 "(year, age, sex, race, rate_birth)"
             )
 
-        # Check fertility rates are > 0 and <= 1
+        # Check fertility rates are > 0 and < 1
         if any(fertility_rates["rate_birth"] < 0) or any(
             fertility_rates["rate_birth"] > 1
         ):
-            raise ValueError("Fertility rates must be between 0 and 1")
+            raise ValueError("Fertility rates must be greater than 0 and less than 1")
 
         # Check fertility sex is only F
         if not all(fertility_rates["sex"] == "F"):

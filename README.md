@@ -15,6 +15,7 @@ comments: "No Comments" # Add comments pertaining to the run
 configurations:  # other configuration files
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
 csv:
+  fertility_rates: null # optional csv with columns: (year, age, sex, race, rate_birth)
   migration_controls: null  # optional csv with columns: (year,ins,outs)
   mortality_rates: null # optional csv with columns: (year, age, sex, race, rate_death)
 interval:  # forecast interval (base is assumed from launch)
