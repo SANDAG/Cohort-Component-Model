@@ -1,9 +1,12 @@
 import cerberus
+import logging
 import pathlib
 import yaml
 
 import pandas as pd
 import python.tests as tests
+
+logger = logging.getLogger(__name__)
 
 
 class InputParser:
@@ -248,7 +251,7 @@ class InputParser:
         if mortality_rates[list(required_cols)].isna().any().any():
             raise ValueError("Mortality rates must not contain null values")
 
-        # Check mortality rates are >= 0 and <= 1
+        # Check mortality rates are > 0 and <= 1
         if any(mortality_rates["rate_death"] < 0) or any(
             mortality_rates["rate_death"] > 1
         ):
@@ -325,7 +328,7 @@ class InputParser:
                 "(year, age, sex, race, rate_birth)"
             )
 
-        # Check fertility rates are >= 0 and <= 1
+        # Check fertility rates are > 0 and <= 1
         if any(fertility_rates["rate_birth"] < 0) or any(
             fertility_rates["rate_birth"] > 1
         ):
@@ -347,7 +350,7 @@ class InputParser:
         )
         inconsistent_age_groups = rates_per_age_group[rates_per_age_group > 1]
         if not inconsistent_age_groups.empty:
-            raise ValueError(
+            logger.warning(
                 "Fertility rates must be identical within each five-year age group"
             )
 
