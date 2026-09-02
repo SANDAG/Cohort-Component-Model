@@ -351,7 +351,7 @@ class InputParser:
         inconsistent_age_groups = rates_per_age_group[rates_per_age_group > 1]
         if not inconsistent_age_groups.empty:
             logger.warning(
-                "Fertility rates must be identical within each five-year age group"
+                "Fertility rates are assumed to be identical within each five-year age group"
             )
 
         # Validate year column
