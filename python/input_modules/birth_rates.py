@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def calculate_birth_rates(yr: int) -> pd.DataFrame:
-    """Calculate fertility rates broken down by race, sex, and single year of age.
+    """Calculate fertility rates broken down by single year of age, sex, and race.
 
     Fertility rates are provided using CDC WONDER Natality births for 5-year age
     groups ranging from ages 15 to 44 then inflated to account for the % of births
@@ -26,9 +26,9 @@ def calculate_birth_rates(yr: int) -> pd.DataFrame:
         yr (int): Increment year
 
     Returns:
-        pd.DataFrame: Birth rates broken down by single year of age, sex, and race
+        pd.DataFrame: Fertility rates broken down by single year of age, sex, and race
     """
-    # Birth rates calculated from base year up to the launch year
+    # Fertility rates calculated from base year up to the launch year
     if yr <= utils.LAUNCH_YEAR:
 
         with utils.SQL_ENGINE.connect() as con:
@@ -110,13 +110,13 @@ def calculate_birth_rates(yr: int) -> pd.DataFrame:
         # Check for any null values in the rates column
         if df["rate_birth"].isnull().any():
             raise ValueError(
-                "Empty fertiltiy rates found after applying geographic"
+                "Empty fertility rates found after applying geographic"
                 "hierarchy. Verify rates are available for geographies."
             )
 
         # Validate output has correct structure
         tests.validate_data(
-            table_name=f"Birth Rates (year {yr})",
+            table_name=f"Fertility Rates (year {yr})",
             # Rename columns to test against the expected naming convention for fertility data
             data=df[["race", "age", "rate_birth"]].rename(
                 columns={"age": "age_births"}
@@ -135,7 +135,7 @@ def calculate_birth_rates(yr: int) -> pd.DataFrame:
 def get_birth_rates(yr: int) -> pd.DataFrame:
     """Create fertility rates broken down by single year of age, sex, and race.
 
-    For each year up to launch, calculate the crude birth rate within single year of age, sex,
+    For each year up to launch, calculate the crude fertility rate within single year of age, sex,
     and race. For post-launch years, if fertility controls are provided, use the year-specific rates.
 
     Args:
@@ -146,7 +146,7 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
             with columns (age, sex, race, rate_birth).
     """
 
-    # Birth rates calculated from base year up to the launch year
+    # Fertility rates calculated from base year up to the launch year
     if yr <= utils.LAUNCH_YEAR:
         rates = calculate_birth_rates(yr=yr)
 
