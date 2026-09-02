@@ -15,6 +15,7 @@ comments: "No Comments" # Add comments pertaining to the run
 configurations:  # other configuration files
   controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
 csv:
+  fertility_rates: null # optional csv with columns: (year, age, sex, race, rate_birth)
   migration_controls: null  # optional csv with columns: (year,ins,outs)
   mortality_rates: null # optional csv with columns: (year, age, sex, race, rate_death)
 interval:  # forecast interval (base is assumed from launch)
@@ -22,6 +23,18 @@ interval:  # forecast interval (base is assumed from launch)
   horizon: 2050  # forecast end year
 sql:  # SQL server options
   load_to_database: False # Set as True if output has to be loaded to database
+```
+
+### Fertility Rates File Format
+If fertility rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include female sex (`F`), each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone), and 30 ages (15-44) to create 210 rows per year:
+
+```csv
+year,age,sex,race,rate_birth
+2023,15,F,American Indian or Alaska Native alone,0.01431606
+...
+2024,30,F,Hispanic,0.09667108
+...
+2025,44,F,White alone,0.01539245
 ```
 
 ### Migration Controls File Format

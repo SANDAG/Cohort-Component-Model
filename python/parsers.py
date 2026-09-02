@@ -1,9 +1,12 @@
 import cerberus
+import logging
 import pathlib
 import yaml
 
 import pandas as pd
 import python.tests as tests
+
+logger = logging.getLogger(__name__)
 
 
 class InputParser:
@@ -21,6 +24,8 @@ class InputParser:
             for each post-launch increment year. If not provided, set to None.
         mortality_rates (pd.DataFrame | None): Optional mortality rates by
             age, sex, and race. If not provided, set to None.
+        fertility_rates (pd.DataFrame | None): Optional fertility rates by
+            race, sex, and age. If not provided, set to None.
         load_to_database (bool): Whether to load the run results into a database.
 
     Methods:
@@ -34,6 +39,8 @@ class InputParser:
             configuration file and sets the migration_controls attribute
         _parse_mortality_rates(): Parses the mortality rate controls from the
             configuration file and sets the mortality_rates attribute
+        _parse_fertility_rates(): Parses the fertility rate controls from the
+            configuration file and sets the fertility_rates attribute
     """
 
     def __init__(self, config: dict) -> None:
@@ -47,6 +54,7 @@ class InputParser:
         self.controls = {}
         self.migration_controls = None
         self.mortality_rates = None
+        self.fertility_rates = None
         self.load_to_database = None
 
     def parse_config(self) -> None:
@@ -66,6 +74,7 @@ class InputParser:
         self.controls = self._parse_controls()
         self.migration_controls = self._parse_migration_controls()
         self.mortality_rates = self._parse_mortality_rates()
+        self.fertility_rates = self._parse_fertility_rates()
         self.load_to_database = self._config.get("sql", {}).get(
             "load_to_database", False
         )
@@ -88,6 +97,7 @@ class InputParser:
                 "schema": {
                     "migration_controls": {"type": "string", "nullable": True},
                     "mortality_rates": {"type": "string", "nullable": True},
+                    "fertility_rates": {"type": "string", "nullable": True},
                 },
             },
             "interval": {
@@ -241,11 +251,11 @@ class InputParser:
         if mortality_rates[list(required_cols)].isna().any().any():
             raise ValueError("Mortality rates must not contain null values")
 
-        # Check mortality rates are >= 0 and <= 1
+        # Check mortality rates are > 0 and < 1
         if any(mortality_rates["rate_death"] < 0) or any(
             mortality_rates["rate_death"] > 1
         ):
-            raise ValueError("Mortality rates must be between 0 and 1")
+            raise ValueError("Mortality rates must be greater than 0 and less than 1")
 
         # Check for duplicate year/age/sex/race combinations
         if mortality_rates.duplicated(subset=["year", "age", "sex", "race"]).any():
@@ -280,3 +290,93 @@ class InputParser:
             )
 
         return mortality_rates
+
+    def _parse_fertility_rates(self) -> pd.DataFrame | None:
+        """Parse the fertility rates CSV file from the configuration file.
+
+        The CSV file must contain fertility rates by year, age, sex, and race.
+
+        Returns:
+            pd.DataFrame | None: DataFrame with columns (year, age, sex, race, rate_birth),
+                or None if no file is provided.
+        """
+        # Check if fertility rate file is provided
+        fertility_rates_fp = self._config["csv"].get("fertility_rates")
+        if fertility_rates_fp is None:
+            return None
+
+        fertility_rates_path = pathlib.Path(fertility_rates_fp)
+        if not fertility_rates_path.is_absolute():
+            fertility_rates_path = (
+                pathlib.Path(__file__).resolve().parent.parent / fertility_rates_path
+            )
+        try:
+            with open(fertility_rates_path, "r") as f:
+                fertility_rates = pd.read_csv(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Fertility rate file not found: {fertility_rates_fp}"
+            )
+        except pd.errors.ParserError as e:
+            raise ValueError(f"Error parsing fertility rate CSV file: {e}")
+
+        # Ensure DataFrame contains required columns
+        required_cols = {"year", "age", "sex", "race", "rate_birth"}
+        if not required_cols.issubset(fertility_rates.columns):
+            raise ValueError(
+                "Fertility rates must contain columns: "
+                "(year, age, sex, race, rate_birth)"
+            )
+
+        # Check fertility rates are > 0 and < 1
+        if any(fertility_rates["rate_birth"] < 0) or any(
+            fertility_rates["rate_birth"] > 1
+        ):
+            raise ValueError("Fertility rates must be greater than 0 and less than 1")
+
+        # Check fertility sex is only F
+        if not all(fertility_rates["sex"] == "F"):
+            raise ValueError("Fertility rates must be for females only")
+
+        # Check age range is valid (15-44)
+        if any(fertility_rates["age"] < 15) or any(fertility_rates["age"] > 44):
+            raise ValueError("Age values must be between 15 and 44")
+
+        # Check fertility rates are identical among five year age groups
+        rates_per_age_group = (
+            fertility_rates.assign(age_group=fertility_rates["age"] // 5)
+            .groupby(["year", "sex", "race", "age_group"])["rate_birth"]
+            .nunique()
+        )
+        inconsistent_age_groups = rates_per_age_group[rates_per_age_group > 1]
+        if not inconsistent_age_groups.empty:
+            logger.warning(
+                "Fertility rates are assumed to be identical within each five-year age group"
+            )
+
+        # Validate year column
+        control_years = set(fertility_rates["year"].unique())
+        post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
+        missing_years = set(post_launch_years) - control_years
+
+        if missing_years:
+            raise ValueError(
+                f"Missing required years in fertility rates: {sorted(missing_years)}. "
+                f"Required years: {list(post_launch_years)}"
+            )
+
+        # Validate each year has the correct structure
+        for year in fertility_rates["year"].unique():
+            year_data = fertility_rates[fertility_rates["year"] == year]
+            tests.validate_data(
+                table_name=f"Birth Rates (year {year})",
+                # Rename columns to test against the expected naming convention for fertility data
+                data=year_data[["race", "age", "rate_birth"]].rename(
+                    columns={"age": "age_births"}
+                ),
+                row_count={"key_columns": {"race", "age_births"}},
+                negative={"negative_ok": set()},
+                null={"null_ok": set()},
+            )
+
+        return fertility_rates

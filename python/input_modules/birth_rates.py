@@ -12,10 +12,10 @@ import python.utils as utils
 logger = logging.getLogger(__name__)
 
 
-def get_birth_rates(yr: int) -> pd.DataFrame:
-    """Create birth rates broken down by race and single year of age.
+def calculate_birth_rates(yr: int) -> pd.DataFrame:
+    """Calculate fertility rates broken down by single year of age, sex, and race.
 
-    Birth rates are provided using CDC WONDER Natality births for 5-year age
+    Fertility rates are provided using CDC WONDER Natality births for 5-year age
     groups ranging from ages 15 to 44 then inflated to account for the % of births
     attributed to:
         1) Ages 15 and under
@@ -23,12 +23,12 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
         3) "Unknown", "Not Stated", "Not Available", or "Not Reported" race/ethnicity groups
 
     Args:
-        yr: Increment year
+        yr (int): Increment year
 
     Returns:
-        pd.DataFrame: Birth rates broken down by race and single year of age
+        pd.DataFrame: Fertility rates broken down by single year of age, sex, and race
     """
-    # Birth rates calculated from base year up to the launch year
+    # Fertility rates calculated from base year up to the launch year
     if yr <= utils.LAUNCH_YEAR:
 
         with utils.SQL_ENGINE.connect() as con:
@@ -110,13 +110,13 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
         # Check for any null values in the rates column
         if df["rate_birth"].isnull().any():
             raise ValueError(
-                "Empty birth rates found after applying geographic"
+                "Empty fertility rates found after applying geographic"
                 "hierarchy. Verify rates are available for geographies."
             )
 
         # Validate output has correct structure
         tests.validate_data(
-            table_name=f"Birth Rates (year {yr})",
+            table_name=f"Fertility Rates (year {yr})",
             # Rename columns to test against the expected naming convention for fertility data
             data=df[["race", "age", "rate_birth"]].rename(
                 columns={"age": "age_births"}
@@ -129,4 +129,40 @@ def get_birth_rates(yr: int) -> pd.DataFrame:
         return df
 
     else:
-        raise ValueError("Birth rates not calculated past launch year")
+        raise ValueError("Fertility rates not calculated past launch year")
+
+
+def get_birth_rates(yr: int) -> pd.DataFrame:
+    """Create fertility rates broken down by single year of age, sex, and race.
+
+    For each year up to launch, calculate the crude fertility rate within single year of age, sex,
+    and race. For post-launch years, if fertility controls are provided, use the year-specific rates.
+
+    Args:
+        yr (int): Increment year
+
+    Returns:
+        pd.DataFrame: Fertility rates broken down by single year of age, sex, and race
+            with columns (age, sex, race, rate_birth).
+    """
+
+    # Fertility rates calculated from base year up to the launch year
+    if yr <= utils.LAUNCH_YEAR:
+        rates = calculate_birth_rates(yr=yr)
+
+    # Post-launch year
+    else:
+        # If fertility rates are provided, use them
+        if utils.FERTILITY_RATES is not None:
+            # Filter to the specific year
+            rates = utils.FERTILITY_RATES.loc[
+                utils.FERTILITY_RATES["year"] == yr
+            ].copy()
+
+            # Drop year column to match expected output format
+            rates = rates.drop(columns=["year"])
+        else:
+            # No rates provided or year not in CSV - hold jump-off rates constant
+            rates = calculate_birth_rates(yr=utils.LAUNCH_YEAR)
+
+    return rates[["race", "sex", "age", "rate_birth"]]

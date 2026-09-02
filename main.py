@@ -60,6 +60,8 @@ for increment in range(utils.BASE_YEAR, utils.HORIZON_YEAR + 1):
         }
 
     else:
+        if utils.FERTILITY_RATES is not None:
+            rates["births"] = get_birth_rates(yr=increment)
         if utils.MIGRATION_CONTROLS is not None:
             rates["migration"] = get_migration_rates(yr=increment, pop_df=pop_df)
         if utils.MORTALITY_RATES is not None:

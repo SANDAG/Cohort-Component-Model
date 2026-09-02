@@ -101,6 +101,7 @@ COMMENTS = input_parser.comments
 CONTROLS = input_parser.controls
 MIGRATION_CONTROLS = input_parser.migration_controls
 MORTALITY_RATES = input_parser.mortality_rates
+FERTILITY_RATES = input_parser.fertility_rates
 LOAD_TO_DATABASE = input_parser.load_to_database
 
 logger.info(
@@ -112,6 +113,9 @@ if MIGRATION_CONTROLS is not None:
 
 if MORTALITY_RATES is not None:
     logger.info("Mortality rates loaded from configuration file")
+
+if FERTILITY_RATES is not None:
+    logger.info("Fertility rates loaded from configuration file")
 
 ##############################
 # UTILITY LISTS AND MAPPINGS #
