@@ -3,9 +3,9 @@ comments: "No Comments"
 configurations:
   controls: "sandag_estimates.yml"
 csv:
+  fertility_rates: null
   migration_controls: null
   mortality_rates: null
-  fertility_rates: null
 interval:
   launch: 2022
   horizon: 2050

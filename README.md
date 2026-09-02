@@ -24,6 +24,18 @@ sql:  # SQL server options
   load_to_database: False # Set as True if output has to be loaded to database
 ```
 
+### Fertility Rates File Format
+If fertility rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include female sex (`F`), each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone), and 30 ages (15-44) to create 210 rows per year:
+
+```csv
+year,age,sex,race,rate_birth
+2023,15,F,American Indian or Alaska Native alone,0.01431606
+...
+2024,30,F,Hispanic,0.09667108
+...
+2025,44,F,White alone,0.01539245
+```
+
 ### Migration Controls File Format
 If migration controls are provided, the CSV should include one row per year post launch year with ins/outs totals >= 0:
 
@@ -44,18 +56,6 @@ year,age,sex,race,rate_death
 2024,45.0,M,Hispanic,0.0022017810643757416
 ...
 2025,99.0,M,White alone,0.16650980
-```
-
-### Fertility Rates File Format
-If fertility rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include female sex (`F`), each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone), and 30 ages (15-44) to create 210 rows per year:
-
-```csv
-year,age,sex,race,rate_birth
-2023,15,F,American Indian or Alaska Native alone,0.01431606
-...
-2024,30,F,Hispanic,0.09667108
-...
-2025,44,F,White alone,0.01539245
 ```
 
 ### Configuration of Private Data in secrets.yml
