@@ -1,4 +1,5 @@
 """This module contains utility functions used in report generation."""
+
 import os
 import sys
 
@@ -8,10 +9,9 @@ import sqlalchemy as sql
 from typing import List
 
 # Add the parent directory to sys.path
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python"))
-)
-from utils import SQL_ENGINE
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from python.utils import SQL_ENGINE
 
 # Define mapping of 5-year age groups
 MAP_5Y_AGE_GROUPS = {
@@ -71,7 +71,6 @@ def hh_metrics(category: str) -> str:
         return "Mean Household Size"
 
     raise ValueError(f"Unknown household category: {category}")
-
 
 
 def life_expectancy(q_x: List[float], age: int) -> int:

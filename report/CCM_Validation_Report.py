@@ -11,8 +11,7 @@ st.write("# CCM Validation Reporting Tool")
 st.sidebar.success("Select a report above.")
 
 # This is bulk of text on the landing page
-st.markdown(
-    """
+st.markdown("""
     This is a streamlit report to review and check the outputs of
     the Cohort Component Model (CCM). **Select an output to review 
     from the sidebar**. The Cohort Component Model is a demographic 
@@ -21,8 +20,7 @@ st.markdown(
     SANDAG's Regional Forecast using assumptions regarding fertility, 
     mortality, migration and headship rates that align with the 
     future economy of the San Diego Metropolitan Area.
-"""
-)
+""")
 
 # Set session state variables To None before a selection of Dataset
 for key in ["population_data", "components_data", "rates_data"]:
@@ -121,8 +119,8 @@ elif data_selector == "SQL Database":
                 st.session_state.population_data = sql_dict["population"][True]
                 st.session_state.components_data = sql_dict["components"][True]
                 st.session_state.rates_data = sql_dict["rates"][True]
-                # Put messsage saying CSVs loaded successfully, select report from left side menu
-                st.success("✅ All CSVs Loaded. Select Report From Left Side Menu")
+                # Put messsage saying SQL data loaded successfully, select report from left side menu
+                st.success("✅ All SQL Data Loaded. Select Report From Left Side Menu")
 
             # Write error message if one or more SQL tables don't load or exist
             else:
