@@ -9,7 +9,7 @@ The purpose of this script is to count migration in and out of San Diego County 
 SET NOCOUNT ON;
 
 -- Select ACS PUMS data based on input survey year this is done to lower original runtime of approximately 20 minutes to 1-4 minutes
-DECLARE @year integer = :yr;
+DECLARE @year integer = :year;
 DECLARE @pums_qry nvarchar(max) =
     CASE WHEN @year = 2010 THEN 'SELECT [ST], [PUMA] AS [PUMA00], NULL AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [MIG], [MIGSP], [MIGPUMA] AS [MIGPUMA00], NULL AS [MIGPUMA10], NULL AS [MIGPUMA20], [PWGTP] FROM [acs].[pums].[5y_2006_2010_persons] WHERE [MIL] != ''1'' AND [MIG] IN (''2'', ''3'')'
          WHEN @year = 2011 THEN 'SELECT [ST], [PUMA] AS [PUMA00], NULL AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [MIL], [MIG], [MIGSP], [MIGPUMA] AS [MIGPUMA00], NULL AS [MIGPUMA10], NULL AS [MIGPUMA20], [PWGTP] FROM [acs].[pums].[5y_2007_2011_persons] WHERE [MIL] != ''1'' AND [MIG] IN (''2'', ''3'')'
@@ -55,17 +55,17 @@ EXECUTE sp_executesql @pums_qry;
 with [transformed_tbl] AS (
     SELECT
         CASE WHEN [AGEP] > 99 THEN 99 ELSE [AGEP] END AS [age],  -- Group oldest ages into one category, if over 99 as 99, otherwise keep single year of age
-        CASE WHEN [SEX] = '1' THEN 'M' WHEN [SEX] = '2' THEN 'F' ELSE NULL END AS [sex],  -- Change numeric codes into standard M and F text codes.
+        CASE WHEN [SEX] = '1' THEN 'Male' WHEN [SEX] = '2' THEN 'Female' ELSE NULL END AS [sex],  -- Change numeric codes into standard text codes.
         CASE WHEN [HISP] NOT IN ('01', '1') THEN 'Hispanic' -- Exclude non-Hispanic which is 01 or 1.  Hispanic takes precendence over Race
-             WHEN [RAC1P] IN ('1', '8') THEN 'White alone' -- Combine Some other race with White
-             WHEN [RAC1P] = '2' THEN 'Black or African American alone'
-             WHEN [RAC1P] IN ('3', '4', '5') THEN 'American Indian or Alaska Native alone'  -- Group various codes for AI and AN together
-             WHEN [RAC1P] = '6' THEN 'Asian alone'
-             WHEN [RAC1P] = '7' THEN 'Native Hawaiian or Other Pacific Islander alone'
-             WHEN [RAC1P] = '9' THEN 'Two or More Races'
-             ELSE NULL END AS [race],
+             WHEN [RAC1P] IN ('1', '8') THEN 'Non-Hispanic, White' -- Combine Some other race with White
+             WHEN [RAC1P] = '2' THEN 'Non-Hispanic, Black'
+             WHEN [RAC1P] IN ('3', '4', '5') THEN 'Non-Hispanic, American Indian or Alaska Native'  -- Group various codes for AI and AN together
+             WHEN [RAC1P] = '6' THEN 'Non-Hispanic, Asian'
+             WHEN [RAC1P] = '7' THEN 'Non-Hispanic, Hawaiian or Pacific Islander'
+             WHEN [RAC1P] = '9' THEN 'Non-Hispanic, Two or More Races'
+             ELSE NULL END AS [ethnicity],
 
-        -- Identify in-migrants into San Diego County       
+        -- Identify in-migrants into San Diego County
         CASE  
             -- The ACS 5-year from 2018-2022 to 2021-2025 mix both Census 2010 and 2020 geographies (only 2018-2022 currently available, but setting up script correctly for future years)
              WHEN @year BETWEEN 2022 AND 2025
@@ -164,9 +164,9 @@ with [transformed_tbl] AS (
 SELECT
     [age],
     [sex],
-    [race],
+    [ethnicity],
     SUM([in]) AS [in],
     SUM([out]) AS [out]
 FROM [transformed_tbl]  
-GROUP BY [age], [sex], [race]
-ORDER BY [age], [sex], [race]
+GROUP BY [age], [sex], [ethnicity]
+ORDER BY [age], [sex], [ethnicity]
