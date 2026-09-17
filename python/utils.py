@@ -62,11 +62,22 @@ except IOError:
     raise IOError("secrets.yml does not exist, see README.md")
 
 # Create SQLAlchemy engine(s)
-SQL_ENGINE = sql.create_engine(
+CCM_ENGINE = sql.create_engine(
     "mssql+pyodbc://@"
-    + _secrets["sql"]["server"]
+    + _secrets["sql"]["ccm"]["server"]
     + "/"
-    + _secrets["sql"]["database"]
+    + _secrets["sql"]["ccm"]["database"]
+    + "?trusted_connection=yes"
+    + "&driver=ODBC Driver 18 for SQL Server"
+    + "&TrustServerCertificate=yes",
+    fast_executemany=True,
+)
+
+ESTIMATES_ENGINE = sql.create_engine(
+    "mssql+pyodbc://@"
+    + _secrets["sql"]["estimates"]["server"]
+    + "/"
+    + _secrets["sql"]["estimates"]["database"]
     + "?trusted_connection=yes"
     + "&driver=ODBC Driver 18 for SQL Server"
     + "&TrustServerCertificate=yes",
@@ -86,16 +97,15 @@ except IOError:
 
 # Initialize input parser
 # Parse the configuration file and validate its contents
-input_parser = parsers.InputParser(config=config)
+input_parser = parsers.InputParser(config=config, engine=ESTIMATES_ENGINE)
 input_parser.parse_config()
 
 # Get data from the parsed and validated configuration file
-BASE_YEAR = input_parser.base_year
 LAUNCH_YEAR = input_parser.launch_year
 HORIZON_YEAR = input_parser.horizon_year
 VERSION = input_parser.version
 COMMENTS = input_parser.comments
-CONTROLS = input_parser.controls
+ESTIMATES_RUN_ID = input_parser.estimates_run_id
 MIGRATION_CONTROLS = input_parser.migration_controls
 MORTALITY_RATES = input_parser.mortality_rates
 FERTILITY_RATES = input_parser.fertility_rates

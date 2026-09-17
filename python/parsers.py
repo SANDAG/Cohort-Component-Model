@@ -1,9 +1,10 @@
 import cerberus
 import logging
 import pathlib
-import yaml
 
 import pandas as pd
+import sqlalchemy as sql
+
 import python.tests as tests
 
 logger = logging.getLogger(__name__)
@@ -14,12 +15,12 @@ class InputParser:
 
     Attributes:
         _config (dict): The configuration dictionary to be parsed
-        base_year (int): Used to store the base year of a new run
+        _engine (sql.Engine): The SQL engine which corresponds to the Estimates Program database
         launch_year (int): Used to store the launch year of a new run
         horizon_year (int): Used to store the horizon year of a new run
         version (str): The software version of the current run
         comments (str): Any comments associated with the current run
-        controls (dict): Mapping of control totals for each year
+        estimates_run_id (int): The run ID for the Estimates Program launch year run
         migration_controls (pd.DataFrame | None): Optional migration control totals (ins/outs)
             for each post-launch increment year. If not provided, set to None.
         mortality_rates (pd.DataFrame | None): Optional mortality rates by
@@ -31,10 +32,9 @@ class InputParser:
     Methods:
         parse_config(): Control function
         _validate_config(): Validate the configuration file
-        _parse_years(): Parses the run launch and horizon years from the configuration
-            file and sets the base year
-        _parse_controls(): Parses the controls mapping from the configuration file and
-            sets the controls attribute
+        _parse_years(): Parses the run launch and horizon years
+        _parse_estimates_run_id(): Parses the Estimates Program run ID from the
+            configuration file and sets the estimates_run_id attribute
         _parse_migration_controls(): Parses the migration controls mapping from the
             configuration file and sets the migration_controls attribute
         _parse_mortality_rates(): Parses the mortality rate controls from the
@@ -43,15 +43,15 @@ class InputParser:
             configuration file and sets the fertility_rates attribute
     """
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict, engine: sql.Engine) -> None:
         """Initialize the InputParser with a configuration dictionary."""
         self._config = config
-        self.base_year = None
+        self._engine = engine
         self.launch_year = None
         self.horizon_year = None
         self.version = None
         self.comments = None
-        self.controls = {}
+        self.estimates_run_id = None
         self.migration_controls = None
         self.mortality_rates = None
         self.fertility_rates = None
@@ -61,17 +61,17 @@ class InputParser:
         """Control flow to parse the runtime configuration.
 
         First, the contents of the configuration file are validated. Then, the
-        base, launch, and horizon years are set along with the software version
-        and any comments. Finally, the controls totals and optional migration control totals are parsed and set.
+        launch and horizon years are set along with the software version and
+        any comments. Finally, the controls totals and optional migration
+        control totals are parsed and set.
         """
         self._validate_config()
         _interval = self._parse_interval()
-        self.base_year = _interval["base_year"]
         self.launch_year = _interval["launch_year"]
         self.horizon_year = _interval["horizon_year"]
         self.comments = self._config.get("comments")
         self.version = self._config.get("version")
-        self.controls = self._parse_controls()
+        self.estimates_run_id = self._parse_estimates_run_id()
         self.migration_controls = self._parse_migration_controls()
         self.mortality_rates = self._parse_mortality_rates()
         self.fertility_rates = self._parse_fertility_rates()
@@ -89,7 +89,7 @@ class InputParser:
             "configurations": {
                 "type": "dict",
                 "schema": {
-                    "controls": {"type": "string"},
+                    "estimates_run_id": {"type": "integer"},
                 },
             },
             "csv": {
@@ -118,7 +118,7 @@ class InputParser:
             raise ValueError(validator.errors)
 
     def _parse_interval(self) -> dict:
-        """Parse the base, launch, and horizon years from the configuration file."""
+        """Parse the launch, and horizon years from the configuration file."""
         launch_year = self._config["interval"]["launch"]
         horizon_year = self._config["interval"]["horizon"]
 
@@ -126,40 +126,42 @@ class InputParser:
         if launch_year >= horizon_year:
             raise ValueError("Launch year must be less than horizon year")
 
-        if 2020 <= launch_year <= 2029:
-            base_year = 2020
-        else:
-            raise ValueError("""
-                    Only base year 2020 is supported at this time.
-                    Launch year must be between 2020 and 2029.
-                """)
+        if launch_year < 2010 or launch_year > 2025:
+            raise ValueError("Launch years must be between 2010 and 2025")
 
         return {
-            "base_year": base_year,
             "launch_year": launch_year,
             "horizon_year": horizon_year,
         }
 
-    def _parse_controls(self) -> dict:
-        """Parse the controls mapping from the configuration file."""
-        # Check the controls mapping file exists and is a valid YAML file
-        controls_fp = self._config["configurations"]["controls"]
-        controls_path = pathlib.Path(controls_fp)
-        if not controls_path.is_absolute():
-            controls_path = (
-                pathlib.Path(__file__).resolve().parent.parent / controls_path
-            )
-        try:
-            with open(controls_path, "r") as f:
-                controls = yaml.safe_load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Controls file not found: {controls_fp}")
-        except yaml.YAMLError as e:
-            raise ValueError(f"Error parsing controls YAML file: {e}")
+    def _parse_estimates_run_id(self) -> None:
+        """Check if supplied Estimates Program run id is valid."""
+        estimates_run_id = self._config["configurations"].get("estimates_run_id")
 
-        # TODO: Normally we would validate the schema but this is soon to be removed.
+        with self._engine.connect() as con:
+            # Ensure supplied run id exists in the Estimates Program database
+            # And that is complete and contains the launch year
+            query = sql.text("""
+                    SELECT CASE WHEN EXISTS (
+                        SELECT [run_id]
+                        FROM [metadata].[run]
+                        WHERE [run_id] = :run_id
+                            AND [complete] = 1
+                            AND :year BETWEEN [start_year] AND [end_year]
+                    ) THEN 1 ELSE 0 END
+                """)
 
-        return controls
+            exists = con.execute(
+                query, {"run_id": estimates_run_id, "year": self.launch_year}
+            ).scalar()
+            if exists == 0:
+                raise ValueError(
+                    f"Either the [run_id]={estimates_run_id} does not exist in the database or "
+                    f"it is not marked as [complete]=1 or it does not contain the provided "
+                    f"launch year={self.launch_year}"
+                )
+            else:
+                return estimates_run_id
 
     def _parse_migration_controls(self) -> pd.DataFrame | None:
         """Parse the migration controls CSV file from the configuration file."""

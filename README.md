@@ -12,13 +12,13 @@ Set the configuration file **config.yml** parameters specific to the model run o
 ```yaml
 version: "0.0.0-dev"
 comments: "No Comments" # Add comments pertaining to the run
-configurations:  # other configuration files
-  controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
+configurations:
+  estimates_run_id: 237  # the SANDAG Estimates Program production run to use for the launch year population
 csv:
   fertility_rates: null # optional csv with columns: (year, age, sex, race, rate_birth)
   migration_controls: null  # optional csv with columns: (year,ins,outs)
   mortality_rates: null # optional csv with columns: (year, age, sex, race, rate_death)
-interval:  # forecast interval (base is assumed from launch)
+interval:  # forecast interval
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
 sql:  # SQL server options
