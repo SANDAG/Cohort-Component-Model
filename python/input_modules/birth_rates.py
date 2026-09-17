@@ -1,4 +1,4 @@
-"""Get birth rates by single year of age and race."""
+"""Get birth rates by single year of age and race/ethnicity."""
 
 import logging
 
@@ -12,33 +12,32 @@ import python.utils as utils
 logger = logging.getLogger(__name__)
 
 
-def calculate_birth_rates(yr: int) -> pd.DataFrame:
-    """Calculate fertility rates broken down by single year of age, sex, and race.
+def calculate_birth_rates(year: int) -> pd.DataFrame:
+    """Calculate fertility rates by single year of age, sex, and race/ethnicity.
 
-    Fertility rates are provided using CDC WONDER Natality births for 5-year age
-    groups ranging from ages 15 to 44 then inflated to account for the % of births
-    attributed to:
+    Fertility rates are provided using CDC WONDER Natality births for 5-year
+    age groups ranging from ages 15 to 44 then inflated to account for the %
+    of births attributed to:
         1) Ages 15 and under
         2) Ages 45 and over
         3) "Unknown", "Not Stated", "Not Available", or "Not Reported" race/ethnicity groups
 
     Args:
-        yr (int): Increment year
+        year (int): Increment year
 
     Returns:
-        pd.DataFrame: Fertility rates broken down by single year of age, sex, and race
+        pd.DataFrame: Fertility rates by single year of age, sex, and
+            race/ethnicity
     """
-    # Fertility rates calculated from base year up to the launch year
-    if yr <= utils.LAUNCH_YEAR:
-
-        with utils.SQL_ENGINE.connect() as con:
-
-            # Load CDC WONDER data from database for the specific year only
+    # Fertility rates calculated for the launch year
+    if year == utils.LAUNCH_YEAR:
+        with utils.CCM_ENGINE.connect() as con:
+            # Load fertility rates
             with open(
                 utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility.sql"
             ) as file:
                 births = pd.read_sql_query(
-                    sql=sql.text(file.read()), con=con, params={"year": yr}
+                    sql=sql.text(file.read()), con=con, params={"year": year}
                 )
                 logger.info("CDC WONDER fertility data loaded from database")
 
@@ -47,28 +46,25 @@ def calculate_birth_rates(yr: int) -> pd.DataFrame:
                 utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility_inflation.sql"
             ) as file:
                 inflation_factor = pd.read_sql_query(
-                    sql=sql.text(file.read()), con=con, params={"year": yr}
+                    sql=sql.text(file.read()), con=con, params={"year": year}
                 )
                 logger.info(
                     "CDC WONDER fertility inflation factors loaded from database"
                 )
 
-        # Calculate inflated rates for individual ages
+        # Inflate the fertility rates with unassigned births
         result = (
-            pd.merge(births, inflation_factor, on=["location", "year"])
-            .assign(
-                rate=lambda x: x["rate"] * x["inflation_factor"],
-                sex="F",
-            )
+            pd.merge(births, inflation_factor, on=["location"])
+            .assign(rate=lambda x: x["rate"] * x["inflation_factor"])
             .rename(columns={"rate": "rate_birth"})[
-                ["location", "race", "age", "hispanic_origin", "rate_birth", "sex"]
+                ["location", "age", "sex", "ethnicity", "rate_birth"]
             ]
         )
 
         # Pivot by location to get county, state, national as separate columns
         pivoted = (
             result.pivot_table(
-                index=["age", "race", "sex", "hispanic_origin"],
+                index=["age", "sex", "ethnicity"],
                 columns="location",
                 values=["rate_birth"],
                 aggfunc="first",
@@ -102,8 +98,8 @@ def calculate_birth_rates(yr: int) -> pd.DataFrame:
 
         # Finalize combined dataset
         df = (
-            pivoted[["age", "race", "sex", "rate_birth"]]
-            .sort_values(by=["sex", "race", "age"])
+            pivoted[["age", "sex", "ethnicity", "rate_birth"]]
+            .sort_values(by=["age", "sex", "ethnicity"])
             .reset_index(drop=True)
         )
 
@@ -116,53 +112,49 @@ def calculate_birth_rates(yr: int) -> pd.DataFrame:
 
         # Validate output has correct structure
         tests.validate_data(
-            table_name=f"Fertility Rates (year {yr})",
-            # Rename columns to test against the expected naming convention for fertility data
-            data=df[["race", "age", "rate_birth"]].rename(
+            table_name=f"Fertility Rates (year {year})",
+            # Rename age column for test (birth data only 15-44)
+            data=df[["age", "ethnicity", "rate_birth"]].rename(
                 columns={"age": "age_births"}
             ),
-            row_count={"key_columns": {"race", "age_births"}},
+            row_count={"key_columns": {"age_births", "ethnicity"}},
             negative={"negative_ok": set()},
             null={"null_ok": set()},
         )
 
-        return df
+        return df[["age", "sex", "ethnicity", "rate_birth"]]
 
     else:
         raise ValueError("Fertility rates not calculated past launch year")
 
 
-def get_birth_rates(yr: int) -> pd.DataFrame:
-    """Create fertility rates broken down by single year of age, sex, and race.
+def get_birth_rates(year: int) -> pd.DataFrame:
+    """Create fertility rates by single year of age, sex, and race/ethnicity.
 
-    For each year up to launch, calculate the crude fertility rate within single year of age, sex,
-    and race. For post-launch years, if fertility controls are provided, use the year-specific rates.
+    For the launch year, calculate the crude fertility rate within single year
+    of age, sex, and race/ethnicity. Post launch year, if fertility rates are
+    provided, use them. Otherwise, the function should not be called.
 
     Args:
-        yr (int): Increment year
+        year (int): Increment year
 
     Returns:
-        pd.DataFrame: Fertility rates broken down by single year of age, sex, and race
-            with columns (age, sex, race, rate_birth).
+        pd.DataFrame: Fertility rates by single year of age, sex, and
+            race/ethnicity
     """
+    # Fertility rates calculated for the launch year
+    if year == utils.LAUNCH_YEAR:
+        return calculate_birth_rates(year=year)
 
-    # Fertility rates calculated from base year up to the launch year
-    if yr <= utils.LAUNCH_YEAR:
-        rates = calculate_birth_rates(yr=yr)
-
-    # Post-launch year
+    # Fertility rates are not calculated past the launch year
+    # Post-launch rates are used directly if provided
     else:
-        # If fertility rates are provided, use them
         if utils.FERTILITY_RATES is not None:
-            # Filter to the specific year
-            rates = utils.FERTILITY_RATES.loc[
-                utils.FERTILITY_RATES["year"] == yr
-            ].copy()
-
-            # Drop year column to match expected output format
-            rates = rates.drop(columns=["year"])
+            # Use the provided rates directly
+            return utils.FERTILITY_RATES.loc[utils.FERTILITY_RATES["year"] == year][
+                ["age", "sex", "ethnicity", "rate_birth"]
+            ]
         else:
-            # No rates provided or year not in CSV - hold jump-off rates constant
-            rates = calculate_birth_rates(yr=utils.LAUNCH_YEAR)
-
-    return rates[["race", "sex", "age", "rate_birth"]]
+            raise ValueError(
+                "Function called post launch year but fertility rates not provided."
+            )

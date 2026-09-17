@@ -29,14 +29,12 @@ DECLARE @product NVARCHAR(9) = CASE
 IF NOT EXISTS (
     SELECT TOP (1) *
     FROM [socioec_data].[vital_statistics].[cdc_wonder_fertility]
-    WHERE 
-        [year] = @year
+    WHERE [year] = @year
 )
 SELECT @msg AS [msg]
 ELSE
 BEGIN
     SELECT
-        [year],
         [location],
         1 + 1.0 * SUM(
             CASE
@@ -55,10 +53,6 @@ BEGIN
         AND [period] = 'Five-Year'
         AND [year] = @year
         AND [births] > 0
-    GROUP BY
-        [year],
-        [location]
-    ORDER BY
-        [year],
-        [location]
+    GROUP BY [location]
+    ORDER BY [location]
 END;

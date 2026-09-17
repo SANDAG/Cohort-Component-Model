@@ -296,10 +296,10 @@ class InputParser:
     def _parse_fertility_rates(self) -> pd.DataFrame | None:
         """Parse the fertility rates CSV file from the configuration file.
 
-        The CSV file must contain fertility rates by year, age, sex, and race.
+        The CSV file must contain fertility rates by year, age, sex, and ethnicity.
 
         Returns:
-            pd.DataFrame | None: DataFrame with columns (year, age, sex, race, rate_birth),
+            pd.DataFrame | None: DataFrame with columns (year, age, sex, ethnicity, rate_birth),
                 or None if no file is provided.
         """
         # Check if fertility rate file is provided
@@ -323,11 +323,11 @@ class InputParser:
             raise ValueError(f"Error parsing fertility rate CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "age", "sex", "race", "rate_birth"}
+        required_cols = {"year", "age", "sex", "ethnicity", "rate_birth"}
         if not required_cols.issubset(fertility_rates.columns):
             raise ValueError(
                 "Fertility rates must contain columns: "
-                "(year, age, sex, race, rate_birth)"
+                "(year, age, sex, ethnicity, rate_birth)"
             )
 
         # Check fertility rates are > 0 and < 1
@@ -336,25 +336,13 @@ class InputParser:
         ):
             raise ValueError("Fertility rates must be greater than 0 and less than 1")
 
-        # Check fertility sex is only F
-        if not all(fertility_rates["sex"] == "F"):
+        # Check fertility sex is only Female
+        if not all(fertility_rates["sex"] == "Female"):
             raise ValueError("Fertility rates must be for females only")
 
         # Check age range is valid (15-44)
         if any(fertility_rates["age"] < 15) or any(fertility_rates["age"] > 44):
             raise ValueError("Age values must be between 15 and 44")
-
-        # Check fertility rates are identical among five year age groups
-        rates_per_age_group = (
-            fertility_rates.assign(age_group=fertility_rates["age"] // 5)
-            .groupby(["year", "sex", "race", "age_group"])["rate_birth"]
-            .nunique()
-        )
-        inconsistent_age_groups = rates_per_age_group[rates_per_age_group > 1]
-        if not inconsistent_age_groups.empty:
-            logger.warning(
-                "Fertility rates are assumed to be identical within each five-year age group"
-            )
 
         # Validate year column
         control_years = set(fertility_rates["year"].unique())
@@ -372,13 +360,13 @@ class InputParser:
             year_data = fertility_rates[fertility_rates["year"] == year]
             tests.validate_data(
                 table_name=f"Birth Rates (year {year})",
-                # Rename columns to test against the expected naming convention for fertility data
-                data=year_data[["race", "age", "rate_birth"]].rename(
+                # Rename age column for test (birth data only 15-44)
+                data=year_data[["age", "ethnicity", "rate_birth"]].rename(
                     columns={"age": "age_births"}
                 ),
-                row_count={"key_columns": {"race", "age_births"}},
+                row_count={"key_columns": {"ethnicity", "age_births"}},
                 negative={"negative_ok": set()},
                 null={"null_ok": set()},
             )
 
-        return fertility_rates
+        return fertility_rates[["year", "age", "sex", "ethnicity", "rate_birth"]]

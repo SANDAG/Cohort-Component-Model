@@ -1,7 +1,13 @@
 /* 
-    This query loads and prepares the CDC WONDER fertility data for the given year by 
-    renaming fields to match the CCM fields, removing "Not Stated" rows, and supplementing 
-    data to create new race categories for years 2020 and earlier.
+    This query loads and prepares the CDC WONDER fertility data for the given
+    year by aligning fields with Cohort Component Model standards, removing
+    ages <15 and >44 and "Not Stated Rows", and accounting for missing
+    race/ethnicity categories in the 2007-2019 product using the "All Races"
+    values for both "Non-Hispanic, Two or More Races" and
+    "Non-Hispanic, Hawaiian or Pacific Islander".
+
+    Note: This querly only handles years from 2012 onwards as that is the
+    first five-year average available (2007-2012).
 */
 
 DECLARE @year INTEGER = :year;
@@ -15,32 +21,30 @@ DECLARE @product NVARCHAR(9) = CASE
 IF NOT EXISTS (
     SELECT TOP (1) *
     FROM [socioec_data].[vital_statistics].[cdc_wonder_fertility]
-    WHERE 
-        [year] = @year
+    WHERE [year] = @year
 )
 SELECT @msg AS [msg]
 ELSE
 BEGIN
     WITH [data] AS (
-        SELECT [product]
-            ,[location]
+        SELECT
+            [location]
             ,[year]
-            ,[age]
-            ,[hispanic_origin]
+            ,[age] AS [age_group]
             ,CASE 
                 WHEN [hispanic_origin] = 'Hispanic or Latino' THEN 'Hispanic'
-                WHEN [race] = 'Asian' THEN 'Asian alone'
-                WHEN [race] = 'Asian or Pacific Islander' THEN 'Asian alone'
-                WHEN [race] = 'Black or African American' THEN 'Black or African American alone'
-                WHEN [race] = 'American Indian or Alaska Native' THEN 'American Indian or Alaska Native alone'
-                WHEN [race] = 'More than one race' THEN 'Two or More Races'
-                WHEN [race] = 'White' THEN 'White alone'
-                WHEN [race] = 'Native Hawaiian or Other Pacific Islander' THEN 'Native Hawaiian or Other Pacific Islander alone'
+                WHEN [race] = 'Asian' THEN 'Non-Hispanic, Asian'
+                WHEN [race] = 'Asian or Pacific Islander' THEN 'Non-Hispanic, Asian'
+                WHEN [race] = 'Black or African American' THEN 'Non-Hispanic, Black'
+                WHEN [race] = 'American Indian or Alaska Native' THEN 'Non-Hispanic, American Indian or Alaska Native'
+                WHEN [race] = 'More than one race' THEN 'Non-Hispanic, Two or More Races'
+                WHEN [race] = 'White' THEN 'Non-Hispanic, White'
+                WHEN [race] = 'Native Hawaiian or Other Pacific Islander' THEN 'Non-Hispanic, Hawaiian or Pacific Islander'
                 -- "All Races" values are used only before 2020 as a placeholder
-                -- For "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
+                -- For "Non-Hispanic, Two or More Races" and "Non-Hispanic, Hawaiian or Pacific Islander"
                 WHEN [product] = '2007-2019' AND [race] = 'All Races' THEN 'All Races'
                 ELSE [race]
-            END AS [race]
+            END AS [ethnicity]
             -- Source rates are expressed per 1,000 women 
             -- (e.g., 50 births / 1,000 women = 0.05, but displayed as 50)
             -- Divide by 1000 to convert back to decimal proportion
@@ -51,56 +55,50 @@ BEGIN
 			[product] = @product
 			-- Five year rolling sums used
 			AND [period] = 'Five-Year'
+            -- Births in there age categories are included in the inflation calculation
             AND [age] NOT IN ('Under 15 years', '45-49 years', '50 years and over')
+            -- Birth from "Not Stated" records are included in the inflation calculation
             AND [hispanic_origin] != 'Not Stated' 
             AND [race] != 'Not Stated'
             AND [year] = @year
     ),
-    [race_expanded] AS (
+    [ethnicity_expanded] AS (
         SELECT 
             [location]
-            ,[year]
-            ,[age]
-            ,[hispanic_origin]
-            ,[race]
+            ,[age_group]
+            ,[ethnicity]
             ,[rate]
         FROM [data]
-        WHERE [race] != 'All Races'
+        WHERE [ethnicity] != 'All Races'
         -- Following UNION statements use the "All Races"
-        -- To create "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
+        -- To create "Non-Hispanic, Two or More Races" and "Non-Hispanic, Hawaiian or Pacific Islander"
         UNION ALL
 
         SELECT
             [location]
-            ,[year]
-            ,[age]
-            ,[hispanic_origin]
-            ,'Two or More Races' AS [race]
+            ,[age_group]
+            ,'Non-Hispanic, Two or More Races' AS [ethnicity]
             ,[rate]
         FROM [data]
-        WHERE [race] = 'All Races' AND [year] <= 2019
+        WHERE [ethnicity] = 'All Races' AND [year] <= 2019
 
         UNION ALL
 
         SELECT
             [location]
-            ,[year]
-            ,[age]
-            ,[hispanic_origin]
-            ,'Native Hawaiian or Other Pacific Islander alone' AS [race]
+            ,[age_group]
+            ,'Non-Hispanic, Hawaiian or Pacific Islander' AS [ethnicity]
             ,[rate]
         FROM [data]
-        WHERE [race] = 'All Races' AND [year] <= 2019
+        WHERE [ethnicity] = 'All Races' AND [year] <= 2019
     )
     SELECT 
         [location]
-        ,[year]
-        ,[single_age].[age_group]
         ,[single_age].[age]
-        ,[hispanic_origin]
-        ,[race]
+        ,'Female' AS [sex]
+        ,[ethnicity]
         ,[rate]
-    FROM [race_expanded]
+    FROM [ethnicity_expanded]
     CROSS JOIN (
         VALUES 
             ('15-19 years', 15), ('15-19 years', 16), ('15-19 years', 17), ('15-19 years', 18), ('15-19 years', 19),
@@ -111,11 +109,9 @@ BEGIN
             ('40-44 years', 40), ('40-44 years', 41), ('40-44 years', 42), ('40-44 years', 43), ('40-44 years', 44)
     ) AS [single_age]([age_group], [age])
     WHERE 
-        [race_expanded].[age] = [single_age].[age_group]
+        [ethnicity_expanded].[age_group] = [single_age].[age_group]
     ORDER BY 
-        [location] 
-        ,[year]
-        ,[single_age].[age] 
-        ,[hispanic_origin]
-        ,[race] 
+        [location]
+        ,[single_age].[age]
+        ,[ethnicity] 
 END;

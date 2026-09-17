@@ -26,15 +26,15 @@ sql:  # SQL server options
 ```
 
 ### Fertility Rates File Format
-If fertility rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include female sex (`F`), each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone), and 30 ages (15-44) to create 210 rows per year:
+If fertility rates are provided, the CSV should include one row per year, age, sex, and race/ethnicity grouping with no null values in any of the columns. Each year should include female sex (`Female`) only, each of the seven race/ethnicity categories (`Non-Hispanic, American Indian or Alaska Native`; `Non-Hispanic, Asian`; `Non-Hispanic, Black`; `Non-Hispanic, Hawaiian or Pacific Islander`; `Non-Hispanic, Two or More Races`; `Non-Hispanic, White`), and 30 single year of age values (`15-44`) to create 210 rows per year:
 
 ```csv
-year,age,sex,race,rate_birth
-2023,15,F,American Indian or Alaska Native alone,0.01431606
+year,age,sex,ethnicity,rate_birth
+2023,15,Female,"Non-Hispanic, American Indian or Alaska Native",0.01431606
 ...
-2024,30,F,Hispanic,0.09667108
+2024,30,Female,Hispanic,0.09667108
 ...
-2025,44,F,White alone,0.01539245
+2025,44,Female,"Non-Hispanic, White",0.01539245
 ```
 
 ### Migration Controls File Format
