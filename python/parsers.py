@@ -216,10 +216,11 @@ class InputParser:
     def _parse_mortality_rates(self) -> pd.DataFrame | None:
         """Parse the mortality rates CSV file from the configuration file.
 
-        The CSV file must contain mortality rates by year, age, sex, and race.
+        The CSV file must contain mortality rates by year, age, sex, and
+        race/ethnicity.
 
         Returns:
-            pd.DataFrame | None: DataFrame with columns (year, age, sex, race, rate_death),
+            pd.DataFrame | None: DataFrame with columns (year, age, sex, ethnicity, rate_death),
                 or None if no file is provided.
         """
         # Check if mortality rates file is provided
@@ -243,10 +244,10 @@ class InputParser:
             raise ValueError(f"Error parsing mortality rates CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "age", "sex", "race", "rate_death"}
+        required_cols = {"year", "age", "sex", "ethnicity", "rate_death"}
         if not required_cols.issubset(mortality_rates.columns):
             raise ValueError(
-                "Mortality rates must contain columns: (year, age, sex, race, rate_death)"
+                "Mortality rates must contain columns: (year, age, sex, ethnicity, rate_death)"
             )
 
         # Required mortality-control fields cannot be null
@@ -260,9 +261,9 @@ class InputParser:
             raise ValueError("Mortality rates must be greater than 0 and less than 1")
 
         # Check for duplicate year/age/sex/race combinations
-        if mortality_rates.duplicated(subset=["year", "age", "sex", "race"]).any():
+        if mortality_rates.duplicated(subset=["year", "age", "sex", "ethnicity"]).any():
             raise ValueError(
-                "Duplicate year/age/sex/race combinations found in mortality rates"
+                "Duplicate year/age/sex/ethnicity combinations found in mortality rates"
             )
 
         # Check age range is valid (0-99)
@@ -282,16 +283,15 @@ class InputParser:
 
         # Validate each year has the correct structure
         for year in mortality_rates["year"].unique():
-            year_data = mortality_rates[mortality_rates["year"] == year]
             tests.validate_data(
                 table_name=f"Mortality Rates (year {year})",
-                data=year_data[["race", "sex", "age", "rate_death"]],
-                row_count={"key_columns": {"race", "sex", "age"}},
+                data=mortality_rates[mortality_rates["year"] == year],
+                row_count={"key_columns": {"age", "sex", "ethnicity"}},
                 negative={"negative_ok": set()},
                 null={"null_ok": set()},
             )
 
-        return mortality_rates
+        return mortality_rates[["year", "age", "sex", "ethnicity", "rate_death"]]
 
     def _parse_fertility_rates(self) -> pd.DataFrame | None:
         """Parse the fertility rates CSV file from the configuration file.

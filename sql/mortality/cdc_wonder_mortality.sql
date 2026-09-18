@@ -1,58 +1,48 @@
 /*
 	This query loads and prepares CDC WONDER mortality data for a given year.
-	The year chosen selects the CDC product used. The 1999-2020 requires the
-	use of "All Races" "Not Hispanic or Latino" as a placeholder for both the
-	"Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
-	categories as they do not exist in the product.
+	The 1999-2020 requires the use of "All Races" "Not Hispanic or Latino" as
+	a placeholder for both the "Non-Hispanic, Two or More Races" and
+	"Non-Hispanic, Hawaiian or Pacific Islander" categories as they do not
+	exist in the product.
 */
 
 DECLARE @year INTEGER = :year;
 DECLARE @msg nvarchar(49) = 'Data for CDC WONDER mortality year does not exist';
 DECLARE @product NVARCHAR(9) = CASE
     WHEN @year >= 2021 THEN '2018+'
-    WHEN @year <=2020 THEN '1999-2020'
+    WHEN @year <= 2020 THEN '1999-2020'
     ELSE NULL END;
 
 -- Send error message if no data exists --------------------------------------
 IF NOT EXISTS (
     SELECT TOP (1) *
     FROM [socioec_data].[vital_statistics].[cdc_wonder_mortality]
-    WHERE 
-        [year] = @year
+    WHERE [year] = @year
 )
 SELECT @msg AS [msg]
 ELSE
 BEGIN
-
 	WITH [data] AS (
 		SELECT
-			[year]
-			,[location]
+			[location]
 			-- Convert age to numeric
-			,CASE
-				WHEN [age] = '85+' THEN '85'
-				ELSE [age]
-			END AS [age]
-			-- Convert sex to single character
-			,CASE [sex]
-				WHEN 'Female' THEN 'F'
-				WHEN 'Male' THEN 'M'
-			END AS [sex]
+			,CASE WHEN [age] = '85+' THEN '85' ELSE [age] END AS [age]
+			,[sex]
 			-- Convert race categories to consistent definition across products
 			,CASE 
 				WHEN [hispanic_origin] = 'Hispanic or Latino' THEN 'Hispanic'
-				WHEN [race] = 'Asian' THEN 'Asian alone'
-				WHEN [race] = 'Asian or Pacific Islander' THEN 'Asian alone'
-				WHEN [race] = 'Black or African American' THEN 'Black or African American alone'
-				WHEN [race] = 'American Indian or Alaska Native' THEN 'American Indian or Alaska Native alone'
-				WHEN [race] = 'More than one race' THEN 'Two or More Races'
-				WHEN [race] = 'White' THEN 'White alone'
-				WHEN [race] = 'Native Hawaiian or Other Pacific Islander' THEN 'Native Hawaiian or Other Pacific Islander alone'
+				WHEN [race] = 'Asian' THEN 'Non-Hispanic, Asian'
+				WHEN [race] = 'Asian or Pacific Islander' THEN 'Non-Hispanic, Asian'
+				WHEN [race] = 'Black or African American' THEN 'Non-Hispanic, Black'
+				WHEN [race] = 'American Indian or Alaska Native' THEN 'Non-Hispanic, American Indian or Alaska Native'
+				WHEN [race] = 'More than one race' THEN 'Non-Hispanic, Two or More Races'
+				WHEN [race] = 'White' THEN 'Non-Hispanic, White'
+				WHEN [race] = 'Native Hawaiian or Other Pacific Islander' THEN 'Non-Hispanic, Hawaiian or Pacific Islander'
 				-- "All Races" values are used only within the 1999-2020 product as a placeholder
-				-- For "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
+				-- For "Non-Hispanic, Two or More Races" and "Non-Hispanic, Hawaiian or Pacific Islander"
 				WHEN @product = '1999-2020' AND [race] = 'All Races' THEN 'All Races'
 				ELSE [race]
-			END AS [race]
+			END AS [ethnicity]
 			,CASE
 				-- Population is suppressed at the county level in the 2018+ CDC WONDER product
 				-- We are forced to use the population within the CCM software which is not a five year sum
@@ -65,6 +55,7 @@ BEGIN
 			[product] = @product
 			-- Five year rolling sums used
 			AND [period] = 'Five-Year'
+			AND [year] = @year
 			-- These values are only used in the inflation factor calculation
 			AND [age] NOT IN (
 				'All Stated Ages',
@@ -77,7 +68,7 @@ BEGIN
 				'Not Stated'
 			)
 			-- "All Races" values are used only within the 1999-2020 product as a placeholder
-			-- For "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
+			-- For "Non-Hispanic, Two or More Races" and "Non-Hispanic, Hawaiian or Pacific Islander"
 			AND NOT (
 				[product] = '2018+'
 				AND [race] = 'All Races'
@@ -85,48 +76,44 @@ BEGIN
 			)
 	)
 	SELECT
-		[year]
-		,[location]
+		[location]
 		,[age]
 		,[sex]
-		,[race]
+		,[ethnicity]
 		,[deaths]
 		,[pop]
 	FROM [data]
-	WHERE [race] != 'All Races' AND [year] = @year 
+	WHERE [ethnicity] != 'All Races'
 
 	-- Following UNION statements use the "All Races" "Not Hispanic or Latino"
-	-- To create "Two or More Races" and "Native Hawaiian or Other Pacific Islander alone"
+	-- To create "Non-Hispanic, Two or More Races" and "Non-Hispanic, Hawaiian or Pacific Islander"
 	UNION ALL
 
 	SELECT
-		[year]
-		,[location]
+		[location]
 		,[age]
 		,[sex]
-		,'Two or More Races' AS [race]
+		,'Non-Hispanic, Two or More Races' AS [ethnicity]
 		,[deaths]
 		,[pop]
 	FROM [data]
-	WHERE [race] = 'All Races' AND [year] = @year AND [year] <= 2020
+	WHERE [ethnicity] = 'All Races'
 
 	UNION ALL
 
 	SELECT
-		[year]
-		,[location]
+		[location]
 		,[age]
 		,[sex]
-		,'Native Hawaiian or Other Pacific Islander alone' AS [race]
+		,'Non-Hispanic, Hawaiian or Pacific Islander' AS [ethnicity]
 		,[deaths]
 		,[pop]
 	FROM [data]
-	WHERE [race] = 'All Races' AND [year] = @year AND [year] <= 2020
+	WHERE [ethnicity] = 'All Races'
 
 	ORDER BY
-		[year]
-		,[location]
+		[location]
 		,[age]
 		,[sex]
-		,[race]
+		,[ethnicity]
 END;
