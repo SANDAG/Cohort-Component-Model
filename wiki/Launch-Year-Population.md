@@ -4,7 +4,7 @@ The population data for the launch year, the last year of observed data used in 
 | Input | Module Source | Usage |
 | ----- | ------------- | ----- |
 | Regional age/sex/ethnicity controls for total population | External (DOF) | Used to split age groups from SANDAG's Estimates Program into single of year of age |
-| Population by age/sex/ethnicity by population type | External (SANDAG Estimates) | SANDAG's Estimates Program [Population by Age/Sex/Ethnicity](https://github.com/SANDAG/Estimates-Program/wiki/Population-by-Age-Sex-Ethnicity) serves as the launch year population for the regional forecast 
+| Population by age/sex/ethnicity by population type | External (SANDAG Estimates) | SANDAG's Estimates Program [Population by Age/Sex/Ethnicity](https://github.com/SANDAG/Estimates-Program/wiki/Population-by-Age-Sex-Ethnicity) serves as the launch year population for the regional forecast |
 
 ## Regional age/sex/ethnicity controls for total population
 The regional age/sex/ethnicity controls for total population are derived from the most recent [California Department of Finance (DOF) Projections](https://dof.ca.gov/forecasting/demographics/projections/) P-3 product available at the time.

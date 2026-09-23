@@ -130,6 +130,31 @@ if FERTILITY_RATES is not None:
 
 RANDOM_SEED = 42  # Seed for random number generation to ensure reproducibility
 
+# Minimum and maximum age values for each age group from SANDAG Estimates
+# https://github.com/SANDAG/Estimates-Program/blob/main/python/utils.py
+AGE_MAPPING = {
+    "Under 5": {"min": 0, "max": 4},
+    "5 to 9": {"min": 5, "max": 9},
+    "10 to 14": {"min": 10, "max": 14},
+    "15 to 17": {"min": 15, "max": 17},
+    "18 and 19": {"min": 18, "max": 19},
+    "20 to 24": {"min": 20, "max": 24},
+    "25 to 29": {"min": 25, "max": 29},
+    "30 to 34": {"min": 30, "max": 34},
+    "35 to 39": {"min": 35, "max": 39},
+    "40 to 44": {"min": 40, "max": 44},
+    "45 to 49": {"min": 45, "max": 49},
+    "50 to 54": {"min": 50, "max": 54},
+    "55 to 59": {"min": 55, "max": 59},
+    "60 and 61": {"min": 60, "max": 61},
+    "62 to 64": {"min": 62, "max": 64},
+    "65 to 69": {"min": 65, "max": 69},
+    "70 to 74": {"min": 70, "max": 74},
+    "75 to 79": {"min": 75, "max": 79},
+    "80 to 84": {"min": 80, "max": 84},
+    "85 and Older": {"min": 85, "max": 100},
+}
+
 
 #####################
 # UTILITY FUNCTIONS #
@@ -744,7 +769,10 @@ def read_sql_query_fallback(max_lookback: int = 1, **kwargs: dict) -> pd.DataFra
     original_year = kwargs["params"]["year"]
 
     # Messages that trigger year lookback
-    lookback_messages = ["Data for CDC WONDER mortality year does not exist"]
+    lookback_messages = [
+        "Data for CDC WONDER mortality year does not exist",
+        "ACS 5-Year PUMS does not exist",
+    ]
 
     # Try up to max_lookback + 1 times
     for attempt in range(max_lookback + 1):
