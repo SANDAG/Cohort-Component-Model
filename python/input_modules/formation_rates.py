@@ -40,8 +40,8 @@ def run_formation_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
         _get_formation_inputs - Get Group Quarters formation rates by age
             group, sex, and ethnicity directly from SANDAG's Estimates Program,
             household formation rates by age group, sex, and ethnicity from the
-            ACS PUMS 5-year, and the total households control from SANDAG's
-            Estimates Program.
+            ACS 5-year PUMS, and the total households control from SANDAG's
+            Estimates Program
         _validate_formation_inputs - Validate inputs from the above function
         _create_formation_outputs - Distribute Group Quarters formation rates
             and household formation rates to single years of age within each

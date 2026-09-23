@@ -1,15 +1,25 @@
-## 1 Overview
-Crude household characteristics rates calculated within race, sex, and single year of age for each increment from the base year up to the launch year.
+This module generates household characteristics rates by single year of age, sex, and race/ethnicity for the launch year. At this time, household characteristics rates are held constant through the entirety of the forecast.
 
-## 2 Input Datasets
-* [5-year ACS PUMS persons files](https://www.census.gov/programs-surveys/acs/microdata.html)
-* [SANDAG's Estimates Program](https://opendata.sandag.org/stories/s/SANDAG-Estimates-PDF-Reports/mire-zdsi/)
+# Inputs
+| Input | Module Source | Usage |
+| ----- | ------------- | ----- |
+| Launch Year Population | [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population) | Rates are applied to the regional forecast [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population) to check control totals and to integerize outputs within age/sex/ethnicity for the launch year |
+| Formation Rates | [Formation Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Formation-Rates) | Launch year household formation rates are needed to generate total households to check controls and to integerize outputs within age/sex/ethnicity for the launch year |
+| Household Characteristics Rates | External (ACS) | The ACS 5-year PUMS provides household characteristics rates by age/sex/ethnicity |
+| Total Households by Characteristics | SANDAG's Estimates Program | SANDAG's Estimates Program [Household Characteristics](https://github.com/SANDAG/Estimates-Program/wiki/Household-Characteristics) are used to control household characteristics rates |
 
-## 3 Methods
-* Take the increment year 5-year ACS PUMS persons file for the San Diego region, scaling the head of household population and all household-related variables to match the total households for the increment year from SANDAG's Estimates program using the version from the chosen launch year. Additionally, for each characteristic, if there exists a SANDAG Estimate, the total number of households within the characteristic category is scaled to match the SANDAG Estimate.
-* For race, sex, and single year of age categories with less than twenty households (but greater than zero), household characteristics rates within race, sex, and more aggregate age categories are used. These categories are; Under 16, 16-17, 18-24, 25-34, 35-49, 50-59, 60-70, and 71+.
-* Finally, if there exists any race, sex, and single year of age categories such that the sum of characteristic rates that cover all households does not equal one, proportionately adjust those rates within those categories such that that sum is equal to one. For example, households by size (1, 2, 3+) would be a group of characteristic rates that cover all households and thus, should sum to 1.
+## Launch Year Population
+See [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population).
 
+## Formation Rates
+See [Formation Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Formation-Rates).
 
-## 4 Repository Location
-The main classes, methods, and utilities associated with creating crude group quarters and household formation rates are contained in **python/input_modules/hh_characteristics_rates.py**
+## Household Characteristics Rates
+The United States Census Bureau's American Community Survey (ACS) [Public Use Microdata Sample (PUMS)](https://www.census.gov/programs-surveys/acs/microdata.html) files provide household characteristics rates for San Diego County.
+
+## Total Households by Characteristics
+When household characteristics rates are applied to the [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population) households formed by applying household [Formation Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Formation-Rates), the rates are adjusted such that the total households formed within each characteristic are equal to the total households from SANDAG's Estimates Program [Household Characteristics](https://github.com/SANDAG/Estimates-Program/wiki/Household-Characteristics), if any such exists.
+
+# Outputs
+## Household Characteristics Rates
+Household characteristics rates are calculated from the Census Bureau ACS 5-year PUMS by age group, sex, and ethnicity. The rates are then uniformly assigned to the launch year households across single year of age wthin each age group. They are then adjusted such that when applied they result in integer values within single year of age, sex, and ethnicity categories and that the regional totals equal the totals from SANDAG's Estimates Program and remain consistent with the launch year households within each category.

@@ -1,6 +1,7 @@
-"""Get household characteristics rates by race, sex, and single year of age."""
+"""Get household characteristics rates by age, sex, and race/ethnicity."""
 
 # TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
+# TODO: Implement functionality for non-launch years if needed.
 
 import logging
 
@@ -8,178 +9,280 @@ import numpy as np
 import pandas as pd
 import sqlalchemy as sql
 
+import python.tests as tests
 import python.utils as utils
 
+generator = np.random.default_rng(utils.RANDOM_SEED)
 logger = logging.getLogger(__name__)
 
 
-def get_hh_characteristic_rates(yr: int) -> pd.DataFrame:
-    """Generate household characteristics rates broken down by race, sex, and
-    single year of age.
+def run_hh_characteristics_rates(
+    year: int, population: pd.DataFrame, rates: dict[str, pd.DataFrame]
+) -> pd.DataFrame:
+    """Orchestrator function to calculate household characteristics rates.
 
-    Household characteristic rates are calculated using the 5-year ACS PUMS
-    persons. Prior to calculation, the total number of households and all
-    household-related variables are scaled to match SANDAG estimates. For each
-    characteristic, if there exists a SANDAG estimate, the total number of
-    households within the characteristic category is scaled to match SANDAG
-    estimates.
+    This modules generates household characteristics rates broken down by
+    single year of age, sex, and race/ethnicity using ACS PUMS data and
+    SANDAG's Estimates PRogram. Rates are calculated within age groups and
+    then applied uniformly to all single years of age within age groups.
 
-    For race, sex, and single year of age categories with less than twenty
-    households, household characteristic rates within race, sex, and more
-    aggregate age categories are used.
+    For each characteristics, if there exists a SANDAG estimates, the total
+    number of households within that characteristics category is scaled to
+    match the values from SANDAG's Estimates Program for the launch year.
 
-    Args:
-        yr: Increment year
+    The final rates, when applied to the launch year households, should yield
+    household characteristics counts identical to SANDAG's Estimates PRogram
+    for the launch year.
 
-    Returns:
-        pd.DataFrame: Household characteristics rates broken down by race,
-            sex, and single year of age
+    Functionality is split apart for code encapsulation:
+        _get_hh_characteristics_rates_inputs - Get household characteristics
+            rates by age group, sex, and ethnicity from the ACS 5-year PUMS
+            and the total household characteristics controls from SANDAG's
+            Estimates Program
+        _validate_hh_characteristics_rates_inputs - Validate inputs from the
+            above function
+        _create_hh_characteristics_rates_outputs - Placeholder
+        _validate_hh_characteristics_rates_outputs - Validate the output from
+            the above function
     """
-    if yr <= utils.LAUNCH_YEAR:
-        # Load SQL queries and apply checks to datasets
-        with utils.SQL_ENGINE.connect() as connection:
-            # Load ACS PUMS persons
-            with open(utils.SQL_FOLDER / "pums_persons.sql", "r") as file:
-                pums_persons_df = pd.read_sql_query(
-                    sql.text(file.read()), connection, params={"yr": yr}
-                )
-        if len(pums_persons_df.index) == 0:
-            raise ValueError(str(yr) + ": not in ACS 5-year PUMS")
+    if year == utils.LAUNCH_YEAR:
+        logger.info("Calculating household characteristics rates for launch year")
 
-        # Get SANDAG Estimates household controls for the increment
-        # Year from the vintage associated with the launch year
-        controls = utils.CONTROLS[str(utils.LAUNCH_YEAR)][str(yr)]["households"]
+        hh_characteristics_rates_inputs = _get_hh_characteristics_rates_inputs(year)
+        _validate_hh_characteristics_rates_inputs(hh_characteristics_rates_inputs)
 
-        # Create mapping of household attributes to ACS PUMS columns and SANDAG Estimates
-        # Include whether attribute is controlled and whether to create crude rate
-        hh_attributes = {
-            "hh": {"col": "pop_hh_head", "control": "total", "rate": None},
-            "laborforce": {
-                "col": "hh_head_lf",
-                "control": None,
-                "rate": "rate_hh_head_lf",
-            },
-            "size1": {"col": "size1", "control": "size1", "rate": "rate_size1"},
-            "size2": {"col": "size2", "control": "size2", "rate": "rate_size2"},
-            "size3": {"col": "size3", "control": "size3", "rate": "rate_size3"},
-            "child1": {"col": "child1", "control": "child1", "rate": "rate_child1"},
-            "senior1": {"col": "senior1", "control": None, "rate": "rate_senior1"},
-            "workers0": {
-                "col": "workers0",
-                "control": "workers0",
-                "rate": "rate_workers0",
-            },
-            "workers1": {
-                "col": "workers1",
-                "control": "workers1",
-                "rate": "rate_workers1",
-            },
-            "workers2": {
-                "col": "workers2",
-                "control": "workers2",
-                "rate": "rate_workers2",
-            },
-            "workers3": {
-                "col": "workers3",
-                "control": "workers3",
-                "rate": "rate_workers3",
-            },
-        }
-
-        # Apply total households scaling factor to all household attributes
-        control_hh = controls["hh"]
-        if control_hh is not None:
-            scale_hh_pct = control_hh / pums_persons_df["pop_hh_head"].sum()
-            for k, v in hh_attributes.items():
-                pums_persons_df[v["col"]] = pums_persons_df[v["col"]] * scale_hh_pct
-        else:
-            logger.warning("No household control total provided.")
-
-        # Apply household characteristics scaling factors and calculate crude rates
-        # Assumed that control totals are consistent with total households control
-        for k, v in hh_attributes.items():
-            if k != "hh":
-                if v["control"] is not None:
-                    control = controls[k]
-                    if control is not None:
-                        scale_pct = control / pums_persons_df[v["col"]].sum()
-                        pums_persons_df[v["col"]] = (
-                            pums_persons_df[v["col"]] * scale_pct
-                        )
-                        # Distribute excess if any characteristic exceeds total households
-                        pums_persons_df[v["col"]] = utils.distribute_excess(
-                            df=pums_persons_df, subset=v["col"], total="pop_hh_head"
-                        )
-                if v["rate"] is not None:
-                    pums_persons_df[v["rate"]] = (
-                        pums_persons_df[v["col"]] / pums_persons_df["pop_hh_head"]
-                    )
-
-        # Calculate rates within age groups to apply when households are < 20 (excluding 0s)
-        age_groups = pd.concat(
-            [
-                pd.DataFrame(data={"age_group": 1, "age": list(range(0, 16))}),
-                pd.DataFrame(data={"age_group": 2, "age": list(range(16, 18))}),
-                pd.DataFrame(data={"age_group": 3, "age": list(range(18, 25))}),
-                pd.DataFrame(data={"age_group": 4, "age": list(range(25, 35))}),
-                pd.DataFrame(data={"age_group": 5, "age": list(range(35, 50))}),
-                pd.DataFrame(data={"age_group": 6, "age": list(range(50, 60))}),
-                pd.DataFrame(data={"age_group": 7, "age": list(range(60, 71))}),
-                # Note maximum age of 99 in defining age groups
-                pd.DataFrame(data={"age_group": 8, "age": list(range(71, 100))}),
-            ],
-            ignore_index=True,
+        hh_characteristics_rates_outputs = _create_hh_characteristics_rates_outputs(
+            hh_characteristics_rates_inputs, population, rates
         )
+        _validate_hh_characteristics_rates_outputs(hh_characteristics_rates_outputs)
 
-        age_rates = (
-            pums_persons_df.merge(right=age_groups, how="left", on="age")
-            .groupby(["race", "sex", "age_group"])
-            .sum()
-        )
-
-        for k, v in hh_attributes.items():
-            if k != "hh":
-                age_rates[v["rate"] + "_age"] = (
-                    age_rates[v["col"]] / age_rates["pop_hh_head"]
-                )
-
-        # Merge Age Group Rates into the Rate DataFrame
-        pums_persons_df = pums_persons_df.merge(
-            right=age_groups, how="left", on="age"
-        ).merge(right=age_rates, on=["race", "sex", "age_group"], suffixes=["", "_y"])
-
-        # Set Rate to Age Group Rate if households < 20 (excluding 0s)
-        for k, v in hh_attributes.items():
-            if k != "hh":
-                if v["rate"] is not None:
-                    pums_persons_df[v["rate"]] = np.where(
-                        (pums_persons_df["pop_hh_head"] > 0)
-                        & (pums_persons_df["pop_hh_head"] < 20),
-                        pums_persons_df[v["rate"] + "_age"],
-                        pums_persons_df[v["rate"]],
-                    )
-
-        # Ensure rates do not sum > 1 within logical groupings (size and workers)
-        groupings = [
-            ["rate_size1", "rate_size2", "rate_size3"],
-            ["rate_workers0", "rate_workers1", "rate_workers2", "rate_workers3"],
-        ]
-
-        for group in groupings:
-            pums_persons_df[group] = utils.adjust_sum(
-                df=pums_persons_df, cols=group, sum=1, option="equals"
-            )
-
-        # Return crude household characteristics rates
-        rates = []
-        for k, v in hh_attributes.items():
-            if v["rate"] is not None:
-                rates.append(v["rate"])
-
-        return pums_persons_df[["race", "sex", "age", *rates]]
-
-    # Household characteristics rates are not calculated after the launch year
+        return hh_characteristics_rates_outputs
     else:
         raise ValueError(
-            "Household characteristics rates not calculated past launch year"
+            "Household characteristics rates can only be run for the launch year."
         )
+
+
+def _get_hh_characteristics_rates_inputs(year: int) -> dict[str, pd.DataFrame]:
+    """Load input datasets for household characteristics rates."""
+    with utils.ESTIMATES_ENGINE.connect() as connection:
+        with open(
+            utils.SQL_FOLDER
+            / "hh_characteristics_rates"
+            / "get_hh_characteristics_rates.sql",
+            "r",
+        ) as file:
+            hh_characteristics_rates = utils.read_sql_query_fallback(
+                sql=sql.text(file.read()),
+                con=connection,
+                params={
+                    "run_id": utils.ESTIMATES_RUN_ID,
+                    "year": year,
+                },  # type: ignore
+            )
+
+        with open(
+            utils.SQL_FOLDER
+            / "hh_characteristics_rates"
+            / "get_total_hh_characteristics.sql",
+            "r",
+        ) as file:
+            total_hh_characteristics = pd.read_sql_query(
+                sql=sql.text(file.read()),
+                con=connection,
+                params={
+                    "run_id": utils.ESTIMATES_RUN_ID,
+                    "year": year,
+                },  # type: ignore
+            )
+
+    return {
+        "hh_characteristics_rates": hh_characteristics_rates,
+        "total_hh_characteristics": total_hh_characteristics,
+    }
+
+
+def _validate_hh_characteristics_rates_inputs(
+    hh_characteristics_rates_inputs: dict[str, pd.DataFrame],
+) -> None:
+    """Validate the input datasets for household characteristics rates."""
+    # Validate the household characteristics rates
+    tests.validate_data(
+        table_name="Input Household Characteristics Rates",
+        data=hh_characteristics_rates_inputs["hh_characteristics_rates"],
+        row_count={"key_columns": {"age_group", "sex", "ethnicity"}},
+        negative={"negative_ok": set()},
+        null={"null_ok": set()},
+    )
+
+    # Validate the total HH count
+    tests.validate_data(
+        table_name="Total Household Characteristics Counts",
+        data=hh_characteristics_rates_inputs["total_hh_characteristics"],
+        negative={"negative_ok": set()},
+        null={"null_ok": set()},
+    )
+
+
+def _create_hh_characteristics_rates_outputs(
+    hh_characteristics_rates_inputs: dict[str, pd.DataFrame],
+    population: pd.DataFrame,
+    rates: dict[str, pd.DataFrame],
+) -> pd.DataFrame:
+    """Create outputs for household characteristics rates."""
+    hh_characteristics_rates = hh_characteristics_rates_inputs[
+        "hh_characteristics_rates"
+    ]
+    total_hh_characteristics = hh_characteristics_rates_inputs[
+        "total_hh_characteristics"
+    ]
+
+    # Create a single year of age mapping from age groups
+    sya_map = pd.DataFrame(
+        (
+            {"age": age, "age_group": age_group}
+            for age_group, bounds in utils.AGE_MAPPING.items()
+            for age in range(bounds["min"], bounds["max"] + 1)
+        )
+    )
+
+    # Take the population and formation rate DataFrames
+    # And calculate households within single year of age, sex, and race/ethnicity
+    households = (
+        population[["age", "sex", "ethnicity", "hhp"]].merge(
+            rates["formation_gq_hh"], on=["age", "sex", "ethnicity"]
+        )
+        # The Household Formation rates for launch year guarantee integer household counts
+        .assign(hh=lambda x: (x["hhp"] * x["rate_hh"]).astype(int))
+    )
+
+    # Distribute Household Characteristics rates to single year of age
+    # And assign to the households DataFrame by age, sex, and race/ethnicity
+    # Scale rates to match total household characteristics from SANDAG's Estimates Program
+    # And adjust the rates ensuring they are integers and consistent with household counts
+    hh_rates = (
+        # Merge the household DataFrame with the household formation rates
+        # Expanded to single year of age uniformly within each age group
+        households.merge(
+            hh_characteristics_rates.merge(sya_map, on="age_group"),
+            on=["age", "sex", "ethnicity"],
+        ).assign(
+            # First calculate implied totals using the rates
+            hh_head_lf=lambda x: x["hh"] * x["rate_hh_head_lf"],
+            hh_size1=lambda x: x["hh"] * x["rate_hh_size1"],
+            hh_size2=lambda x: x["hh"] * x["rate_hh_size2"],
+            hh_size3=lambda x: x["hh"] * x["rate_hh_size3"],
+            hh_workers0=lambda x: x["hh"] * x["rate_hh_workers0"],
+            hh_workers1=lambda x: x["hh"] * x["rate_hh_workers1"],
+            hh_workers2=lambda x: x["hh"] * x["rate_hh_workers2"],
+            hh_workers3=lambda x: x["hh"] * x["rate_hh_workers3"],
+            hh_children=lambda x: x["hh"] * x["rate_hh_children"],
+            hh_seniors=lambda x: x["hh"] * x["rate_hh_seniors"],
+        )
+    )
+
+    # Then adjust the implied counts to match the total counts
+    # Ensuring individual counts are integerized
+    for col in [
+        "hh_head_lf",
+        "hh_size1",
+        "hh_size2",
+        "hh_size3",
+        "hh_workers0",
+        "hh_workers1",
+        "hh_workers2",
+        "hh_workers3",
+        "hh_children",
+        "hh_seniors",
+    ]:
+        # For fields without SANDAG Estimates controls round summation to integer
+        # And control to that value
+        if col in ["hh_head_lf", "hh_children", "hh_seniors"]:
+            hh_rates[col] = utils.integerize_1d(
+                data=hh_rates[col],
+                control=round(hh_rates[col].sum()),
+                methodology="weighted_random",
+                generator=generator,
+            ).astype(int)
+        # For fields with SANDAG Estimates controls
+        # Control to the SANDAG Estimates total
+        else:
+            hh_rates[col] = utils.integerize_1d(
+                data=hh_rates[col],
+                control=total_hh_characteristics[col].sum(),  # type: ignore
+                methodology="weighted_random",
+                generator=generator,
+            ).astype(int)
+
+    # Then adjust the implied counts row-wise to ensure consistency with
+    # The total household count within single year of age, sex, and race/ethnicity
+    hh_rates["hh_head_lf"] = utils.reallocate_integers(
+        df=hh_rates, subset="hh_head_lf", total="hh"
+    )
+
+    hh_rates[["hh_size1", "hh_size2", "hh_size3"]] = utils.reallocate_group_integers(
+        df=hh_rates, cols=["hh_size1", "hh_size2", "hh_size3"], total="hh"
+    )
+
+    hh_rates[["hh_workers0", "hh_workers1", "hh_workers2", "hh_workers3"]] = (
+        utils.reallocate_group_integers(
+            df=hh_rates,
+            cols=["hh_workers0", "hh_workers1", "hh_workers2", "hh_workers3"],
+            total="hh",
+        )
+    )
+
+    hh_rates["hh_children"] = utils.reallocate_integers(
+        df=hh_rates, subset="hh_children", total="hh"
+    )
+
+    hh_rates["hh_seniors"] = utils.reallocate_integers(
+        df=hh_rates, subset="hh_seniors", total="hh"
+    )
+
+    # Finally, re-calculate the rates avoiding divide by zero errors
+    hh_rates = hh_rates.assign(
+        rate_hh_head_lf=lambda x: x["hh_head_lf"] / x["hh"].replace({0: 1}),
+        rate_hh_size1=lambda x: x["hh_size1"] / x["hh"].replace({0: 1}),
+        rate_hh_size2=lambda x: x["hh_size2"] / x["hh"].replace({0: 1}),
+        rate_hh_size3=lambda x: x["hh_size3"] / x["hh"].replace({0: 1}),
+        rate_hh_workers0=lambda x: x["hh_workers0"] / x["hh"].replace({0: 1}),
+        rate_hh_workers1=lambda x: x["hh_workers1"] / x["hh"].replace({0: 1}),
+        rate_hh_workers2=lambda x: x["hh_workers2"] / x["hh"].replace({0: 1}),
+        rate_hh_workers3=lambda x: x["hh_workers3"] / x["hh"].replace({0: 1}),
+        rate_hh_children=lambda x: x["hh_children"] / x["hh"].replace({0: 1}),
+        rate_hh_seniors=lambda x: x["hh_seniors"] / x["hh"].replace({0: 1}),
+    )
+
+    # Return the final household characteristics rates DataFrame
+    return hh_rates[
+        [
+            "age",
+            "sex",
+            "ethnicity",
+            "rate_hh_head_lf",
+            "rate_hh_size1",
+            "rate_hh_size2",
+            "rate_hh_size3",
+            "rate_hh_workers0",
+            "rate_hh_workers1",
+            "rate_hh_workers2",
+            "rate_hh_workers3",
+            "rate_hh_children",
+            "rate_hh_seniors",
+        ]
+    ]
+
+
+def _validate_hh_characteristics_rates_outputs(
+    hh_characteristics_rates_outputs: pd.DataFrame,
+) -> None:
+    """Validate the output household characteristics rates dataset."""
+    # Validate the output household characteristics rates
+    tests.validate_data(
+        table_name="Output Household Characteristics Rates",
+        data=hh_characteristics_rates_outputs,
+        row_count={"key_columns": {"age", "sex", "ethnicity"}},
+        negative={"negative_ok": set()},
+        null={"null_ok": set()},
+    )
