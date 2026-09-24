@@ -203,7 +203,7 @@ def create_newborns(population: pd.DataFrame) -> pd.DataFrame:
 
     # Assign newborn population to sex using percentage of male newborns
     newborns["pop"] = np.where(
-        newborns["sex"] == "M",
+        newborns["sex"] == "Male",
         newborns["births"] * utils.MALE_PCT,
         newborns["births"] * (1 - utils.MALE_PCT),
     )
