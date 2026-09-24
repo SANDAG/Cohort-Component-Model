@@ -281,7 +281,7 @@ def increment_population(
     # Correctional Facilities" populations back in age increment as both are
     # held constant in the forecast
     incremented_population = incremented_population.sort_values(
-        by=["age", "sex", "ethnicity"]
+        by=["ethnicity", "sex", "age"]
     ).reset_index()
 
     incremented_population["gq_mil"] = incremented_population["gq_mil"].shift(
