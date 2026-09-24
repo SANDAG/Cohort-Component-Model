@@ -1,7 +1,5 @@
 """Methods to increment through the annual cycle."""
 
-# TODO: (10-feature) Add function to allow for control totals at each increment for in/out migration.
-
 import numpy as np
 import pandas as pd
 
@@ -10,257 +8,321 @@ import python.utils as utils
 generator = np.random.default_rng(utils.RANDOM_SEED)
 
 
-def calculate_births(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
-    """Calculate births by race, sex, and single year of age.
+def calculate_births(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
+    """Calculate births by single year of age, sex, and race/ethnicity.
 
-    Birth rates are applied to the total survived population (the
-    military population plus the survived civilian population). Note that the
-    survived civilian population is assigned birth rates for the next single
-    year of age increment as the population ages through the annual cycle. The
-    military population is note assumed to age as it is held constant.
+    Birth rates are applied to the total survived population excluding "Group
+    Quarters - Military" and "Group Quarters - Insitutional Correctional
+    Facilities" populations. Note that the survived population is assigned
+    birth rates for the next single year of age increment as the population
+    ages through the annual cycle.
 
     Args:
-        pop_df (pd.DataFrame): Population data broken down by race, sex, and
-            single year of age with the military population broken out from
-            the total population and calculated deaths
-        rate (pd.DataFrame): Birth rates by race, sex, and single year of age
+        population (pd.DataFrame): Population data broken down by single year
+            of age, sex, and race/ethnicity with calculated deaths
+        rate (pd.DataFrame): Birth rates by single year of age, sex, and
+            race/ethnicity
 
     Returns:
-        pd.DataFrame: Births by race, sex, and single year of age
+        pd.DataFrame: Births by single year of age, sex, and race/ethnicity
     """
     # Merge population with Birth Rates
     # Apply Birth Rates to the Survived Population
-    # Note the Civilian Population Ages +1 before applying Birth Rates
-    df = (
-        pop_df[["race", "sex", "age", "pop", "pop_mil", "deaths"]]
+    # Note the Population Ages +1 before applying Birth Rates
+    births = (
+        population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison", "deaths"]]
         .assign(
-            pop_civ_surv=lambda x: x["pop"] - x["pop_mil"] - x["deaths"],
-            age_civ_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
-            pop_surv=lambda x: x["pop"] - x["deaths"],
+            pop_surv=lambda x: x["pop"] - x["gq_mil"] - x["gq_prison"] - x["deaths"],
+            age_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
-        .groupby(["race", "sex", "age", "age_civ_surv"])
-        .sum()
-        .reset_index()
-        .merge(right=rate, how="left", on=["race", "sex", "age"])
-        .merge(
-            right=rate,
-            how="left",
-            left_on=["race", "sex", "age_civ_surv"],
-            right_on=["race", "sex", "age"],
-            suffixes=["", "_civ"],
-        )
-        .assign(
-            births=lambda x: round(
-                x["pop_mil"] * x["rate_birth"]
-                + x["pop_civ_surv"] * x["rate_birth_civ"]
-            )
-        )
-        .fillna(0)
-        .sort_values(by=["race", "sex", "age"])
-        .reset_index(drop=True)
-    )
-
-    # Integerize preserving sum of Births
-    df["births"] = utils.integerize_1d(
-        data=df["births"], control=None, generator=generator
-    )
-
-    # Ensure Births <= Survived Population after Integerization
-    df["births"] = utils.reallocate_integers(df=df, subset="births", total="pop_surv")
-
-    return df[["race", "sex", "age", "births"]]
-
-
-def calculate_deaths(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
-    """Calculate deaths by race, sex, and single year of age.
-
-    Death rates are applied to the non-military civilian population as it is
-    assumed the military population remains constant outside of pre-launch
-    year controls.
-
-    Args:
-        pop_df (pd.DataFrame): Population data broken down by race, sex, and
-            single year of age with the military population broken out from
-            the total population
-        rate (pd.DataFrame): Death rates by race, sex, and single year of age
-
-    Returns:
-        pd.DataFrame: Deaths by race, sex, and single year of age
-    """
-    # Merge Population with Death Rates
-    # Apply Death Rates to the Non-Military Population
-    df = (
-        pop_df[["race", "sex", "age", "pop", "pop_mil"]]
-        .merge(right=rate, how="left", on=["race", "sex", "age"])
-        .assign(pop_civ=lambda x: x["pop"] - x["pop_mil"])
-        .assign(deaths=lambda x: round(x["pop_civ"] * x["rate_death"]))
-        .sort_values(by=["race", "sex", "age"])
-        .reset_index(drop=True)
-    )
-
-    # Integerize preserving sum of Deaths
-    df["deaths"] = utils.integerize_1d(
-        data=df["deaths"], control=None, generator=generator
-    )
-
-    # Ensure Deaths <= Non-Military Population after Integerization
-    df["deaths"] = utils.reallocate_integers(df=df, subset="deaths", total="pop_civ")
-
-    return df[["race", "sex", "age", "deaths"]]
-
-
-def calculate_migration(pop_df: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
-    """Calculate migration by race, sex, and single year of age.
-
-    Migration rates are applied to the survived civilian population. Note that
-    the survived civilian population is assigned migration rates for the next
-    single year of age increment as the population ages through the annual
-    cycle.
-
-    Args:
-        pop_df (pd.DataFrame): Population data broken down by race, sex, and
-            single year of age with the military population broken out from
-            the total population and calculated deaths
-        rate (pd.DataFrame): Migration rates by race, sex, and single year of
-            age
-
-    Returns:
-        pd.DataFrame: In/Out Migration by race, sex, and single year of age
-    """
-    # Merge population with Migration Rates
-    # Apply Migration Rates to the Survived Civilian Population
-    # Note the Civilian Population Ages +1 before applying Birth Rates
-    df = (
-        pop_df[["race", "sex", "age", "pop", "pop_mil", "deaths"]]
-        .assign(
-            pop_civ_surv=lambda x: x["pop"] - x["pop_mil"] - x["deaths"],
-            age_civ_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
-        )
-        .groupby(["race", "sex", "age", "age_civ_surv"])
+        .groupby(["age", "sex", "ethnicity", "age_surv"])
         .sum()
         .reset_index()
         .merge(
             right=rate,
             how="left",
-            left_on=["race", "sex", "age_civ_surv"],
-            right_on=["race", "sex", "age"],
+            left_on=["age_surv", "sex", "ethnicity"],
+            right_on=["age", "sex", "ethnicity"],
             suffixes=["", "_y"],
         )
-        .assign(ins=lambda x: round(x["pop_civ_surv"] * x["rate_in"]))
-        .assign(outs=lambda x: round(x["pop_civ_surv"] * x["rate_out"]))
-        .sort_values(by=["race", "sex", "age"])
+        .assign(births=lambda x: round(x["pop_surv"] * x["rate_birth"]))
+        .fillna(0)
+        .sort_values(by=["age", "sex", "ethnicity"])
         .reset_index(drop=True)
     )
 
-    # TODO: Consider controlling to migration controls here if provided for almost perfect match
-    df["ins"] = utils.integerize_1d(data=df["ins"], control=None, generator=generator)
-    df["outs"] = utils.integerize_1d(data=df["outs"], control=None, generator=generator)
+    # Integerize preserving integerized sum of Births
+    births["births"] = utils.integerize_1d(
+        data=births["births"],
+        control=round(births["births"].sum()),
+        generator=generator,
+        methodology="weighted_random",
+    )
 
-    # Ensure Outs <= Survived Population after Integerization
-    df["outs"] = utils.reallocate_integers(df=df, subset="outs", total="pop_civ_surv")
-
-    return df[["race", "sex", "age", "ins", "outs"]]
+    return births[["age", "sex", "ethnicity", "births"]]
 
 
-def create_newborns(pop_df: pd.DataFrame, male_pct: float) -> pd.DataFrame:
-    """Create newborn population by race and sex (all are age 0).
+def calculate_deaths(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
+    """Calculate deaths by single year of age, sex, and race/ethnicity.
+
+    Death rates are applied to the total population excluding "Group
+    Quarters - Military" and "Group Quarters - Insitutional Correctional
+    Facilities" populations.
 
     Args:
-        pop_df (pd.DataFrame): Population data broken down by race, sex, and
-            single year of age with calculated births
-        male_pct (float): Percentage of newborns assign to male sex
+        population (pd.DataFrame): Population by single year of age, sex, and
+            race/ethnicity
+        rate (pd.DataFrame): Death rates by single year of age, sex, and
+            race/ethnicity
 
     Returns:
-        pd.DataFrame: Newborn population by race and sex (all are age 0)
+        pd.DataFrame: Deaths by single year of age, sex, and race/ethnicity
     """
-    df = (
-        pop_df[["race", "births"]]
-        .groupby("race")
+    # Merge Population with Death Rates
+    # Apply Death Rates to the Non-Military/Prison population
+    deaths = (
+        population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison"]]
+        .merge(right=rate, how="left", on=["age", "sex", "ethnicity"])
+        .assign(
+            pop_eligible=lambda x: (x["pop"] - x["gq_mil"] - x["gq_prison"]).astype(int)
+        )
+        .assign(deaths=lambda x: x["pop_eligible"] * x["rate_death"])
+        .sort_values(by=["age", "sex", "ethnicity"])
+        .reset_index(drop=True)
+    )
+
+    # Integerize preserving integerized sum of Deaths
+    deaths["deaths"] = utils.integerize_1d(
+        data=deaths["deaths"],
+        control=round(deaths["deaths"].sum()),
+        generator=generator,
+        methodology="weighted_random",
+    )
+
+    # Ensure Deaths <= Non-Military/Prison Population after Integerization
+    deaths["deaths"] = utils.reallocate_integers(
+        df=deaths, subset="deaths", total="pop_eligible"
+    )
+
+    return deaths[["age", "sex", "ethnicity", "deaths"]]
+
+
+def calculate_migration(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFrame:
+    """Calculate migration by single year of age, sex, and race/ethnicity.
+
+    Migration rates are applied to the survived population excluding "Group
+    Quarters - Military" and "Group Quarters - Insitutional Correctional
+    Facilities" populations. Note that the survived population is assigned
+    migration rates for the next single year of age increment as the
+    population ages through the annual cycle.
+
+    Args:
+        population (pd.DataFrame): Population by single year of age, sex, and
+            race/ethnicity with calculated deaths
+        rate (pd.DataFrame): Migration rates by single year of age, sex, and
+            race/ethnicity
+
+    Returns:
+        pd.DataFrame: In/Out migration by single year of age, sex, and
+            race/ethnicity
+    """
+    # Merge population with Migration Rates
+    # Apply Migration Rates to the Survived Population
+    # Note the Population Ages +1 before applying Migration Rates
+    migrants = (
+        population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison", "deaths"]]
+        .assign(
+            pop_surv=lambda x: (
+                x["pop"] - x["gq_mil"] - x["gq_prison"] - x["deaths"]
+            ).astype(int),
+            age_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
+        )
+        .groupby(["age", "sex", "ethnicity", "age_surv"])
         .sum()
         .reset_index()
         .merge(
-            pop_df[pop_df["age"] == 0][["race", "sex", "age"]], how="right", on="race"
+            right=rate,
+            how="left",
+            left_on=["age_surv", "sex", "ethnicity"],
+            right_on=["age", "sex", "ethnicity"],
+            suffixes=["", "_y"],
         )
-        .fillna(0)
-        .sort_values(by=["race", "sex", "age"])
+        .assign(ins=lambda x: x["pop_surv"] * x["rate_in"])
+        .assign(outs=lambda x: x["pop_surv"] * x["rate_out"])
+        .sort_values(by=["age", "sex", "ethnicity"])
         .reset_index(drop=True)
     )
 
-    df["pop"] = np.where(
-        df["sex"] == "M",
-        round(df["births"] * male_pct),
-        round(df["births"] * (1 - male_pct)),
+    # Integerize preserving integerized sums of Ins/Outs
+    # TODO: Consider controlling to migration controls here if provided for almost perfect match
+    migrants["ins"] = utils.integerize_1d(
+        data=migrants["ins"],
+        control=round(migrants["ins"].sum()),
+        generator=generator,
+        methodology="weighted_random",
+    )
+    migrants["outs"] = utils.integerize_1d(
+        data=migrants["outs"],
+        control=round(migrants["outs"].sum()),
+        generator=generator,
+        methodology="weighted_random",
     )
 
-    df["pop"] = utils.integerize_1d(data=df["pop"], control=None, generator=generator)
+    # Ensure Outs <= Survived Population after Integerization
+    migrants["outs"] = utils.reallocate_integers(
+        df=migrants, subset="outs", total="pop_surv"
+    )
 
-    return df[["race", "sex", "age", "pop"]]
+    return migrants[["age", "sex", "ethnicity", "ins", "outs"]]
 
 
-def increment_population(pop_df: pd.DataFrame, rates: dict,) -> dict[str, pd.DataFrame]:
+def create_newborns(population: pd.DataFrame) -> pd.DataFrame:
+    """Create newborn population by sex and race/ethnicity (all are age 0).
+
+    Args:
+        population (pd.DataFrame): Population by single year of age, sex, and
+            race/ethnicity with calculated births
+
+    Returns:
+        pd.DataFrame: Newborn population by sex and race/ethnicity (all are age 0)
+    """
+    newborns = (
+        population[["ethnicity", "births"]]
+        .groupby("ethnicity")
+        .sum()
+        .reset_index()
+        .merge(
+            population[population["age"] == 0][["age", "sex", "ethnicity"]],
+            how="right",
+            on="ethnicity",
+        )
+        .fillna(0)
+        .sort_values(by=["age", "sex", "ethnicity"])
+        .reset_index(drop=True)
+    )
+
+    # Assign newborn population to sex using percentage of male newborns
+    newborns["pop"] = np.where(
+        newborns["sex"] == "Male",
+        newborns["births"] * utils.MALE_PCT,
+        newborns["births"] * (1 - utils.MALE_PCT),
+    )
+
+    # Integerize the newborn population preserving integerized sum
+    newborns["pop"] = utils.integerize_1d(
+        data=newborns["pop"],
+        control=round(newborns["pop"].sum()),
+        generator=generator,
+        methodology="weighted_random",
+    )
+
+    return newborns[["age", "sex", "ethnicity", "pop"]]
+
+
+def increment_population(
+    population: pd.DataFrame,
+    rates: dict[str, pd.DataFrame],
+) -> dict[str, pd.DataFrame]:
     """Calculate components of change and create input population for next
     increment.
 
     Args:
-        pop_df (pd.DataFrame): Population data broken down by race, sex, and
-            single year of age with the military population broken out from
-            the total population
-        rates (dict): Dictionary containing death, birth, and migration rates
-            by race, sex, and single year of age
+        population (pd.DataFrame): Population by single year of age, sex, and
+            race/ethnicity
+        rates (dict): Dictionary containing birth, death, and migration rates
+            by single year of age, sex, and race/ethnicity
 
     Returns:
         dict[str, pd.DataFrame]: Dictionary with two DataFrame elements. The
-        first containing the components of change for the current population.
-        The second containing the input population for the next increment.
+            first containing the components of change for the current
+            population and the second containing the population for the next
+            increment
     """
-    # Calculate Components of Change; Deaths, Births, and Migration
-    pop_df = pop_df.merge(
-        right=calculate_deaths(pop_df, rate=rates["deaths"]),
+    # Calculate Components of Change; Births, Deaths, and Migration
+    # Deaths are calculated first as Births and Migration depend on the
+    # survived population
+
+    # Calculate Deaths
+    population = population.merge(
+        right=calculate_deaths(population=population, rate=rates["deaths"]),
         how="left",
-        on=["race", "sex", "age"],
+        on=["age", "sex", "ethnicity"],
     )
 
-    pop_df = pop_df.merge(
-        right=calculate_births(pop_df=pop_df, rate=rates["births"]),
+    # Calculate Births
+    population = population.merge(
+        right=calculate_births(population=population, rate=rates["births"]),
         how="left",
-        on=["race", "sex", "age"],
+        on=["age", "sex", "ethnicity"],
     )
 
-    pop_df = pop_df.merge(
-        right=calculate_migration(pop_df=pop_df, rate=rates["migration"]),
+    # Calculate In/Out Migrants
+    population = population.merge(
+        right=calculate_migration(population=population, rate=rates["migration"]),
         how="left",
-        on=["race", "sex", "age"],
+        on=["age", "sex", "ethnicity"],
     )
 
     # Calculate the newborn population for the next increment
-    newborns = create_newborns(pop_df=pop_df, male_pct=0.512)
+    newborns = create_newborns(population=population)
 
-    # Create the incremented population
-    # Calculate total population and increment age
-    pop_inc = (
-        pop_df.assign(
+    # Create the incremented population total population and age +1 year
+    incremented_population = (
+        population.assign(
             pop=lambda x: x["pop"] - x["deaths"] + x["ins"] - x["outs"],
             age=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
-        .groupby(["race", "sex", "age"])
+        .groupby(["age", "sex", "ethnicity"])
         .sum()
         .reset_index()
     )
 
-    # Shift the Military Population back in age increment
-    # The Military Population is held constant
-    # Ensure the Military Population is not greater than the Population
-    pop_inc = pop_inc.sort_values(by=["race", "sex", "age"]).reset_index()
-    pop_inc["pop_mil"] = pop_inc["pop_mil"].shift(periods=-1, fill_value=0)
-    pop_inc["pop_mil"] = utils.reallocate_integers(
-        df=pop_inc, subset="pop_mil", total="pop"
+    # Shift the "Group Quarters - Military" and "Group Quarters - Insitutional
+    # Correctional Facilities" populations back in age increment as both are
+    # held constant in the forecast
+    incremented_population = incremented_population.sort_values(
+        by=["ethnicity", "sex", "age"]
+    ).reset_index()
+
+    incremented_population["gq_mil"] = incremented_population["gq_mil"].shift(
+        periods=-1, fill_value=0
     )
 
-    # Add the newborns into the dataset setting their Military Population to 0
-    pop_inc = pd.concat([newborns.assign(pop_mil=0), pop_inc])
+    incremented_population["gq_prison"] = incremented_population["gq_prison"].shift(
+        periods=-1, fill_value=0
+    )
+
+    # Ensure the "Group Quarters - Military" and "Group Quarters - Insitutional
+    # Correctional Facilities" populations are not greater than the total
+    # population in each single year of age, sex, and ethnicity group
+
+    # Check Military first is not greater than total population
+    incremented_population["gq_mil"] = utils.reallocate_integers(
+        df=incremented_population, subset="gq_mil", total="pop"
+    )
+
+    # Then check Prison population is not greater than the total population
+    # Subtracting the Military population
+    incremented_population["pop_no_mil"] = (
+        incremented_population["pop"] - incremented_population["gq_mil"]
+    ).astype(int)
+    incremented_population["gq_prison"] = utils.reallocate_integers(
+        df=incremented_population, subset="gq_prison", total="pop_no_mil"
+    )
+    # Drop the temporary column used for reallocation
+    incremented_population = incremented_population.drop(columns=["pop_no_mil"])
+
+    # Add the newborns into the dataset
+    incremented_population = pd.concat(
+        [newborns.assign(gq_mil=0, gq_prison=0), incremented_population]
+    )
 
     # Return the Components of Change and the incremented Population
     return {
-        "components": pop_df[["race", "sex", "age", "deaths", "births", "ins", "outs"]],
-        "population": pop_inc[["race", "sex", "age", "pop", "pop_mil"]],
+        "components": population[
+            ["age", "sex", "ethnicity", "births", "deaths", "ins", "outs"]
+        ],
+        "population": incremented_population[
+            ["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison"]
+        ],
     }

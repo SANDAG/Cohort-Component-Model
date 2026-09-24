@@ -1,19 +1,29 @@
-## 1 Overview
-Crude group quarters and household formation rates calculated within race, sex, and single year of age for each increment from the base year up to the launch year.
+This module generates groups quarters and household formation rates by single year of age, sex, and race/ethnicity for the launch year. At this time, formation rates are held constant through the entirety of the forecast. Both "Group Quarters - Military" and "Group Quarters - Institutional Correctional Facilities" populations are excluded from this module and held constant from the launch year.
 
-## 2 Input Datasets
-* [5-year ACS PUMS persons files](https://www.census.gov/programs-surveys/acs/microdata.html)
-* [SANDAG's Estimates Program](https://opendata.sandag.org/stories/s/SANDAG-Estimates-PDF-Reports/mire-zdsi/)
+# Inputs
+| Input | Module Source | Usage |
+| ----- | ------------- | ----- |
+| Launch Year Population | [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population) | Rates are applied to the regional forecast [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population) to check control totals and to integerize outputs within age/sex/ethnicity for the launch year |
+| Group Quarters Formation Rates | SANDAG's Estimates Program | SANDAG's Estimates Program [Population by Type](https://github.com/SANDAG/Estimates-Program/wiki/Population-by-Type) and [Population by Age/Sex/Ethnicity by Type](https://github.com/SANDAG/Estimates-Program/wiki/Population-by-Age-Sex-Ethnicity) provide launch year group quarters formation rates |
+| Household Formation Rates | External (ACS) | The ACS 5-year PUMS provides household formation rates by age/sex/ethnicity |
+| Total Households | SANDAG's Estimates Program | The total households from SANDAG's Estimates Program [Housing and Households](https://github.com/SANDAG/Estimates-Program/wiki/Housing-and-Households) are used to control household formation rates |
 
-## 3 Methods
-* Take the increment year 5-year ACS PUMS persons file for the San Diego region, scaling the head of household, group quarters, and total population to match the control totals for the increment year from SANDAG's Estimates program using the version from the chosen launch year.
-* If there exists any race, sex, and single year of age categories where the group quarters population exceeds the total population, set the group quarters population to the total population and distribute the excess group quarters population proportionately within categories where the group quarters population is less than the total population. Repeat this process until no category has group quarters population that exceeds the total population.
-* If there exists any race, sex, and single year of age categories where the head of household population exceeds the total household population, set the head of household population to the total household population and distribute the excess head of household population proportionately within categories where the head of household population is less than the total household population. Repeat this process until no category has head of household population that exceeds the total household population.
-* For single year of age categories 70 years and below, calculate the group quarters and household formation (head of household) rates.
-* For single year of age categories above 70 years
-  * Calculate the group quarters rate within sex combining all races and ages and apply this uniform rate to all ages above 70 years
-  * Calculate the household formation rate within race and sex combining all ages and apply this uniform rate to all ages above 70 years
-* Finally, if there exists any race, sex, and single year of age categories such that the sum of the group quarters and household formation rates exceeds one, proportionately adjust the group quarters and household formation rates within those categories such that that sum is equal to one.
+## Group Quarters Formation Rates
+[SANDAG's Estimates Program](https://github.com/SANDAG/Estimates-Program/wiki) has produced annual population and housing estimates since 1974. These estimates provide both internal and external customers with sub-jurisdiction-level information about population, housing, demographic, and household characteristics from a composite of data sources. The [population by age/sex/ethnicity](https://github.com/SANDAG/Estimates-Program/wiki/Population-by-Age-Sex-Ethnicity) by population type (e.g. Household Population, Group Quarters - College, etc.) from SANDAG's Estimates Program provides group quarters formation rates directly to SANDAG's regional forecast.
 
-## 4 Repository Location
-The main classes, methods, and utilities associated with creating crude group quarters and household formation rates are contained in **python/input_modules/formation_rates.py**
+## Household Formation Rates
+The United States Census Bureau's American Community Survey (ACS) [Public Use Microdata Sample (PUMS)](https://www.census.gov/programs-surveys/acs/microdata.html) files provide household formation rates for San Diego County.
+
+## Total Households
+When household formation rates are applied to the [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population) household population the rates are adjusted such that the total households formed are equal to the total households from SANDAG's Estimates Program [Housing and Households](https://github.com/SANDAG/Estimates-Program/wiki/Housing-and-Households).
+
+# Outputs
+## Group Quarters Formation Rates
+Group quarters formations rates are retrieved directly from SANDAG's Estimates Program by age group, sex, and ethnicity. The rates are then uniformly assigned to the launch year population across single year of age wthin each age group. They are then adjusted such that when applied within each single year of age, sex, and ethnicity category the resulting group quarters value is equal to the launch year population value. This ensure consistency between launch year group quarters populations and formation rates.
+
+Only *Group Quarters - College* and *Group Quarters - Other* rates are calculated as the regional forecast assumes constant *Group Quarters - Military* and *Group Quarters - Institutional Correctional Facilities* populations for the entirety of the forecast.
+
+## Household Formation Rates
+Household formation rates are calculated from the Census Bureau ACS 5-year PUMS by age group, sex, and ethnicity. The rates are then uniformly assigned to the launch year population across single year of age wthin each age group. They are then adjusted such that when applied they result in integer values within single year of age, sex, and ethnicity categories and that the regional total equals the total households from SANDAG's Estimates Program.
+
+*See the **python/input_modules/formation_rates.py** file and **sql/formation_rates** folder for underlying code used by the module.*

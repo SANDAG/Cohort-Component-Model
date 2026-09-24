@@ -1,16 +1,15 @@
 /* 
-    This query calculates the CDC WONDER mortality inflation factors that will be used to
-    inflate death counts for known demographic groups.
+    This query calculates the CDC WONDER mortality inflation factors to account
+    for deaths attributed to unknown demographic groups.
     
-    Some records from the CDC WONDER mortality dataset contain incomplete demographic information 
-    (race/hispanic origin marked as "Not Stated"). These deaths still occurred but cannot be 
-    assigned to specific demographic groups. By inflating the counts for known groups, we 
-    proportionally distribute these unknown deaths so that the total modeled deaths matches the 
-    actual total deaths reported.
+    Some records in the CDC WONDER mortality dataset contain incomplete
+    demographic information. These deaths occurred but cannot be  assigned to
+    specific demographic groups. By inflating the counts for known groups, we
+    proportionally distribute these unassigned deaths.
     
-    The inflation factor is calculated as 1 + (Unknown Deaths / Total Deaths) for each year 
-    and location.
-    
+    The inflation factor is calculated as 1 + (Unknown Deaths / Total Deaths)
+    for each year  and location.
+
     Unknown deaths are defined as deaths that are:
         1) assigned to "Not Stated" age
         2) assigned to "Not Stated" hispanic origin
@@ -34,12 +33,8 @@ SELECT @msg AS [msg]
 ELSE
 BEGIN
     SELECT
-        [year],
         [location],
-        CASE [sex]
-            WHEN 'Female' THEN 'F'
-            WHEN 'Male' THEN 'M'
-        END AS [sex],
+        [sex],
         1 + SUM(
             CASE
                 WHEN [age] = 'Not Stated' OR [hispanic_origin] = 'Not Stated' THEN [deaths]
@@ -58,11 +53,9 @@ BEGIN
         AND [period] = 'Five-Year'
         AND [year] = @year
     GROUP BY
-        [year],
         [location],
         [sex]
     ORDER BY
-        [year],
         [location],
         [sex]
 END;

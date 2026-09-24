@@ -62,11 +62,22 @@ except IOError:
     raise IOError("secrets.yml does not exist, see README.md")
 
 # Create SQLAlchemy engine(s)
-SQL_ENGINE = sql.create_engine(
+CCM_ENGINE = sql.create_engine(
     "mssql+pyodbc://@"
-    + _secrets["sql"]["server"]
+    + _secrets["sql"]["ccm"]["server"]
     + "/"
-    + _secrets["sql"]["database"]
+    + _secrets["sql"]["ccm"]["database"]
+    + "?trusted_connection=yes"
+    + "&driver=ODBC Driver 18 for SQL Server"
+    + "&TrustServerCertificate=yes",
+    fast_executemany=True,
+)
+
+ESTIMATES_ENGINE = sql.create_engine(
+    "mssql+pyodbc://@"
+    + _secrets["sql"]["estimates"]["server"]
+    + "/"
+    + _secrets["sql"]["estimates"]["database"]
     + "?trusted_connection=yes"
     + "&driver=ODBC Driver 18 for SQL Server"
     + "&TrustServerCertificate=yes",
@@ -86,16 +97,15 @@ except IOError:
 
 # Initialize input parser
 # Parse the configuration file and validate its contents
-input_parser = parsers.InputParser(config=config)
+input_parser = parsers.InputParser(config=config, engine=ESTIMATES_ENGINE)
 input_parser.parse_config()
 
 # Get data from the parsed and validated configuration file
-BASE_YEAR = input_parser.base_year
 LAUNCH_YEAR = input_parser.launch_year
 HORIZON_YEAR = input_parser.horizon_year
 VERSION = input_parser.version
 COMMENTS = input_parser.comments
-CONTROLS = input_parser.controls
+ESTIMATES_RUN_ID = input_parser.estimates_run_id
 MIGRATION_CONTROLS = input_parser.migration_controls
 MORTALITY_RATES = input_parser.mortality_rates
 FERTILITY_RATES = input_parser.fertility_rates
@@ -119,6 +129,34 @@ if FERTILITY_RATES is not None:
 ##############################
 
 RANDOM_SEED = 42  # Seed for random number generation to ensure reproducibility
+
+# Minimum and maximum age values for each age group from SANDAG Estimates
+# https://github.com/SANDAG/Estimates-Program/blob/main/python/utils.py
+AGE_MAPPING = {
+    "Under 5": {"min": 0, "max": 4},
+    "5 to 9": {"min": 5, "max": 9},
+    "10 to 14": {"min": 10, "max": 14},
+    "15 to 17": {"min": 15, "max": 17},
+    "18 and 19": {"min": 18, "max": 19},
+    "20 to 24": {"min": 20, "max": 24},
+    "25 to 29": {"min": 25, "max": 29},
+    "30 to 34": {"min": 30, "max": 34},
+    "35 to 39": {"min": 35, "max": 39},
+    "40 to 44": {"min": 40, "max": 44},
+    "45 to 49": {"min": 45, "max": 49},
+    "50 to 54": {"min": 50, "max": 54},
+    "55 to 59": {"min": 55, "max": 59},
+    "60 and 61": {"min": 60, "max": 61},
+    "62 to 64": {"min": 62, "max": 64},
+    "65 to 69": {"min": 65, "max": 69},
+    "70 to 74": {"min": 70, "max": 74},
+    "75 to 79": {"min": 75, "max": 79},
+    "80 to 84": {"min": 80, "max": 84},
+    "85 and Older": {"min": 85, "max": 100},
+}
+
+# Hardcoded percentage of newborns that are Male sex
+MALE_PCT = 0.512
 
 
 #####################
@@ -679,18 +717,61 @@ def wipe_output_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
     return deleted
 
 
-def write_df(yr: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
+def write_df(year: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
     """Write DataFrame for increment year."""
-    df = df.sort_values(by=["race", "sex", "age"])
-    df.insert(0, "year", yr)
+    df = df.sort_values(by=["age", "sex", "ethnicity"])
+    df.insert(0, "year", year)
+
+    # TODO: This section is temporary to keep backwards compatibility with older output format
+    temp_df = df.copy()
+
+    if "pop" in temp_df.columns:
+        temp_df = temp_df.assign(
+            gq=temp_df["gq_college"]
+            + temp_df["gq_prison"]
+            + temp_df["gq_mil"]
+            + temp_df["gq_other"],
+            pop_mil=temp_df["gq_mil"],
+        ).drop(columns=["gq_college", "gq_prison", "gq_mil", "gq_other"])
+    elif "rate_hh" in temp_df.columns:
+        temp_df = temp_df.assign(
+            rate_gq=temp_df["rate_gq_college"] + temp_df["rate_gq_other"]
+        ).drop(columns=["rate_gq_college", "rate_gq_other"])
+
+    temp_df = temp_df.rename(
+        columns={
+            "ethnicity": "race",
+            "hh_size1": "size1",
+            "hh_size2": "size2",
+            "hh_size3": "size3",
+            "hh_workers0": "workers0",
+            "hh_workers1": "workers1",
+            "hh_workers2": "workers2",
+            "hh_workers3": "workers3",
+            "hh_children": "child1",
+            "hh_seniors": "senior1",
+            "rate_hh_size1": "rate_size1",
+            "rate_hh_size2": "rate_size2",
+            "rate_hh_size3": "rate_size3",
+            "rate_hh_workers0": "rate_workers0",
+            "rate_hh_workers1": "rate_workers1",
+            "rate_hh_workers2": "rate_workers2",
+            "rate_hh_workers3": "rate_workers3",
+            "rate_hh_head_lf": "rate_head_lf",
+            "rate_hh_children": "rate_child1",
+            "rate_hh_seniors": "rate_senior1",
+        }
+    )
+
+    temp_df["sex"] = temp_df["sex"].replace({"Male": "M", "Female": "F"})
 
     if os.path.isfile(fp):
-        df.to_csv(fp, mode="a", index=False, header=False)
+        temp_df.to_csv(fp, mode="a", index=False, header=False)
     else:
-        df.to_csv(fp, mode="w", index=False)
+        temp_df.to_csv(fp, mode="w", index=False)
 
 
-def write_rates(yr: int, rates: dict, fp: pathlib.Path) -> None:
+def write_rates(year: int, rates: dict, fp: pathlib.Path) -> None:
     """Write calculated rates for increment year."""
     output = None
     for rate in rates:
@@ -698,10 +779,10 @@ def write_rates(yr: int, rates: dict, fp: pathlib.Path) -> None:
             output = rates[rate]
         else:
             output = output.merge(
-                right=rates[rate], how="outer", on=["race", "sex", "age"]
+                right=rates[rate], how="outer", on=["age", "sex", "ethnicity"]
             )
-
-    write_df(yr=yr, df=output, fp=fp)
+    output = output.fillna(0)  # Replace any missing values with 0
+    write_df(year=year, df=output, fp=fp)
 
 
 def read_sql_query_fallback(max_lookback: int = 1, **kwargs: dict) -> pd.DataFrame:
@@ -734,7 +815,10 @@ def read_sql_query_fallback(max_lookback: int = 1, **kwargs: dict) -> pd.DataFra
     original_year = kwargs["params"]["year"]
 
     # Messages that trigger year lookback
-    lookback_messages = ["Data for CDC WONDER mortality year does not exist"]
+    lookback_messages = [
+        "Data for CDC WONDER mortality year does not exist",
+        "ACS 5-Year PUMS does not exist",
+    ]
 
     # Try up to max_lookback + 1 times
     for attempt in range(max_lookback + 1):

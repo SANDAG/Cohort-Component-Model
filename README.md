@@ -12,13 +12,13 @@ Set the configuration file **config.yml** parameters specific to the model run o
 ```yaml
 version: "0.0.0-dev"
 comments: "No Comments" # Add comments pertaining to the run
-configurations:  # other configuration files
-  controls: "sandag_estimates.yml"  # SANDAG Estimates Control totals
+configurations:
+  estimates_run_id: 237  # the SANDAG Estimates Program production run to use for the launch year population
 csv:
   fertility_rates: null # optional csv with columns: (year, age, sex, race, rate_birth)
   migration_controls: null  # optional csv with columns: (year,ins,outs)
   mortality_rates: null # optional csv with columns: (year, age, sex, race, rate_death)
-interval:  # forecast interval (base is assumed from launch)
+interval:  # forecast interval
   launch: 2020  # last year before forecast starts
   horizon: 2050  # forecast end year
 sql:  # SQL server options
@@ -26,15 +26,15 @@ sql:  # SQL server options
 ```
 
 ### Fertility Rates File Format
-If fertility rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include female sex (`F`), each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone), and 30 ages (15-44) to create 210 rows per year:
+If fertility rates are provided, the CSV should include one row per year, age, sex, and race/ethnicity grouping with no null values in any of the columns. Each year should include female sex (`Female`) only, each of the seven race/ethnicity categories (`Non-Hispanic, American Indian or Alaska Native`; `Non-Hispanic, Asian`; `Non-Hispanic, Black`; `Non-Hispanic, Hawaiian or Pacific Islander`; `Non-Hispanic, Two or More Races`; `Non-Hispanic, White`), and 30 single year of age values (`15-44`) to create 210 rows per year:
 
 ```csv
-year,age,sex,race,rate_birth
-2023,15,F,American Indian or Alaska Native alone,0.01431606
+year,age,sex,ethnicity,rate_birth
+2023,15,Female,"Non-Hispanic, American Indian or Alaska Native",0.01431606
 ...
-2024,30,F,Hispanic,0.09667108
+2024,30,Female,Hispanic,0.09667108
 ...
-2025,44,F,White alone,0.01539245
+2025,44,Female,"Non-Hispanic, White",0.01539245
 ```
 
 ### Migration Controls File Format
@@ -62,13 +62,22 @@ year,age,sex,race,rate_death
 ### Configuration of Private Data in secrets.yml
 In order to avoid exposing certain data to the public this repository uses a secrets file to store sensitive configurations in addition to a standard configuration file. This file is stored in the root directory of the repository as `secrets.yml` and is included in the `.gitignore` intentionally to avoid it ever being committed to the repository.
 
-The `secrets.yml` should mirror the following structure where the <SqlInstanceName> is a production SQL instance containing all necessary objects required by queries contained in the `sql` folder and there is a database <SqlDatabaseName> in the production instance where the user has permission to create temporary tables and contains the SQL objects built by `sql/db_build` necessary to load output into the SQL database.
+The `secrets.yml` should mirror the following structure. 
+
+Under the `sql: ccm` section, the `<SqlInstanceName>` and `<SqlDatabaseName>` identify the production SQL instance/server and production Cohort Component Model database where the user has permission to create temporary tables and contains the SQL objects built by `sql/db_build` necessary to load output into the SQL database.
+
+Under the `sql: estimates` section, the `<SqlInstanceName>` and `<SqlDatabaseName>` identify the production SQL instance/server and production [SANDAG Estimate's Program](https://github.com/SANDAG/Estimates-Program) database.
 
 ```yaml
 sql:
-  server: "<SqlInstanceName>"
-  database: "<SqlDatabaseName>"
+  ccm:
+    server: "<SqlInstanceName>"
+    database: "<SqlDatabaseName>"
+  estimates:
+    server: "<SqlInstanceName>"
+    database: "<SqlDatabaseName>"
 ```
+
 ### Production Database Schema
 ```mermaid
 erDiagram
