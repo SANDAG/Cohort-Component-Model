@@ -158,6 +158,16 @@ def _create_launch_outputs(launch_inputs: dict[str, pd.DataFrame]) -> pd.DataFra
             + df["gq_mil"]
             + df["gq_other"]
         )
+        .astype(
+            {
+                "pop": int,
+                "hhp": int,
+                "gq_college": int,
+                "gq_prison": int,
+                "gq_mil": int,
+                "gq_other": int,
+            }
+        )
     )
 
     return launch_population[

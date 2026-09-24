@@ -155,6 +155,9 @@ AGE_MAPPING = {
     "85 and Older": {"min": 85, "max": 100},
 }
 
+# Hardcoded percentage of newborns that are Male sex
+MALE_PCT = 0.512
+
 
 #####################
 # UTILITY FUNCTIONS #
@@ -735,7 +738,7 @@ def write_rates(year: int, rates: dict, fp: pathlib.Path) -> None:
             output = output.merge(
                 right=rates[rate], how="outer", on=["age", "sex", "ethnicity"]
             )
-
+    output = output.fillna(0)  # Replace any missing values with 0
     write_df(year=year, df=output, fp=fp)
 
 
