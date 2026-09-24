@@ -714,10 +714,10 @@ def wipe_output_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
     return deleted
 
 
-def write_df(yr: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
+def write_df(year: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
     """Write DataFrame for increment year."""
-    df = df.sort_values(by=["race", "sex", "age"])
-    df.insert(0, "year", yr)
+    df = df.sort_values(by=["age", "sex", "ethnicity"])
+    df.insert(0, "year", year)
 
     if os.path.isfile(fp):
         df.to_csv(fp, mode="a", index=False, header=False)
@@ -725,7 +725,7 @@ def write_df(yr: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
         df.to_csv(fp, mode="w", index=False)
 
 
-def write_rates(yr: int, rates: dict, fp: pathlib.Path) -> None:
+def write_rates(year: int, rates: dict, fp: pathlib.Path) -> None:
     """Write calculated rates for increment year."""
     output = None
     for rate in rates:
@@ -733,10 +733,10 @@ def write_rates(yr: int, rates: dict, fp: pathlib.Path) -> None:
             output = rates[rate]
         else:
             output = output.merge(
-                right=rates[rate], how="outer", on=["race", "sex", "age"]
+                right=rates[rate], how="outer", on=["age", "sex", "ethnicity"]
             )
 
-    write_df(yr=yr, df=output, fp=fp)
+    write_df(year=year, df=output, fp=fp)
 
 
 def read_sql_query_fallback(max_lookback: int = 1, **kwargs: dict) -> pd.DataFrame:

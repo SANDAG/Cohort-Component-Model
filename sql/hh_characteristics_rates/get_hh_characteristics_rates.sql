@@ -34,7 +34,6 @@ BEGIN
             [estimates_groups].[age_group],
             [estimates_groups].[sex],
             [estimates_groups].[ethnicity],
-            ISNULL(SUM([hh_head_lf]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_head_lf],
             ISNULL(SUM([hh_size1]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_size1],
             ISNULL(SUM([hh_size2]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_size2],
             ISNULL(SUM([hh_size3]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_size3],
@@ -42,6 +41,7 @@ BEGIN
             ISNULL(SUM([hh_workers1]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_workers1],
             ISNULL(SUM([hh_workers2]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_workers2],
             ISNULL(SUM([hh_workers3]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_workers3],
+            ISNULL(SUM([hh_head_lf]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_head_lf],
             ISNULL(SUM([hh_children]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_children],
             ISNULL(SUM([hh_seniors]) / NULLIF(SUM([PWGTP]), 0), 0) AS [rate_hh_seniors]
         FROM (
@@ -66,7 +66,6 @@ BEGIN
                         WHEN [RAC1P] = ''9'' THEN ''Non-Hispanic, Two or More Races''
                         ELSE NULL END AS [ethnicity],
                 [PWGTP],  -- [SPORDER]=1 filter makes this equivalent to household weight
-                CASE WHEN [ESR] IN (1,2,3,4,5) THEN [PWGTP] ELSE 0 END AS [hh_head_lf],
                 CASE WHEN [NP] = 1 THEN [PWGTP] ELSE 0 END AS [hh_size1],
                 CASE WHEN [NP] = 2 THEN [PWGTP] ELSE 0 END AS [hh_size2],
                 CASE WHEN [NP] >= 3 THEN [PWGTP] ELSE 0 END AS [hh_size3],
@@ -74,6 +73,7 @@ BEGIN
                 CASE WHEN [hh_workers] = 1 THEN [PWGTP] ELSE 0 END AS [hh_workers1],
                 CASE WHEN [hh_workers] = 2 THEN [PWGTP] ELSE 0 END AS [hh_workers2],
                 CASE WHEN [hh_workers] >= 3 THEN [PWGTP] ELSE 0 END AS [hh_workers3],
+                CASE WHEN [ESR] IN (1,2,3,4,5) THEN [PWGTP] ELSE 0 END AS [hh_head_lf],
                 CASE WHEN [hh_children] = 1 THEN [PWGTP] ELSE 0 END AS [hh_children],
                 CASE WHEN [hh_seniors] = 1 THEN [PWGTP] ELSE 0 END AS [hh_seniors]
             FROM [acs].[pums].[vi_5y_' + @pums + '_households_sd] AS [households]

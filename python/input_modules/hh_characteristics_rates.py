@@ -168,7 +168,6 @@ def _create_hh_characteristics_rates_outputs(
             on=["age", "sex", "ethnicity"],
         ).assign(
             # First calculate implied totals using the rates
-            hh_head_lf=lambda x: x["hh"] * x["rate_hh_head_lf"],
             hh_size1=lambda x: x["hh"] * x["rate_hh_size1"],
             hh_size2=lambda x: x["hh"] * x["rate_hh_size2"],
             hh_size3=lambda x: x["hh"] * x["rate_hh_size3"],
@@ -176,6 +175,7 @@ def _create_hh_characteristics_rates_outputs(
             hh_workers1=lambda x: x["hh"] * x["rate_hh_workers1"],
             hh_workers2=lambda x: x["hh"] * x["rate_hh_workers2"],
             hh_workers3=lambda x: x["hh"] * x["rate_hh_workers3"],
+            hh_head_lf=lambda x: x["hh"] * x["rate_hh_head_lf"],
             hh_children=lambda x: x["hh"] * x["rate_hh_children"],
             hh_seniors=lambda x: x["hh"] * x["rate_hh_seniors"],
         )
@@ -184,7 +184,6 @@ def _create_hh_characteristics_rates_outputs(
     # Then adjust the implied counts to match the total counts
     # Ensuring individual counts are integerized
     for col in [
-        "hh_head_lf",
         "hh_size1",
         "hh_size2",
         "hh_size3",
@@ -192,6 +191,7 @@ def _create_hh_characteristics_rates_outputs(
         "hh_workers1",
         "hh_workers2",
         "hh_workers3",
+        "hh_head_lf",
         "hh_children",
         "hh_seniors",
     ]:
@@ -216,10 +216,6 @@ def _create_hh_characteristics_rates_outputs(
 
     # Then adjust the implied counts row-wise to ensure consistency with
     # The total household count within single year of age, sex, and race/ethnicity
-    hh_rates["hh_head_lf"] = utils.reallocate_integers(
-        df=hh_rates, subset="hh_head_lf", total="hh"
-    )
-
     hh_rates[["hh_size1", "hh_size2", "hh_size3"]] = utils.reallocate_group_integers(
         df=hh_rates, cols=["hh_size1", "hh_size2", "hh_size3"], total="hh"
     )
@@ -232,6 +228,10 @@ def _create_hh_characteristics_rates_outputs(
         )
     )
 
+    hh_rates["hh_head_lf"] = utils.reallocate_integers(
+        df=hh_rates, subset="hh_head_lf", total="hh"
+    )
+
     hh_rates["hh_children"] = utils.reallocate_integers(
         df=hh_rates, subset="hh_children", total="hh"
     )
@@ -242,7 +242,6 @@ def _create_hh_characteristics_rates_outputs(
 
     # Finally, re-calculate the rates avoiding divide by zero errors
     hh_rates = hh_rates.assign(
-        rate_hh_head_lf=lambda x: x["hh_head_lf"] / x["hh"].replace({0: 1}),
         rate_hh_size1=lambda x: x["hh_size1"] / x["hh"].replace({0: 1}),
         rate_hh_size2=lambda x: x["hh_size2"] / x["hh"].replace({0: 1}),
         rate_hh_size3=lambda x: x["hh_size3"] / x["hh"].replace({0: 1}),
@@ -250,6 +249,7 @@ def _create_hh_characteristics_rates_outputs(
         rate_hh_workers1=lambda x: x["hh_workers1"] / x["hh"].replace({0: 1}),
         rate_hh_workers2=lambda x: x["hh_workers2"] / x["hh"].replace({0: 1}),
         rate_hh_workers3=lambda x: x["hh_workers3"] / x["hh"].replace({0: 1}),
+        rate_hh_head_lf=lambda x: x["hh_head_lf"] / x["hh"].replace({0: 1}),
         rate_hh_children=lambda x: x["hh_children"] / x["hh"].replace({0: 1}),
         rate_hh_seniors=lambda x: x["hh_seniors"] / x["hh"].replace({0: 1}),
     )
@@ -260,7 +260,6 @@ def _create_hh_characteristics_rates_outputs(
             "age",
             "sex",
             "ethnicity",
-            "rate_hh_head_lf",
             "rate_hh_size1",
             "rate_hh_size2",
             "rate_hh_size3",
@@ -268,6 +267,7 @@ def _create_hh_characteristics_rates_outputs(
             "rate_hh_workers1",
             "rate_hh_workers2",
             "rate_hh_workers3",
+            "rate_hh_head_lf",
             "rate_hh_children",
             "rate_hh_seniors",
         ]
