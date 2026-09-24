@@ -722,10 +722,53 @@ def write_df(year: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
     df = df.sort_values(by=["age", "sex", "ethnicity"])
     df.insert(0, "year", year)
 
+    # TODO: This section is temporary to keep backwards compatibility with older output format
+    temp_df = df.copy()
+
+    if "pop" in temp_df.columns:
+        temp_df = temp_df.assign(
+            gq=temp_df["gq_college"]
+            + temp_df["gq_prison"]
+            + temp_df["gq_mil"]
+            + temp_df["gq_other"],
+            pop_mil=temp_df["gq_mil"],
+        ).drop(columns=["gq_college", "gq_prison", "gq_mil", "gq_other"])
+    elif "rate_hh" in temp_df.columns:
+        temp_df = temp_df.assign(
+            rate_gq=temp_df["rate_gq_college"] + temp_df["rate_gq_other"]
+        ).drop(columns=["rate_gq_college", "rate_gq_other"])
+
+    temp_df = temp_df.rename(
+        columns={
+            "ethnicity": "race",
+            "hh_size1": "size1",
+            "hh_size2": "size2",
+            "hh_size3": "size3",
+            "hh_workers0": "workers0",
+            "hh_workers1": "workers1",
+            "hh_workers2": "workers2",
+            "hh_workers3": "workers3",
+            "hh_children": "child1",
+            "hh_seniors": "senior1",
+            "rate_hh_size1": "rate_size1",
+            "rate_hh_size2": "rate_size2",
+            "rate_hh_size3": "rate_size3",
+            "rate_hh_workers0": "rate_workers0",
+            "rate_hh_workers1": "rate_workers1",
+            "rate_hh_workers2": "rate_workers2",
+            "rate_hh_workers3": "rate_workers3",
+            "rate_hh_head_lf": "rate_head_lf",
+            "rate_hh_children": "rate_child1",
+            "rate_hh_seniors": "rate_senior1",
+        }
+    )
+
+    temp_df["sex"] = temp_df["sex"].replace({"Male": "M", "Female": "F"})
+
     if os.path.isfile(fp):
-        df.to_csv(fp, mode="a", index=False, header=False)
+        temp_df.to_csv(fp, mode="a", index=False, header=False)
     else:
-        df.to_csv(fp, mode="w", index=False)
+        temp_df.to_csv(fp, mode="w", index=False)
 
 
 def write_rates(year: int, rates: dict, fp: pathlib.Path) -> None:
