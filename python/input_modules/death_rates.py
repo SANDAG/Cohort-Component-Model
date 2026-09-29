@@ -1,4 +1,4 @@
-"""Get death rates by single year of age and race/ethnicity."""
+"""Get death rates by single year of age, sex, and race/ethnicity."""
 
 import logging
 import scipy
@@ -16,14 +16,14 @@ logger = logging.getLogger(__name__)
 def load_cdc_wonder(population: pd.DataFrame, year: int) -> pd.DataFrame:
     """Load CDC WONDER mortality file from SQL and transform into a standardized DataFrame.
 
-    This function loads mortality data from SQL and replaces San Diego Countypopulation
+    This function loads mortality data from SQL and replaces San Diego County population
     with CCM population for the 2018+ product to fill in missing population values for
     the county, and then inflates deaths using the inflation factor calculated from the
     number of "Not Stated" deaths.
 
     Args:
         population (pd.DataFrame): Population DataFrame to merge with CDC WONDER data
-        year (int): The year to load data for.
+        year (int): The year to load data for
 
     Returns:
         pd.DataFrame: Processed DataFrame with no missing or 'Not Stated' values.
@@ -336,7 +336,7 @@ def calculate_death_rates(
 
     For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
     rates by age and sex, but not by race/ethnicity. To incorporate race-specific
-    variation,scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
+    variation, scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
     mortality rates by sex and race/ethnicity. The scaling factor for each
     sex and race/ethnicity combination equals the CDC 85+ mortality rate divided
     by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to

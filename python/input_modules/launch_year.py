@@ -32,8 +32,8 @@ def run_launch_year() -> pd.DataFrame:
     Functionality is split apart for code encapsulation:
         _get_launch_inputs - Get SANDAG Estimates Program population by
             type, age_group, sex, and race/ethnicity and the California DOF
-            age/sex/ethnicity distribution mapping age_group to single year of
-            age.
+            age, sex, and race/ethnicity distribution, mapping age_group to
+            single year of age
         _validate_launch_inputs - Validate inputs from the above function
         _create_launch_outputs - Split SANDAG Estimates Program age_group into
             single year of age and integerize within each age_group
@@ -125,7 +125,7 @@ def _create_launch_outputs(launch_inputs: dict[str, pd.DataFrame]) -> pd.DataFra
                         continue
                     else:
                         # Integerize the sex/ethnicity-specific population within this age group
-                        # Ensuring the intergerized values sum to the original total from the Estiamtes Program
+                        # Ensuring the integerized values sum to the original total from the Estimates Program
                         launch_population.loc[mask, "population"] = utils.integerize_1d(
                             data=launch_population.loc[mask, "population"].values,
                             control=control,

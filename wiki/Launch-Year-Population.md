@@ -3,7 +3,7 @@ The population data for the launch year, the last year of observed data used in 
 # Inputs
 | Input | Module Source | Usage |
 | ----- | ------------- | ----- |
-| Regional age/sex/ethnicity controls for total population | External (DOF) | Used to split age groups from SANDAG's Estimates Program into single of year of age |
+| Regional age/sex/ethnicity controls for total population | External (DOF) | Used to split age groups from SANDAG's Estimates Program into single year of age |
 | Population by age/sex/ethnicity by population type | External (SANDAG Estimates) | SANDAG's Estimates Program [Population by Age/Sex/Ethnicity](https://github.com/SANDAG/Estimates-Program/wiki/Population-by-Age-Sex-Ethnicity) serves as the launch year population for the regional forecast |
 
 ## Regional age/sex/ethnicity controls for total population

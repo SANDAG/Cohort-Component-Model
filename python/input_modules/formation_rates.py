@@ -26,7 +26,7 @@ def run_formation_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
 
     The Group Quarters formation rates are only calculated for College and
     Other group quarters categories as it is assumed that the Military and
-    Insitutional Correctional Facilities group quarters population will remain
+    Institutional Correctional Facilities group quarters population will remain
     fixed through the forecast.
 
     The Household formation rates are only applied to the household population,
@@ -36,7 +36,7 @@ def run_formation_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
     Group Quarters populations and total household counts identical to SANDAG's
     Estimates Program for the launch year.
 
-    Functionality is plit apart for code encapsulation:
+    Functionality is split apart for code encapsulation:
         _get_formation_inputs - Get Group Quarters formation rates by age
             group, sex, and ethnicity directly from SANDAG's Estimates Program,
             household formation rates by age group, sex, and ethnicity from the

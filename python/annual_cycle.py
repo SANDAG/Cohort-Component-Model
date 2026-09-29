@@ -12,7 +12,7 @@ def calculate_births(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
     """Calculate births by single year of age, sex, and race/ethnicity.
 
     Birth rates are applied to the total survived population excluding "Group
-    Quarters - Military" and "Group Quarters - Insitutional Correctional
+    Quarters - Military" and "Group Quarters - Institutional Correctional
     Facilities" populations. Note that the survived population is assigned
     birth rates for the next single year of age increment as the population
     ages through the annual cycle.
@@ -51,7 +51,7 @@ def calculate_births(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
         .reset_index(drop=True)
     )
 
-    # Integerize preserving integerized sum of Births
+    # Integerize preserving rounded sum of Births
     births["births"] = utils.integerize_1d(
         data=births["births"],
         control=round(births["births"].sum()),
@@ -66,7 +66,7 @@ def calculate_deaths(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
     """Calculate deaths by single year of age, sex, and race/ethnicity.
 
     Death rates are applied to the total population excluding "Group
-    Quarters - Military" and "Group Quarters - Insitutional Correctional
+    Quarters - Military" and "Group Quarters - Institutional Correctional
     Facilities" populations.
 
     Args:
@@ -91,7 +91,7 @@ def calculate_deaths(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
         .reset_index(drop=True)
     )
 
-    # Integerize preserving integerized sum of Deaths
+    # Integerize preserving rounded sum of Deaths
     deaths["deaths"] = utils.integerize_1d(
         data=deaths["deaths"],
         control=round(deaths["deaths"].sum()),
@@ -111,7 +111,7 @@ def calculate_migration(population: pd.DataFrame, rate: pd.DataFrame) -> pd.Data
     """Calculate migration by single year of age, sex, and race/ethnicity.
 
     Migration rates are applied to the survived population excluding "Group
-    Quarters - Military" and "Group Quarters - Insitutional Correctional
+    Quarters - Military" and "Group Quarters - Institutional Correctional
     Facilities" populations. Note that the survived population is assigned
     migration rates for the next single year of age increment as the
     population ages through the annual cycle.
@@ -153,7 +153,7 @@ def calculate_migration(population: pd.DataFrame, rate: pd.DataFrame) -> pd.Data
         .reset_index(drop=True)
     )
 
-    # Integerize preserving integerized sums of Ins/Outs
+    # Integerize preserving rounded sums of Ins/Outs
     # TODO: Consider controlling to migration controls here if provided for almost perfect match
     migrants["ins"] = utils.integerize_1d(
         data=migrants["ins"],
@@ -277,7 +277,7 @@ def increment_population(
         .reset_index()
     )
 
-    # Shift the "Group Quarters - Military" and "Group Quarters - Insitutional
+    # Shift the "Group Quarters - Military" and "Group Quarters - Institutional
     # Correctional Facilities" populations back in age increment as both are
     # held constant in the forecast
     incremented_population = incremented_population.sort_values(
@@ -292,7 +292,7 @@ def increment_population(
         periods=-1, fill_value=0
     )
 
-    # Ensure the "Group Quarters - Military" and "Group Quarters - Insitutional
+    # Ensure the "Group Quarters - Military" and "Group Quarters - Institutional
     # Correctional Facilities" populations are not greater than the total
     # population in each single year of age, sex, and ethnicity group
 

@@ -2,7 +2,7 @@
 Get household formation rates for San Diego County by age group, sex, and ethnicity.
 
 Rates are calculated directly from the 5-year ACS PUMS for the household
-population mapping single of year of age to SANDAG age groups used in SANDAG's
+population mapping single year of age to SANDAG age groups used in SANDAG's
 Estimates Program.
 
 This data is used as initial values that are controlled such that, when applied
@@ -47,7 +47,7 @@ BEGIN
             SELECT
                 [age_group].[name] AS [age_group],  -- Group oldest ages into one category, if over 99 as 99, otherwise keep single year of age
                 CASE WHEN [SEX] = ''1'' THEN ''Male'' WHEN [SEX] = ''2'' THEN ''Female'' ELSE NULL END AS [sex],  -- Change numeric codes into standard text codes.
-                CASE WHEN [HISP] NOT IN (''01'', ''1'') THEN ''Hispanic'' -- Exclude non-Hispanic which is 01 or 1.  Hispanic takes precendence over Race
+                CASE WHEN [HISP] NOT IN (''01'', ''1'') THEN ''Hispanic'' -- Exclude non-Hispanic which is 01 or 1.  Hispanic takes precedence over race
                         WHEN [RAC1P] IN (''1'', ''8'') THEN ''Non-Hispanic, White'' -- Combine Some other race with White
                         WHEN [RAC1P] = ''2'' THEN ''Non-Hispanic, Black''
                         WHEN [RAC1P] IN (''3'', ''4'', ''5'') THEN ''Non-Hispanic, American Indian or Alaska Native''  -- Group various codes for AI and AN together

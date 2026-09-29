@@ -3,12 +3,12 @@
     for deaths attributed to unknown demographic groups.
     
     Some records in the CDC WONDER mortality dataset contain incomplete
-    demographic information. These deaths occurred but cannot be  assigned to
+    demographic information. These deaths occurred but cannot be assigned to
     specific demographic groups. By inflating the counts for known groups, we
     proportionally distribute these unassigned deaths.
     
     The inflation factor is calculated as 1 + (Unknown Deaths / Total Deaths)
-    for each year  and location.
+    for each year and location.
 
     Unknown deaths are defined as deaths that are:
         1) assigned to "Not Stated" age

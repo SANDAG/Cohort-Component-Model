@@ -32,7 +32,7 @@ If fertility rates are provided, the CSV should include one row per year, age, s
 year,age,sex,ethnicity,rate_birth
 2023,15,Female,"Non-Hispanic, American Indian or Alaska Native",0.01431606
 ...
-2024,30,Female,Hispanic,0.09667108
+2024,30,Female,"Hispanic",0.09667108
 ...
 2025,44,Female,"Non-Hispanic, White",0.01539245
 ```

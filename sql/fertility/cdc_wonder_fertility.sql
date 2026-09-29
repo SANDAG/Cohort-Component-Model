@@ -6,8 +6,13 @@
     values for both "Non-Hispanic, Two or More Races" and
     "Non-Hispanic, Hawaiian or Pacific Islander".
 
-    Note: This querly only handles years from 2012 onwards as that is the
-    first five-year average available (2007-2012).
+    Note: This query only handles years from 2012 onwards as that is the
+    first five-year average available (2007-2012) in the 2007-2019 product.
+
+    Note: The 2007-2019 product corresponds to the 2007-2024 product. We prefer
+    calling it the 2007-2019 product as race/ethnicity definitions change
+    starting with 2020 onwards within it. As such, we only load and use years
+    2007-2019 and call it the 2007-2019 product.
 */
 
 DECLARE @year INTEGER = :year;
@@ -55,7 +60,7 @@ BEGIN
 			[product] = @product
 			-- Five year rolling sums used
 			AND [period] = 'Five-Year'
-            -- Births in there age categories are included in the inflation calculation
+            -- Births in these age categories are included in the inflation calculation
             AND [age] NOT IN ('Under 15 years', '45-49 years', '50 years and over')
             -- Birth from "Not Stated" records are included in the inflation calculation
             AND [hispanic_origin] != 'Not Stated' 

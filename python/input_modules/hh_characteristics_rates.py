@@ -23,7 +23,7 @@ def run_hh_characteristics_rates(
 
     This modules generates household characteristics rates broken down by
     single year of age, sex, and race/ethnicity using ACS PUMS data and
-    SANDAG's Estimates PRogram. Rates are calculated within age groups and
+    SANDAG's Estimates Program. Rates are calculated within age groups and
     then applied uniformly to all single years of age within age groups.
 
     For each characteristics, if there exists a SANDAG estimates, the total
@@ -31,7 +31,7 @@ def run_hh_characteristics_rates(
     match the values from SANDAG's Estimates Program for the launch year.
 
     The final rates, when applied to the launch year households, should yield
-    household characteristics counts identical to SANDAG's Estimates PRogram
+    household characteristics counts identical to SANDAG's Estimates Program
     for the launch year.
 
     Functionality is split apart for code encapsulation:
@@ -41,7 +41,13 @@ def run_hh_characteristics_rates(
             Estimates Program
         _validate_hh_characteristics_rates_inputs - Validate inputs from the
             above function
-        _create_hh_characteristics_rates_outputs - Placeholder
+        _create_hh_characteristics_rates_outputs - Distribute household
+            characteristics rates to single years of age within each
+            age group and control such that the resulting rates, when applied
+            to the launch year households, yield total household values
+            identical to both SANDAG's Estimates Program and row-wise
+            households identical to those generated in the Formation Rates
+            module
         _validate_hh_characteristics_rates_outputs - Validate the output from
             the above function
     """
