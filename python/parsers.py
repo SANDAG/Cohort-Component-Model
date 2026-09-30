@@ -1,9 +1,10 @@
 import cerberus
 import logging
 import pathlib
-import yaml
 
 import pandas as pd
+import sqlalchemy as sql
+
 import python.tests as tests
 
 logger = logging.getLogger(__name__)
@@ -14,12 +15,12 @@ class InputParser:
 
     Attributes:
         _config (dict): The configuration dictionary to be parsed
-        base_year (int): Used to store the base year of a new run
+        _engine (sql.Engine): The SQL engine which corresponds to the Estimates Program database
         launch_year (int): Used to store the launch year of a new run
         horizon_year (int): Used to store the horizon year of a new run
         version (str): The software version of the current run
         comments (str): Any comments associated with the current run
-        controls (dict): Mapping of control totals for each year
+        estimates_run_id (int): The run ID for the Estimates Program launch year run
         migration_controls (pd.DataFrame | None): Optional migration control totals (ins/outs)
             for each post-launch increment year. If not provided, set to None.
         mortality_rates (pd.DataFrame | None): Optional mortality rates by
@@ -31,10 +32,9 @@ class InputParser:
     Methods:
         parse_config(): Control function
         _validate_config(): Validate the configuration file
-        _parse_years(): Parses the run launch and horizon years from the configuration
-            file and sets the base year
-        _parse_controls(): Parses the controls mapping from the configuration file and
-            sets the controls attribute
+        _parse_years(): Parses the run launch and horizon years
+        _parse_estimates_run_id(): Parses the Estimates Program run ID from the
+            configuration file and sets the estimates_run_id attribute
         _parse_migration_controls(): Parses the migration controls mapping from the
             configuration file and sets the migration_controls attribute
         _parse_mortality_rates(): Parses the mortality rate controls from the
@@ -43,15 +43,15 @@ class InputParser:
             configuration file and sets the fertility_rates attribute
     """
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict, engine: sql.Engine) -> None:
         """Initialize the InputParser with a configuration dictionary."""
         self._config = config
-        self.base_year = None
+        self._engine = engine
         self.launch_year = None
         self.horizon_year = None
         self.version = None
         self.comments = None
-        self.controls = {}
+        self.estimates_run_id = None
         self.migration_controls = None
         self.mortality_rates = None
         self.fertility_rates = None
@@ -61,17 +61,17 @@ class InputParser:
         """Control flow to parse the runtime configuration.
 
         First, the contents of the configuration file are validated. Then, the
-        base, launch, and horizon years are set along with the software version
-        and any comments. Finally, the controls totals and optional migration control totals are parsed and set.
+        launch and horizon years are set along with the software version and
+        any comments. Finally, the controls totals and optional migration
+        control totals are parsed and set.
         """
         self._validate_config()
         _interval = self._parse_interval()
-        self.base_year = _interval["base_year"]
         self.launch_year = _interval["launch_year"]
         self.horizon_year = _interval["horizon_year"]
         self.comments = self._config.get("comments")
         self.version = self._config.get("version")
-        self.controls = self._parse_controls()
+        self.estimates_run_id = self._parse_estimates_run_id()
         self.migration_controls = self._parse_migration_controls()
         self.mortality_rates = self._parse_mortality_rates()
         self.fertility_rates = self._parse_fertility_rates()
@@ -89,7 +89,7 @@ class InputParser:
             "configurations": {
                 "type": "dict",
                 "schema": {
-                    "controls": {"type": "string"},
+                    "estimates_run_id": {"type": "integer"},
                 },
             },
             "csv": {
@@ -118,7 +118,7 @@ class InputParser:
             raise ValueError(validator.errors)
 
     def _parse_interval(self) -> dict:
-        """Parse the base, launch, and horizon years from the configuration file."""
+        """Parse the launch, and horizon years from the configuration file."""
         launch_year = self._config["interval"]["launch"]
         horizon_year = self._config["interval"]["horizon"]
 
@@ -126,40 +126,42 @@ class InputParser:
         if launch_year >= horizon_year:
             raise ValueError("Launch year must be less than horizon year")
 
-        if 2020 <= launch_year <= 2029:
-            base_year = 2020
-        else:
-            raise ValueError("""
-                    Only base year 2020 is supported at this time.
-                    Launch year must be between 2020 and 2029.
-                """)
+        if launch_year < 2010 or launch_year > 2025:
+            raise ValueError("Launch years must be between 2010 and 2025")
 
         return {
-            "base_year": base_year,
             "launch_year": launch_year,
             "horizon_year": horizon_year,
         }
 
-    def _parse_controls(self) -> dict:
-        """Parse the controls mapping from the configuration file."""
-        # Check the controls mapping file exists and is a valid YAML file
-        controls_fp = self._config["configurations"]["controls"]
-        controls_path = pathlib.Path(controls_fp)
-        if not controls_path.is_absolute():
-            controls_path = (
-                pathlib.Path(__file__).resolve().parent.parent / controls_path
-            )
-        try:
-            with open(controls_path, "r") as f:
-                controls = yaml.safe_load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Controls file not found: {controls_fp}")
-        except yaml.YAMLError as e:
-            raise ValueError(f"Error parsing controls YAML file: {e}")
+    def _parse_estimates_run_id(self) -> None:
+        """Check if supplied Estimates Program run id is valid."""
+        estimates_run_id = self._config["configurations"].get("estimates_run_id")
 
-        # TODO: Normally we would validate the schema but this is soon to be removed.
+        with self._engine.connect() as con:
+            # Ensure supplied run id exists in the Estimates Program database
+            # And that is complete and contains the launch year
+            query = sql.text("""
+                    SELECT CASE WHEN EXISTS (
+                        SELECT [run_id]
+                        FROM [metadata].[run]
+                        WHERE [run_id] = :run_id
+                            AND [complete] = 1
+                            AND :year BETWEEN [start_year] AND [end_year]
+                    ) THEN 1 ELSE 0 END
+                """)
 
-        return controls
+            exists = con.execute(
+                query, {"run_id": estimates_run_id, "year": self.launch_year}
+            ).scalar()
+            if exists == 0:
+                raise ValueError(
+                    f"Either the [run_id]={estimates_run_id} does not exist in the database or "
+                    f"it is not marked as [complete]=1 or it does not contain the provided "
+                    f"launch year={self.launch_year}"
+                )
+            else:
+                return estimates_run_id
 
     def _parse_migration_controls(self) -> pd.DataFrame | None:
         """Parse the migration controls CSV file from the configuration file."""
@@ -214,10 +216,11 @@ class InputParser:
     def _parse_mortality_rates(self) -> pd.DataFrame | None:
         """Parse the mortality rates CSV file from the configuration file.
 
-        The CSV file must contain mortality rates by year, age, sex, and race.
+        The CSV file must contain mortality rates by year, age, sex, and
+        race/ethnicity.
 
         Returns:
-            pd.DataFrame | None: DataFrame with columns (year, age, sex, race, rate_death),
+            pd.DataFrame | None: DataFrame with columns (year, age, sex, ethnicity, rate_death),
                 or None if no file is provided.
         """
         # Check if mortality rates file is provided
@@ -241,10 +244,10 @@ class InputParser:
             raise ValueError(f"Error parsing mortality rates CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "age", "sex", "race", "rate_death"}
+        required_cols = {"year", "age", "sex", "ethnicity", "rate_death"}
         if not required_cols.issubset(mortality_rates.columns):
             raise ValueError(
-                "Mortality rates must contain columns: (year, age, sex, race, rate_death)"
+                "Mortality rates must contain columns: (year, age, sex, ethnicity, rate_death)"
             )
 
         # Required mortality-control fields cannot be null
@@ -258,9 +261,9 @@ class InputParser:
             raise ValueError("Mortality rates must be greater than 0 and less than 1")
 
         # Check for duplicate year/age/sex/race combinations
-        if mortality_rates.duplicated(subset=["year", "age", "sex", "race"]).any():
+        if mortality_rates.duplicated(subset=["year", "age", "sex", "ethnicity"]).any():
             raise ValueError(
-                "Duplicate year/age/sex/race combinations found in mortality rates"
+                "Duplicate year/age/sex/ethnicity combinations found in mortality rates"
             )
 
         # Check age range is valid (0-99)
@@ -280,24 +283,23 @@ class InputParser:
 
         # Validate each year has the correct structure
         for year in mortality_rates["year"].unique():
-            year_data = mortality_rates[mortality_rates["year"] == year]
             tests.validate_data(
                 table_name=f"Mortality Rates (year {year})",
-                data=year_data[["race", "sex", "age", "rate_death"]],
-                row_count={"key_columns": {"race", "sex", "age"}},
+                data=mortality_rates[mortality_rates["year"] == year],
+                row_count={"key_columns": {"age", "sex", "ethnicity"}},
                 negative={"negative_ok": set()},
                 null={"null_ok": set()},
             )
 
-        return mortality_rates
+        return mortality_rates[["year", "age", "sex", "ethnicity", "rate_death"]]
 
     def _parse_fertility_rates(self) -> pd.DataFrame | None:
         """Parse the fertility rates CSV file from the configuration file.
 
-        The CSV file must contain fertility rates by year, age, sex, and race.
+        The CSV file must contain fertility rates by year, age, sex, and ethnicity.
 
         Returns:
-            pd.DataFrame | None: DataFrame with columns (year, age, sex, race, rate_birth),
+            pd.DataFrame | None: DataFrame with columns (year, age, sex, ethnicity, rate_birth),
                 or None if no file is provided.
         """
         # Check if fertility rate file is provided
@@ -321,11 +323,11 @@ class InputParser:
             raise ValueError(f"Error parsing fertility rate CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "age", "sex", "race", "rate_birth"}
+        required_cols = {"year", "age", "sex", "ethnicity", "rate_birth"}
         if not required_cols.issubset(fertility_rates.columns):
             raise ValueError(
                 "Fertility rates must contain columns: "
-                "(year, age, sex, race, rate_birth)"
+                "(year, age, sex, ethnicity, rate_birth)"
             )
 
         # Check fertility rates are > 0 and < 1
@@ -334,25 +336,13 @@ class InputParser:
         ):
             raise ValueError("Fertility rates must be greater than 0 and less than 1")
 
-        # Check fertility sex is only F
-        if not all(fertility_rates["sex"] == "F"):
+        # Check fertility sex is only Female
+        if not all(fertility_rates["sex"] == "Female"):
             raise ValueError("Fertility rates must be for females only")
 
         # Check age range is valid (15-44)
         if any(fertility_rates["age"] < 15) or any(fertility_rates["age"] > 44):
             raise ValueError("Age values must be between 15 and 44")
-
-        # Check fertility rates are identical among five year age groups
-        rates_per_age_group = (
-            fertility_rates.assign(age_group=fertility_rates["age"] // 5)
-            .groupby(["year", "sex", "race", "age_group"])["rate_birth"]
-            .nunique()
-        )
-        inconsistent_age_groups = rates_per_age_group[rates_per_age_group > 1]
-        if not inconsistent_age_groups.empty:
-            logger.warning(
-                "Fertility rates are assumed to be identical within each five-year age group"
-            )
 
         # Validate year column
         control_years = set(fertility_rates["year"].unique())
@@ -370,13 +360,13 @@ class InputParser:
             year_data = fertility_rates[fertility_rates["year"] == year]
             tests.validate_data(
                 table_name=f"Birth Rates (year {year})",
-                # Rename columns to test against the expected naming convention for fertility data
-                data=year_data[["race", "age", "rate_birth"]].rename(
+                # Rename age column for test (birth data only 15-44)
+                data=year_data[["age", "ethnicity", "rate_birth"]].rename(
                     columns={"age": "age_births"}
                 ),
-                row_count={"key_columns": {"race", "age_births"}},
+                row_count={"key_columns": {"ethnicity", "age_births"}},
                 negative={"negative_ok": set()},
                 null={"null_ok": set()},
             )
 
-        return fertility_rates
+        return fertility_rates[["year", "age", "sex", "ethnicity", "rate_birth"]]

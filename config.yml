@@ -1,7 +1,7 @@
 version: "0.0.0-dev"
 comments: "No Comments"
 configurations:
-  controls: "sandag_estimates.yml"
+  estimates_run_id: 237  # Estimates 2025 run
 csv:
   fertility_rates: null
   migration_controls: null

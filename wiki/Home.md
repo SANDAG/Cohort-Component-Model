@@ -17,8 +17,7 @@ SANDAG's Cohort Component Module consists of input data modules, the main foreca
 #### Table 1: Input Modules
 | Module | Description |
 | :----------: | ----------- |
-| [Base Year](https://github.com/SANDAG/Cohort-Component-Model/wiki/Base-Year-Population) | Generates base year population by race, sex, and single year of age. |
-| [Active-Duty Military](https://github.com/SANDAG/Cohort-Component-Model/wiki/Active%E2%80%90Duty-Military) | Separates active-duty military population from total population by race, sex, and single year of age. |
+| [Launch Year](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population) | Generates launch year population by single year of age, sex, and race/ethnicity within population type (e.g. Household Population, Group Quarters - College, etc.). |
 | [Death (Mortality)](https://github.com/SANDAG/Cohort-Component-Model/wiki/Death-Rates) | Crude death rates by race, sex, and single year of age. |
 | [Birth (Fertility)](https://github.com/SANDAG/Cohort-Component-Model/wiki/Birth-Rates) | Crude birth rates by race and single year of age. |
 | [Migration](https://github.com/SANDAG/Cohort-Component-Model/wiki/Migration-Rates) | Crude in/out migration rates by race, sex, and single year of age. |

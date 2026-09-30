@@ -17,9 +17,11 @@ logger = logging.getLogger(__name__)
 # column
 _DISTINCT_COUNTS = {
     "age": 100,
-    "race": 7,
-    "sex": 2,
     "age_births": 30,  # Fertility limited to ages 15-44
+    "age_group": 20,  # Estimates Program age groups
+    "ethnicity": 7,
+    "pop_type": 5,
+    "sex": 2,
 }
 
 #########

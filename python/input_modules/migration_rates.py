@@ -1,6 +1,6 @@
-"""Get migration rates by race, sex, and single year of age."""
+"""Get migration rates by single year of age, sex, and race/ethnicity."""
 
-# TODO: (5-feature) Potentially implement smoothing function within race and sex categories.
+# TODO: (5-feature) Potentially implement smoothing function.
 
 import numpy as np
 import pandas as pd
@@ -9,84 +9,93 @@ import sqlalchemy as sql
 import python.utils as utils
 
 
-def get_migration_rates(yr: int, pop_df: pd.DataFrame) -> pd.DataFrame:
-    """Create migration rates broken down by race, sex, and single year of age.
+def get_migration_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
+    """Create migration rates broken down by single year of age, sex, and race/ethnicity.
 
-    For each year up to launch, merge the population dataset with the 5-year
+    For the launch year, merge the population dataset with the 5-year
     ACS PUMS count of in/out migrants for San Diego County. Calculate the
-    crude migration rate within race, sex, and single year of age capping the
-    rates at 20% within each category removing active-duty military population
-    from the calculation.
+    crude migration rate within single year of age, sex, and race/ethnicity
+    capping the rates at 20% within each category removing group quarters
+    military and prison populations from the calculation.
 
     Post launch year, the launch year migration rates are scaled to match
     asserted migration control totals for ins/outs if they are provided.
+    Otherwise, the function should not be called.
 
     Args:
-        yr: Increment year
-        pop_df (pd.DataFrame): Population data broken down by race, sex, and
-            single year of age
+        year: Increment year
+        population (pd.DataFrame): Population data by single year of age, sex,
+            and race/ethnicity
 
     Returns:
-        pd.DataFrame: Migration rates broken down by race, sex, and single
-            year of age.
+        pd.DataFrame: Migration rates by single year of age, sex, and
+            race/ethnicity
     """
-    # Migration rates calculated from base year up to the launch year
-    if yr <= utils.LAUNCH_YEAR:
-        rates = calculate_migration_rates(
-            yr=yr,
-            pop_df=pop_df,
+    # Migration rates calculated for the launch year
+    if year == utils.LAUNCH_YEAR:
+        return calculate_migration_rates(
+            year=year,
+            population=population,
             cap_rates=0.2,
         )
 
     # Migration rates are not calculated after the launch year
     # Post-launch rates are controlled to annual in/out totals if provided
-    # TODO: Re-calculating every increment post launch is inefficient
     else:
-
         if utils.MIGRATION_CONTROLS is not None:
+            # TODO: Re-calculating every increment post launch is inefficient
             rates = calculate_migration_rates(
-                yr=utils.LAUNCH_YEAR,
-                pop_df=pop_df,
+                year=utils.LAUNCH_YEAR,  # type: ignore
+                population=population,
                 cap_rates=0.2,
             )
 
-            rates = control_migration_rates(yr=yr, pop_df=pop_df, rates=rates)
+            return control_migration_rates(
+                year=year, population=population, rates=rates
+            )
 
-    return rates
+        else:
+            raise ValueError(
+                "Function called post launch year but migration controls not provided."
+            )
 
 
 def calculate_migration_rates(
-    yr: int,
-    pop_df: pd.DataFrame,
+    year: int,
+    population: pd.DataFrame,
     cap_rates: float,
 ) -> pd.DataFrame:
     """Calculate migration rates for a specific source year.
 
     Args:
-        yr: Source year for ACS PUMS migrants query
-        pop_df (pd.DataFrame): Population data by race, sex, and age
+        year: Source year for ACS PUMS migrants query
+        population (pd.DataFrame): Population data by single year of age, sex,
+            and race/ethnicity
         cap_rates (float): Maximum allowed migration rate (e.g., 0.2 for 20%)
 
     Returns:
-        pd.DataFrame: Migration rates by race, sex, and age
+        pd.DataFrame: Migration rates by single year of age, sex, and
+            race/ethnicity
     """
     if cap_rates <= 0 or cap_rates >= 1:
         raise ValueError("cap_rates parameter must be between 0 and 1")
 
-    with utils.SQL_ENGINE.connect() as connection:
+    with utils.CCM_ENGINE.connect() as connection:
         with open(utils.SQL_FOLDER / "pums_migrants.sql", "r") as file:
-            pums_migrants_df = pd.read_sql_query(sql.text(file.read()), connection, 
-                                                 params={"yr": yr})
-        if len(pums_migrants_df.index) == 0:
-            raise ValueError(str(yr) + ": not in ACS PUMS in/out migrants")
+            pums_migrants = pd.read_sql_query(
+                sql.text(file.read()), connection, params={"year": year}
+            )
+        if len(pums_migrants.index) == 0:
+            raise ValueError(str(year) + ": not in ACS PUMS in/out migrants")
 
     df = (
-        pop_df.merge(
-            right=pums_migrants_df,
+        population.merge(
+            right=pums_migrants,
             how="left",
-            on=["race", "sex", "age"],
+            on=["age", "sex", "ethnicity"],
         )
-        .assign(pop_civ=lambda x: x["pop"] - x["pop_mil"])
+        # The Military and Prison populations do not migrate
+        .assign(pop_civ=lambda x: x["pop"] - x["gq_mil"] - x["gq_prison"])
         .assign(
             rate_in=lambda x: np.where(
                 x["pop_civ"] > 0,
@@ -113,12 +122,12 @@ def calculate_migration_rates(
     df["rate_in"] = np.where(df["rate_in"] > cap_rates, cap_rates, df["rate_in"])
     df["rate_out"] = np.where(df["rate_out"] > cap_rates, cap_rates, df["rate_out"])
 
-    return df[["race", "sex", "age", "rate_in", "rate_out"]]
+    return df[["age", "sex", "ethnicity", "rate_in", "rate_out"]]
 
 
 def control_migration_rates(
-    yr: int,
-    pop_df: pd.DataFrame,
+    year: int,
+    population: pd.DataFrame,
     rates: pd.DataFrame,
     cap_rates: float = 0.2,
 ) -> pd.DataFrame:
@@ -134,43 +143,50 @@ def control_migration_rates(
     in/migrants control totals.
 
     Args:
-        yr: Increment year
-        pop_df (pd.DataFrame): Population data by race, sex, and age
-        rates (pd.DataFrame): Migration rates by race, sex, and age
+        year: Increment year
+        population (pd.DataFrame): Population data by single year of age, sex,
+            and race/ethnicity
+        rates (pd.DataFrame): Migration rates by single year of age, sex, and
+            race/ethnicity
         cap_rates (float): Maximum allowed migration rate (e.g., 0.2 for 20%)
 
     Returns:
         pd.DataFrame: Migration rates controlled to in/out migrant totals by
-            race, sex, and age
+            single year of age, sex, and race/ethnicity
     """
     if cap_rates <= 0 or cap_rates >= 1:
         raise ValueError("cap_rates parameter must be between 0 and 1")
 
     # Check the controls DataFrame is valid and return controls for the given year
-    controls = utils.MIGRATION_CONTROLS.loc[utils.MIGRATION_CONTROLS["year"] == yr]
+    if utils.MIGRATION_CONTROLS is not None:
+        controls = utils.MIGRATION_CONTROLS.loc[
+            utils.MIGRATION_CONTROLS["year"] == year
+        ]
 
-    # Calculate the total in/out migrants from the rates and population
-    # Note this uses the civilian population as opposed to the survived civilian population
-    # Migration rates are applied to the survived civilian population to get true in/out migrants
-    # Therefore this, along with the capped rates, will lead to a discrepancy
-    # between the controlled rates and the actual in/out migrants
-    df = (
-        pop_df[["race", "sex", "age", "pop", "pop_mil"]]
-        .merge(rates, how="left", on=["race", "sex", "age"])
-        .fillna(0)
-        .assign(
-            pop_civ=lambda x: x["pop"] - x["pop_mil"],
-            ins=lambda x: x["rate_in"] * x["pop_civ"],
-            outs=lambda x: x["rate_out"] * x["pop_civ"],
+        # Calculate the total in/out migrants from the rates and population
+        # Note this uses the civilian population as opposed to the survived civilian population
+        # Migration rates are applied to the survived civilian population to get true in/out migrants
+        # Therefore this, along with the capped rates, will lead to a discrepancy
+        # between the controlled rates and the actual in/out migrants
+        df = (
+            population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison"]]
+            .merge(rates, how="left", on=["age", "sex", "ethnicity"])
+            .fillna(0)
+            .assign(
+                pop_civ=lambda x: x["pop"] - x["gq_mil"] - x["gq_prison"],
+                ins=lambda x: x["rate_in"] * x["pop_civ"],
+                outs=lambda x: x["rate_out"] * x["pop_civ"],
+            )
         )
-    )
 
-    # Scale the rates such that the ins/outs match the control totals
-    df["rate_in"] = df["rate_in"] * (controls["ins"].sum() / df["ins"].sum())
-    df["rate_out"] = df["rate_out"] * (controls["outs"].sum() / df["outs"].sum())
+        # Scale the rates such that the ins/outs match the control totals
+        df["rate_in"] = df["rate_in"] * (controls["ins"].sum() / df["ins"].sum())
+        df["rate_out"] = df["rate_out"] * (controls["outs"].sum() / df["outs"].sum())
 
-    # Cap crude migration rates at the specified cap_rates value
-    df["rate_in"] = np.where(df["rate_in"] > cap_rates, cap_rates, df["rate_in"])
-    df["rate_out"] = np.where(df["rate_out"] > cap_rates, cap_rates, df["rate_out"])
+        # Cap crude migration rates at the specified cap_rates value
+        df["rate_in"] = np.where(df["rate_in"] > cap_rates, cap_rates, df["rate_in"])
+        df["rate_out"] = np.where(df["rate_out"] > cap_rates, cap_rates, df["rate_out"])
 
-    return df[["race", "sex", "age", "rate_in", "rate_out"]]
+        return df[["age", "sex", "ethnicity", "rate_in", "rate_out"]]
+    else:
+        raise ValueError("Migration controls are not defined in the configuration.")

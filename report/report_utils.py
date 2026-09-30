@@ -11,7 +11,7 @@ from typing import List
 # Add the parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from python.utils import SQL_ENGINE
+from python.utils import CCM_ENGINE as SQL_ENGINE
 
 # Define mapping of 5-year age groups
 MAP_5Y_AGE_GROUPS = {
