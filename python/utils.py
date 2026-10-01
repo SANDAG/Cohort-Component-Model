@@ -152,11 +152,15 @@ AGE_MAPPING = {
     "70 to 74": {"min": 70, "max": 74},
     "75 to 79": {"min": 75, "max": 79},
     "80 to 84": {"min": 80, "max": 84},
-    "85 and Older": {"min": 85, "max": 100},
+    "85 and Older": {"min": 85, "max": 99},
 }
 
 # Hardcoded percentage of newborns that are Male sex
 MALE_PCT = 0.512
+
+# Harcoded maximum allowed in/out migration rate
+# Within age, sex, and race/ethnicity categories
+MAX_MIGRATION_RATE = 0.2
 
 
 #####################

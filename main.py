@@ -41,7 +41,7 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
                 year=increment, population=population
             ),
             # Crude Migration Rates
-            "migration": migration_rates.get_migration_rates(
+            "migration": migration_rates.run_migration_rates(
                 year=increment, population=population
             ),
             # Crude Group Quarters and Household Formation Rates
@@ -66,7 +66,7 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
         if utils.FERTILITY_RATES is not None:
             rates["births"] = birth_rates.get_birth_rates(year=increment)
         if utils.MIGRATION_CONTROLS is not None:
-            rates["migration"] = migration_rates.get_migration_rates(
+            rates["migration"] = migration_rates.run_migration_rates(
                 year=increment, population=population
             )
         if utils.MORTALITY_RATES is not None:
