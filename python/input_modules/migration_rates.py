@@ -202,9 +202,9 @@ def _control_migration_rates(
     Note, this calculation uses the migration-eligible population rather than
     the survived migration-eligible population, which is where the migration
     rates are ultimately applied. This, combined with the capping of maximum
-    rates post-scaling, creates a discrepancy between the controlled rates
-    when they are ultimately applied and the asserted in/out migration control
-    totals.
+    rates post-scaling, creates a slight discrepancy between the controlled
+    rates when they are ultimately applied and the asserted in/out migration
+    control totals.
 
     Args:
         year: Increment year
