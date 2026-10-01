@@ -59,7 +59,7 @@ SET NOCOUNT ON;
 DECLARE @year INTEGER = :year;
 IF @year IN (2010, 2011) SET @year = 2012;  -- Pre-2012 PUMS files cannot be used (see header)
 DECLARE @pums_5yr NVARCHAR(9) = CONCAT(CONVERT(NVARCHAR, @year-4), '_', CONVERT(NVARCHAR, @year))
-DECLARE @msg nvarchar(45) = 'PUMS 5-Year does not exist';
+DECLARE @msg nvarchar(45) = 'ACS 5-Year PUMS does not exist';
 -- Maximum 5-Year PUMS data that has been reviewed and incorporated
 -- Field definitions may change so new releases must be reviewed
 DECLARE @max_year integer = 2024
@@ -228,7 +228,7 @@ BEGIN
             END AS [ethnicity],
             -- Identify in-migrants into San Diego County
             CASE
-                -- Census 2020 geographies using [MIGSP] applies to ACS PUMS 5-years from 2018-2022 (partially) and ownwards (fully)
+                -- Census 2020 geographies using [MIGSP] applies to ACS PUMS 5-years from 2018-2022 (partially) and onwards (fully)
                 WHEN ([MIGSP] NOT IN ('006', '6') OR ([MIGSP] IN ('006', '6') AND [MIGPUMA20] != '07300'))  -- Migrated from outside California, or from within California but from outside San Diego County
                     AND [STATE] = '06' AND [PUMA20] IN (SELECT [PUMA20] FROM [#PUMA20])  -- Currently reside in San Diego County, defined by state being California and PUMA of residence being in a list of San Diego County PUMAs
                 THEN [PWGTP]
@@ -253,7 +253,7 @@ BEGIN
 
             -- Identify out-migrants from San Diego County
             CASE
-                -- Census 2020 geographies using [MIGSP] applies to ACS PUMS 5-years from 2018-2022 (partially) and ownwards (fully)
+                -- Census 2020 geographies using [MIGSP] applies to ACS PUMS 5-years from 2018-2022 (partially) and onwards (fully)
                 WHEN [MIGSP] IN ('006', '6') AND [MIGPUMA20] = '07300'  -- Migrated from San Diego County, defined by migration state being California and migration PUMA being the code for San Diego County
                     AND ([STATE] != '06' OR ([STATE] = '06' AND [PUMA20] NOT IN (SELECT [PUMA20] FROM [#PUMA20])))  -- Currently reside not in San Diego County, defined by state being not California and PUMA of residence being not in a list of San Diego County PUMAs
                 THEN [PWGTP]

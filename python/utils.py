@@ -158,7 +158,7 @@ AGE_MAPPING = {
 # Hardcoded percentage of newborns that are Male sex
 MALE_PCT = 0.512
 
-# Harcoded maximum allowed in/out migration rate
+# Hardcoded maximum allowed in/out migration rate
 # Within age, sex, and race/ethnicity categories
 MAX_MIGRATION_RATE = 0.2
 

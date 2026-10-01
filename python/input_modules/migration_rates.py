@@ -27,10 +27,10 @@ def run_migration_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
     Migration rates are calculated from the ACS 5-year PUMS, excluding the
     Military and Institutional Correctional Facilities group quarters
     populations as it is assumed those populations will remain fixed through
-    the forecast. Rates are calculation within age groups and then applied
+    the forecast. Rates are calculated within age groups and then applied
     uniformly to all single years of age within those age groups.
 
-    Functionaly is aplit apart for code encapsulation:
+    Functionality is split apart for code encapsulation:
         _get_migration_inputs - Get migration ins/outs and migration-eligible
             San Diego County resident population by age group, sex, and
             race/ethnicity from the ACS 5-year PUMS
@@ -73,7 +73,7 @@ def run_migration_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
 
     else:
         # No migration controls provided for post-launch year
-        pass
+        raise ValueError("No migration controls provided for post-launch year")
 
 
 # Decorator to cache the results of the function to improve performance

@@ -13,7 +13,7 @@ SET NOCOUNT ON;
 DECLARE @year INTEGER = :year;
 IF @year IN (2010, 2011) SET @year = 2012;  -- Pre-2012 PUMS files cannot be used (see migration in/out counts SQL)
 DECLARE @pums_5yr NVARCHAR(9) = CONCAT(CONVERT(NVARCHAR, @year-4), '_', CONVERT(NVARCHAR, @year))
-DECLARE @msg nvarchar(45) = 'PUMS 5-Year does not exist';
+DECLARE @msg nvarchar(45) = 'ACS 5-Year PUMS does not exist';
 -- Maximum 5-Year PUMS data that has been reviewed and incorporated
 -- Field definitions may change so new releases must be reviewed
 DECLARE @max_year integer = 2024
@@ -135,7 +135,7 @@ BEGIN
                     NOT ([MIL] = 1 AND ' + @gq_noninst + ')
                     -- Remove "Group Quarters - Institutional Correctional Facilities"
                     AND NOT ([DIS] = ''2'' AND [AGEP] >= 10 AND ' + @gq_inst + ')
-            ) AS [migration_eligble]
+            ) AS [migration_eligible]
             GROUP BY [age_group], [sex], [ethnicity]
         )
         SELECT
