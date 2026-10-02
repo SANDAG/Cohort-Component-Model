@@ -25,7 +25,7 @@ DECLARE @undesa_id INTEGER = 2;  -- updated based on latest version
 IF NOT EXISTS (
     SELECT TOP (1) *
     FROM [socioec_data].[vital_statistics].[undesa_survivors] 
-    WHERE [year] = @year
+    WHERE [undesa_id] = @undesa_id AND [year] = @year
 )
 SELECT @msg AS [msg]
 ELSE
