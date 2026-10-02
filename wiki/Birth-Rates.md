@@ -3,8 +3,8 @@ This module generates fertility rates by single year of age and race/ethnicity f
 # Inputs
 | Input | Module Source | Usage |
 | ----- | ------------- | ----- |
-| 2007-2024 CDC WONDER Natality | [CDC WONDER natality-current: Natality, 2007-2024](https://wonder.cdc.gov/natality-current.html) | Provides fertility rates for years 2007 to 2020 |
-| 2016-2024 CDC WONDER Natality | [CDC WONDER natality-expanded-current: Natality, 2016-2024 expanded](https://wonder.cdc.gov/natality-expanded-current.html) | Provides fertility rates for years 2021 to 2024 |
+| 2007-2024 CDC WONDER Natality | [CDC WONDER natality-current: Natality, 2007-2024](https://wonder.cdc.gov/natality-current.html) | Provides fertility rates for years 2007 to 2019 |
+| 2016-2024 CDC WONDER Natality | [CDC WONDER natality-expanded-current: Natality, 2016-2024 expanded](https://wonder.cdc.gov/natality-expanded-current.html) | Provides fertility rates for years 2020 to 2024 |
 
 # Outputs
 ## Fertility Rates
