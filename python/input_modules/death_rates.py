@@ -13,29 +13,65 @@ import python.utils as utils
 logger = logging.getLogger(__name__)
 
 
-def load_cdc_wonder(population: pd.DataFrame, year: int) -> pd.DataFrame:
-    """Load CDC WONDER mortality file from SQL and transform into a standardized DataFrame.
+def run_mortality_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
+    """Orchestrator function to calculate mortality rates.
 
-    This function loads mortality data from SQL and replaces San Diego County population
-    with CCM population for the 2018+ product to fill in missing population values for
-    the county, and then inflates deaths using the inflation factor calculated from the
-    number of "Not Stated" deaths.
+    This module generates mortality rates by single year of age, sex, and race/ethnicity
+    using data from the Centers for Disease Control and Prevention (CDC) WONDER
+    mortality database.
+
+    Functionality is split apart for code encapsulation:
+        _get_mortality_inputs - Get deaths by age, sex, and ethnicity from CDC WONDER
+            mortality database
+        _validate_mortality_inputs - Validate inputs from the above function
+        _create_mortality_outputs - Replaces San Diego County population with CCM
+            population for the 2018+ product to fill in missing population values for
+            the county, and then inflates deaths using the inflation factor calculated
+            from the number of "Not Stated" deaths.
+        _validate_mortality_outputs - Validate the output from the above function
+    """
+    if year == utils.LAUNCH_YEAR:
+        logger.info("Calculating mortality rates for launch year")
+
+        mortality_rates_inputs = _get_mortality_inputs(year, population)
+        _validate_mortality_inputs(
+            mortality_rates_inputs["mortality_inputs"],
+            mortality_rates_inputs["undesa_rates"],
+        )
+
+        mortality_outputs = _create_mortality_outputs(mortality_rates_inputs)
+        _validate_mortality_outputs(mortality_outputs)
+
+        return mortality_outputs
+    else:
+        if utils.MORTALITY_RATES is not None:
+            # Use the provided rates directly
+            return utils.MORTALITY_RATES.loc[utils.MORTALITY_RATES["year"] == year][
+                ["age", "sex", "ethnicity", "rate_death"]
+            ]
+        else:
+            raise ValueError("Mortality rates can only be run for the launch year.")
+
+
+def _get_mortality_inputs(
+    year: int, population: pd.DataFrame
+) -> dict[str, pd.DataFrame]:
+    """Retrieve mortality inputs from the CDC WONDER database for a given year.
 
     Args:
-        population (pd.DataFrame): Population DataFrame to merge with CDC WONDER data
-        year (int): The year to load data for
+        year (int): Increment year
+        population (pd.DataFrame): Population data for the given year
 
     Returns:
-        pd.DataFrame: Processed DataFrame with no missing or 'Not Stated' values.
+        dict[str, pd.DataFrame]: Mortality inputs and UNDESA rates for the given year
     """
-
-    with utils.CCM_ENGINE.connect() as con:
+    with utils.CCM_ENGINE.connect() as connection:
         # Load CDC WONDER data from database for the specific year only
         with open(utils.SQL_FOLDER / "mortality" / "cdc_wonder_mortality.sql") as file:
             cdc_wonder = utils.read_sql_query_fallback(
                 max_lookback=1,
                 sql=sql.text(file.read()),
-                con=con,
+                con=connection,
                 params={"year": year},
             )
             # Convert age to integer type
@@ -49,10 +85,20 @@ def load_cdc_wonder(population: pd.DataFrame, year: int) -> pd.DataFrame:
             inflation_factor = utils.read_sql_query_fallback(
                 max_lookback=1,
                 sql=sql.text(file.read()),
-                con=con,
+                con=connection,
                 params={"year": year},
             )
             logger.info("CDC WONDER mortality inflation factors loaded from database:")
+
+        # Load UNDESA data for ages 85-99
+        with open(utils.SQL_FOLDER / "mortality" / "undesa_survivors.sql") as file:
+            undesa_rates = utils.read_sql_query_fallback(
+                max_lookback=2,
+                sql=sql.text(file.read()),
+                con=connection,
+                params={"year": year},
+            )
+            logger.info("UN DESA loaded from database:")
 
     # For years >= 2022 (2018+ product), merge SD County deaths with CCM population
     if year >= 2022 and population is not None:
@@ -112,19 +158,154 @@ def load_cdc_wonder(population: pd.DataFrame, year: int) -> pd.DataFrame:
         cdc_wonder = pd.concat([sya_records, tya_records], ignore_index=True)
 
     # Inflate deaths and calculate rates for all ages
-    return (
+    mortality_inputs = (
         pd.merge(cdc_wonder, inflation_factor, on=["location", "sex"])
         .assign(
             deaths=lambda x: x["deaths"] * x["inflation_factor"],
             rates=lambda x: np.where(
-                (x["deaths"].isnull()) | (x["pop"] <= 0), np.nan, x["deaths"] / x["pop"]
+                (x["deaths"].isnull()) | (x["pop"] <= 0),
+                np.nan,
+                x["deaths"] / x["pop"],
             ),
         )
         .drop(columns=["inflation_factor"])
     )
 
+    return {
+        "mortality_inputs": mortality_inputs,
+        "undesa_rates": undesa_rates,
+    }
 
-def deaths_recode(deaths: int, pop: int) -> float:
+
+def _validate_mortality_inputs(
+    mortality_inputs: pd.DataFrame, undesa_rates: pd.DataFrame
+) -> None:
+    """Validate the mortality inputs.
+
+    Args:
+        mortality_inputs (pd.DataFrame): Mortality inputs by single year of age, sex,
+            and race/ethnicity
+        undesa_rates (pd.DataFrame): UN DESA mortality rates by single year of age and sex
+    """
+    # Validate for each location
+    for location in mortality_inputs["location"].unique():
+        tests.validate_data(
+            table_name="Input Mortality Rates",
+            data=mortality_inputs[["age", "sex", "ethnicity"]]
+            .loc[mortality_inputs["location"] == location]
+            .rename(columns={"age": "age_cdc_deaths"}),
+            row_count={"key_columns": {"age_cdc_deaths", "sex", "ethnicity"}},
+            negative={"negative_ok": set()},
+            null={"null_ok": set()},
+        )
+    tests.validate_data(
+        table_name="Input UN DESA Rates",
+        data=undesa_rates[["age", "sex"]].rename(columns={"age": "age_undesa_deaths"}),
+        row_count={"key_columns": {"age_undesa_deaths", "sex"}},
+        negative={"negative_ok": set()},
+        null={"null_ok": set()},
+    )
+
+
+def _create_mortality_outputs(
+    mortality_inputs: dict[str, pd.DataFrame],
+    smooth_s: int = 5,
+    smooth_k: int = 2,
+) -> pd.DataFrame:
+    """Mortality rates are calculated for ages < 85 from CDC WONDER by simply
+    dividing raw deaths by population for each single year of age, sex, and
+    race/ethnicity category after setting "Suppressed" raw deaths (values < 10)
+    to values of 4.5 and 0 raw deaths to values of 1. This strategy avoids
+    missing value records and implausible 0% mortality rates.
+
+    For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
+    rates by age and sex, but not by race/ethnicity. To incorporate race-specific
+    variation,scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
+    mortality rates by sex and race/ethnicity. The scaling factor for each
+    sex and race/ethnicity combination equals the CDC 85+ mortality rate divided
+    by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to
+    each individual UN DESA age (85-99) to produce race/ethnicity-specific
+    mortality rates that match CDC's overall 85+ mortality pattern by
+    race/ethnicity.
+
+    The CDC WONDER mortality dataset for 2021 is unavailable, so 2020 data is
+    used as a substitute for year 2021. Smoothing is applied to the combined
+    CDC and scaled UN DESA dataset.
+
+    Args:
+        mortality_inputs (dict[str, pd.DataFrame]): Mortality inputs and inflation
+            factors by single year of age, sex, and race/ethnicity
+        smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
+        smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
+
+    Returns:
+        pd.DataFrame: Mortality outputs by single year of age, sex, and race/ethnicity
+    """
+    mortality_data = mortality_inputs["mortality_inputs"]
+    undesa_data = mortality_inputs["undesa_rates"]
+
+    # Load mortality data for this specific year
+    cdc_data = _substitute_geographies(mortality_data)[
+        ["age", "sex", "ethnicity", "rates"]
+    ]
+
+    # Expand UNDESA rates to include all race/ethnicity categories
+    # UN DESA life table does not have race/ethnicity, apply same rates to all
+    race_categories = cdc_data["ethnicity"].unique()
+    undesa_expanded = []
+    for race in race_categories:
+        undesa_race = undesa_data.copy()
+        undesa_race["ethnicity"] = race
+        undesa_expanded.append(undesa_race)
+    undesa_rates = pd.concat(undesa_expanded, ignore_index=True)
+
+    # Get CDC mortality rate for age 85 (from TYA 85+ group)
+    cdc_rate_85plus = cdc_data[cdc_data["age"] == 85][
+        ["sex", "ethnicity", "rates"]
+    ].rename(columns={"rates": "cdc_rate"})
+
+    # Get UN DESA mortality rate for age 85+ (aggregate of ages 85-99)
+    undesa_rate_85plus = undesa_rates[undesa_rates["age"] == "85+"][
+        ["sex", "ethnicity", "rates"]
+    ].rename(columns={"rates": "undesa_rate"})
+
+    # Calculate scaling factor
+    scaling_df = cdc_rate_85plus.merge(
+        undesa_rate_85plus,
+        on=["sex", "ethnicity"],
+        how="left",
+    ).assign(scaling_factor=lambda x: x["cdc_rate"] / x["undesa_rate"])
+
+    # Merge scaling factor and apply to UNDESA mortality rates
+    undesa_rates = (
+        undesa_rates[undesa_rates["age"] != "85+"]
+        .assign(age=lambda x: x["age"].astype(int))
+        .merge(
+            scaling_df[["sex", "ethnicity", "scaling_factor"]],
+            on=["sex", "ethnicity"],
+            how="left",
+        )
+        .assign(rates=lambda x: x["rates"] * x["scaling_factor"])
+        .drop(columns=["scaling_factor"])
+    )[["age", "sex", "ethnicity", "rates"]]
+
+    cdc_rates = cdc_data[cdc_data["age"] < 85]
+
+    # Combine CDC rates (ages 0-84) with scaled UNDESA rates (ages 85-99)
+    combined_rates = pd.concat([cdc_rates, undesa_rates], ignore_index=True)
+
+    # Apply smoothing to the combined dataset (ages 0-99)
+    if smooth_s is not None and smooth_k is not None:
+        # Apply smoothing to full age range
+        combined_rates = _smooth_rates(input_df=combined_rates, s=smooth_s, k=smooth_k)
+
+    # Rename to final column name
+    rates = combined_rates.rename(columns={"rates": "rate_death"})
+
+    return rates[["age", "sex", "ethnicity", "rate_death"]]
+
+
+def _deaths_recode(deaths: int, pop: int) -> float:
     """Recode CDC WONDER zero death and suppressed values.
 
     This function is used as the final methodology for substituting missing rates where
@@ -162,30 +343,21 @@ def deaths_recode(deaths: int, pop: int) -> float:
         return float(deaths)
 
 
-def substitute_geographies(population: pd.DataFrame, year: int) -> pd.DataFrame:
+def _substitute_geographies(mortality_inputs: pd.DataFrame) -> pd.DataFrame:
     """Substitute missing or suppressed geographies with higher-level data.
 
     Supplements county-level data with state- or national-level equivalents
     when values are unavailable or suppressed.
 
     Args:
-        population (pd.DataFrame): Population dataframe from CCM for 2018+
-            product population estimates
-        year (int): The year to load data for
+        mortality_inputs (pd.DataFrame): Mortality input DataFrame
 
     Returns:
         pd.DataFrame: A single DataFrame for ages 0-85 with mortality rates.
     """
-
-    # Use unified load_cdc_wonder function with year parameter
-    df = load_cdc_wonder(population=population, year=year)
-
-    if df.empty:
-        raise ValueError(f"No CDC WONDER data found for year {year}")
-
     # Pivot by location to get county, state, national as separate columns
     pivoted = (
-        df.pivot_table(
+        mortality_inputs.pivot_table(
             index=["age", "sex", "ethnicity"],
             columns="location",
             values=["rates", "deaths", "pop"],
@@ -207,7 +379,7 @@ def substitute_geographies(population: pd.DataFrame, year: int) -> pd.DataFrame:
     # Impute missing or zero rates for national
     national_impute = np.where(
         (nat_pop.notna()) & (nat_pop > 0),
-        np.vectorize(deaths_recode)(nat_deaths, nat_pop) / nat_pop,
+        np.vectorize(_deaths_recode)(nat_deaths, nat_pop) / nat_pop,
         np.nan,
     )
 
@@ -248,7 +420,7 @@ def substitute_geographies(population: pd.DataFrame, year: int) -> pd.DataFrame:
     )
 
 
-def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
+def _smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     """Smooth mortality rates using spline interpolation.
 
     This function replaces mortality rates with smoothed values by applying
@@ -276,7 +448,7 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
         ValueError: If rates contain non-positive values (cannot take log).
 
     Example:
-        >>> df_smooth = smooth_rates(df, s=5, k=2)
+        >>> df_smooth = _smooth_rates(df, s=5, k=2)
     """
     # Validate required columns
     required_cols = [
@@ -320,114 +492,17 @@ def smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
     return df
 
 
-def calculate_death_rates(
-    year: int,
-    population: pd.DataFrame,
-    smooth_s: int = 5,
-    smooth_k: int = 2,
-) -> pd.DataFrame:
-    """Calculate mortality rates by single year of age, sex, and race/ethnicity.
-
-    Mortality rates are calculated for ages < 85 from CDC WONDER by simply
-    dividing raw deaths by population for each single year of age, sex, and
-    race/ethnicity category after setting "Suppressed" raw deaths (values < 10)
-    to values of 4.5 and 0 raw deaths to values of 1. This strategy avoids
-    missing value records and implausible 0% mortality rates.
-
-    For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
-    rates by age and sex, but not by race/ethnicity. To incorporate race-specific
-    variation, scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
-    mortality rates by sex and race/ethnicity. The scaling factor for each
-    sex and race/ethnicity combination equals the CDC 85+ mortality rate divided
-    by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to
-    each individual UN DESA age (85-99) to produce race/ethnicity-specific
-    mortality rates that match CDC's overall 85+ mortality pattern by
-    race/ethnicity.
-
-    The CDC WONDER mortality dataset for 2021 is unavailable, so 2020 data is
-    used as a substitute for year 2021. Smoothing is applied to the combined
-    CDC and scaled UN DESA dataset.
+def _validate_mortality_outputs(mortality_outputs: pd.DataFrame) -> None:
+    """Validate the mortality outputs.
 
     Args:
-        year (int): Increment year.
-        population (pd.DataFrame): Population data for the year.
-        smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
-        smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
-
-    Returns:
-        pd.DataFrame: Mortality rates broken down by single year of age, sex, and
-            race.
+        mortality_outputs (pd.DataFrame): The final mortality rates DataFrame.
     """
-    # Load mortality data for this specific year
-    cdc_data = substitute_geographies(population=population, year=year)[
-        ["age", "sex", "ethnicity", "rates"]
-    ]
-
-    # Load UNDESA data for ages 85-99
-    with utils.CCM_ENGINE.connect() as con:
-        with open(utils.SQL_FOLDER / "mortality" / "undesa_survivors.sql") as file:
-            undesa_rates = pd.read_sql_query(
-                sql=sql.text(file.read()), con=con, params={"year": year}
-            )
-            logger.info("UN DESA loaded from database:")
-
-    # Expand UNDESA rates to include all race/ethnicity categories
-    # UN DESA life table does not have race/ethnicity, apply same rates to all
-    race_categories = cdc_data["ethnicity"].unique()
-    undesa_expanded = []
-    for race in race_categories:
-        undesa_race = undesa_rates.copy()
-        undesa_race["ethnicity"] = race
-        undesa_expanded.append(undesa_race)
-    undesa_rates = pd.concat(undesa_expanded, ignore_index=True)
-
-    # Get CDC mortality rate for age 85 (from TYA 85+ group)
-    cdc_rate_85plus = cdc_data[cdc_data["age"] == 85][
-        ["sex", "ethnicity", "rates"]
-    ].rename(columns={"rates": "cdc_rate"})
-
-    # Get UN DESA mortality rate for age 85+ (aggregate of ages 85-99)
-    undesa_rate_85plus = undesa_rates[undesa_rates["age"] == "85+"][
-        ["sex", "ethnicity", "rates"]
-    ].rename(columns={"rates": "undesa_rate"})
-
-    # Calculate scaling factor
-    scaling_df = cdc_rate_85plus.merge(
-        undesa_rate_85plus,
-        on=["sex", "ethnicity"],
-        how="left",
-    ).assign(scaling_factor=lambda x: x["cdc_rate"] / x["undesa_rate"])
-
-    # Merge scaling factor and apply to UNDESA mortality rates
-    undesa_rates = (
-        undesa_rates[undesa_rates["age"] != "85+"]
-        .assign(age=lambda x: x["age"].astype(int))
-        .merge(
-            scaling_df[["sex", "ethnicity", "scaling_factor"]],
-            on=["sex", "ethnicity"],
-            how="left",
-        )
-        .assign(rates=lambda x: x["rates"] * x["scaling_factor"])
-        .drop(columns=["scaling_factor"])
-    )[["age", "sex", "ethnicity", "rates"]]
-
-    cdc_rates = cdc_data[cdc_data["age"] < 85]
-
-    # Combine CDC rates (ages 0-84) with scaled UNDESA rates (ages 85-99)
-    combined_rates = pd.concat([cdc_rates, undesa_rates], ignore_index=True)
-
-    # Apply smoothing to the combined dataset (ages 0-99)
-    if smooth_s is not None and smooth_k is not None:
-        # Apply smoothing to full age range
-        combined_rates = smooth_rates(input_df=combined_rates, s=smooth_s, k=smooth_k)
-
-    # Rename to final column name
-    rates = combined_rates.rename(columns={"rates": "rate_death"})
 
     # Validate output has correct structure
     tests.validate_data(
-        table_name=f"Mortality Rates (year {year})",
-        data=rates[["age", "sex", "ethnicity", "rate_death"]],
+        table_name="Output Mortality Rates",
+        data=mortality_outputs[["age", "sex", "ethnicity", "rate_death"]],
         row_count={
             "key_columns": {
                 "age",
@@ -438,39 +513,3 @@ def calculate_death_rates(
         negative={"negative_ok": set()},
         null={"null_ok": set()},
     )
-
-    return rates[["age", "sex", "ethnicity", "rate_death"]]
-
-
-def get_death_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
-    """Create mortality rates by single year of age, sex, and race/ethnicity.
-
-    For the launch year, calculate the crude death rate within single year of
-    age, sex, and race/ethnicity. Post launch year, if mortality rates are
-    provided, use them. Otherwise, the function should not be called.
-
-    Args:
-        year (int): Increment year
-        population (pd.DataFrame): Population data by single year of age, sex,
-            and race/ethnicity
-
-    Returns:
-        pd.DataFrame: Mortality rates by single year of age, sex, and
-            race/ethnicity
-    """
-    # Mortality rates calculated for the launch year
-    if year == utils.LAUNCH_YEAR:
-        return calculate_death_rates(year=year, population=population)
-
-    # Mortality rates are not calculated past the launch year
-    # Post-launch rates are used directly if provided
-    else:
-        if utils.MORTALITY_RATES is not None:
-            # Use the provided rates directly
-            return utils.MORTALITY_RATES.loc[utils.MORTALITY_RATES["year"] == year][
-                ["age", "sex", "ethnicity", "rate_death"]
-            ]
-        else:
-            raise ValueError(
-                "Function called post launch year but mortality rates not provided."
-            )
