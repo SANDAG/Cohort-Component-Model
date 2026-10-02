@@ -820,7 +820,9 @@ def read_sql_query_fallback(max_lookback: int = 1, **kwargs: dict) -> pd.DataFra
 
     # Messages that trigger year lookback
     lookback_messages = [
+        "Data for UN DESA year does not exist",
         "Data for CDC WONDER mortality year does not exist",
+        "Data for CDC WONDER fertility year does not exist",
         "ACS 5-Year PUMS does not exist",
     ]
 
