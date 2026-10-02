@@ -23,3 +23,5 @@ When household characteristics rates are applied to the [Launch Year Population]
 # Outputs
 ## Household Characteristics Rates
 Household characteristics rates are calculated from the Census Bureau ACS 5-year PUMS by age group, sex, and ethnicity. The rates are then uniformly assigned to the launch year households across single year of age wthin each age group. They are then adjusted such that when applied they result in integer values within single year of age, sex, and ethnicity categories and that the regional totals equal the totals from SANDAG's Estimates Program and remain consistent with the launch year households within each category.
+
+*See the **python/input_modules/hh_characteristics_rates.py** file and **sql/hh_characteristics_rates** folder for underlying code used by the module.*
