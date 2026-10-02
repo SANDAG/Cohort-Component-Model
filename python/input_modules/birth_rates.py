@@ -15,20 +15,23 @@ logger = logging.getLogger(__name__)
 def run_fertility_rates(year: int) -> pd.DataFrame:
     """Orchestrator function to calculate fertility rates.
 
-    This module generates fertility rates by single year of age, sex, and race/ethnicity
+    This module generates fertility rates by single year of age and race/ethnicity
     using data from the Centers for Disease Control and Prevention (CDC) natality
     database.
 
+    Rates are calculated within age groups and then applied uniformly to all single years of
+    age within those age groups.  Rates are then inflated to account for the % of births
+    attributed to `Not Stated`, `Unknown`, `Not Reported`, `Not Available` or belonging to
+    age groups `Under 15 years`, `45-49 years`, and `50 years and over`. Any missing
+    county-level fertility rates are substituted following a county, state, then national
+    hierarchy.
+
     Functionality is split apart for code encapsulation:
-        _get_fertility_inputs - Get fertility rates by age, sex, and ethnicity from CDC natality
-            database
+        _get_fertility_inputs - Get fertility rates by age and race/ethnicity from CDC
+            natality database
         _validate_fertility_inputs - Validate inputs from the above function
-        _create_fertility_outputs - Calculate fertility rates by inflating births to account for the
-            % of births attributed to:
-                1) Ages 15 and under
-                2) Ages 45 and over
-                3) "Unknown", "Not Stated", "Not Available", or "Not Reported"
-                  race/ethnicity groups
+        _create_fertility_outputs - Calculate fertility rates and distribute to single
+            years of age within each age group, substituting missing data when necessary
         _validate_fertility_outputs - Validate the output from the above function
     """
     if year == utils.LAUNCH_YEAR:
@@ -48,19 +51,11 @@ def run_fertility_rates(year: int) -> pd.DataFrame:
                 ["age", "sex", "ethnicity", "rate_birth"]
             ]
         else:
-            raise ValueError("Fertility rates can only be run for the launch year.")
+            raise ValueError("No fertility rates provided post-launch year.")
 
 
 def _get_fertility_inputs(year: int) -> dict[str, pd.DataFrame]:
-    """Retrieve fertility inputs from the CDC natality database for a given year.
-
-    Args:
-        year (int): Increment year
-
-    Returns:
-        dict[str, pd.DataFrame]: Dictionary containing fertility inputs and inflation
-            factors by single year of age, sex, and race/ethnicity
-    """
+    """Retrieve fertility inputs from the CDC natality database for a given year."""
     with utils.CCM_ENGINE.connect() as connection:
         with open(utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility.sql") as file:
             fertility_inputs = utils.read_sql_query_fallback(
@@ -89,17 +84,12 @@ def _get_fertility_inputs(year: int) -> dict[str, pd.DataFrame]:
 
 
 def _validate_fertility_inputs(fertility_inputs: pd.DataFrame) -> None:
-    """Validate the fertility inputs.
-
-    Args:
-        fertility_inputs (pd.DataFrame): Fertility inputs by single year of age, sex,
-            and race/ethnicity
-    """
+    """Validate the fertility inputs."""
     # Loop through each location and validate the fertility inputs for that location
     for location in fertility_inputs["location"].unique():
         # Validate input has correct structure
         tests.validate_data(
-            table_name="Input Fertility Rates",
+            table_name=f"Input Fertility Rates for {location}",
             # Rename age column for test (birth data only 15-44)
             data=fertility_inputs[["age", "ethnicity", "rate"]]
             .rename(columns={"age": "age_births"})
@@ -113,15 +103,7 @@ def _validate_fertility_inputs(fertility_inputs: pd.DataFrame) -> None:
 def _create_fertility_outputs(
     fertility_inputs: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
-    """Create fertility outputs for a given year.
-
-    Args:
-        fertility_inputs (dict[str, pd.DataFrame]): Fertility inputs and inflation
-            factors by single year of age, sex, and race/ethnicity
-
-    Returns:
-        pd.DataFrame: Fertility outputs by single year of age, sex, and race/ethnicity
-    """
+    """Create fertility outputs for a given year."""
     fertility_data = fertility_inputs["fertility_inputs"]
     inflation_factor = fertility_inputs["fertility_inflation"]
 
@@ -187,11 +169,7 @@ def _create_fertility_outputs(
 
 
 def _validate_fertility_outputs(fertility_outputs: pd.DataFrame) -> None:
-    """Validate the fertility outputs.
-
-    Args:
-        fertility_outputs (pd.DataFrame): Fertility outputs dataframe
-    """
+    """Validate the fertility outputs."""
     # Validate output has correct structure
     tests.validate_data(
         table_name="Output Fertility Rates",

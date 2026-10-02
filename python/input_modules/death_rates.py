@@ -20,14 +20,38 @@ def run_mortality_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
     using data from the Centers for Disease Control and Prevention (CDC) WONDER
     mortality database.
 
+    Mortality rates are calculated for ages < 85 from CDC WONDER by simply
+    dividing raw deaths by population for each single year of age, sex, and
+    race/ethnicity category after setting "Suppressed" raw deaths (values < 10)
+    to values of 4.5 and 0 raw deaths to values of 1. This strategy avoids
+    missing value records and implausible 0% mortality rates. Any missing
+    county-level fertility rates are substituted following a county, state, then national
+    hierarchy. Should there be no county-, state-, or national-level data available,
+    a separate recoding formula will be used (see _deaths_recode function for details).
+
+    For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
+    rates by age and sex, but not by race/ethnicity. To incorporate race-specific
+    variation,scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
+    mortality rates by sex and race/ethnicity. The scaling factor for each
+    sex and race/ethnicity combination equals the CDC 85+ mortality rate divided
+    by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to
+    each individual UN DESA age (85-99) to produce race/ethnicity-specific
+    mortality rates that match CDC's overall 85+ mortality pattern by
+    race/ethnicity.
+
+    The CDC WONDER mortality dataset for 2021 is unavailable, so 2020 data is
+    used as a substitute for year 2021. Smoothing is applied to the combined
+    CDC and scaled UN DESA dataset.
+
     Functionality is split apart for code encapsulation:
         _get_mortality_inputs - Get deaths by age, sex, and ethnicity from CDC WONDER
             mortality database
         _validate_mortality_inputs - Validate inputs from the above function
-        _create_mortality_outputs - Replaces San Diego County population with CCM
-            population for the 2018+ product to fill in missing population values for
-            the county, and then inflates deaths using the inflation factor calculated
-            from the number of "Not Stated" deaths.
+        _create_mortality_outputs - Calculate mortality rates by single year of age,
+            sex, and race/ethnicity; replace missing San Diego County population with
+            launch year population for years 2022 and onward (2018+ CDC Product);
+            inflate deaths using the inflation factor; scale UN DESA 85+ mortality rates
+            to match CDC 85+ mortality patterns by race/ethnicity
         _validate_mortality_outputs - Validate the output from the above function
     """
     if year == utils.LAUNCH_YEAR:
@@ -50,21 +74,13 @@ def run_mortality_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
                 ["age", "sex", "ethnicity", "rate_death"]
             ]
         else:
-            raise ValueError("Mortality rates can only be run for the launch year.")
+            raise ValueError("No mortality rates provided post-launch year.")
 
 
 def _get_mortality_inputs(
     year: int, population: pd.DataFrame
 ) -> dict[str, pd.DataFrame]:
-    """Retrieve mortality inputs from the CDC WONDER database for a given year.
-
-    Args:
-        year (int): Increment year
-        population (pd.DataFrame): Population data for the given year
-
-    Returns:
-        dict[str, pd.DataFrame]: Mortality inputs and UNDESA rates for the given year
-    """
+    """Retrieve mortality inputs from the CDC WONDER database for a given year."""
     with utils.CCM_ENGINE.connect() as connection:
         # Load CDC WONDER data from database for the specific year only
         with open(utils.SQL_FOLDER / "mortality" / "cdc_wonder_mortality.sql") as file:
@@ -180,17 +196,11 @@ def _get_mortality_inputs(
 def _validate_mortality_inputs(
     mortality_inputs: pd.DataFrame, undesa_rates: pd.DataFrame
 ) -> None:
-    """Validate the mortality inputs.
-
-    Args:
-        mortality_inputs (pd.DataFrame): Mortality inputs by single year of age, sex,
-            and race/ethnicity
-        undesa_rates (pd.DataFrame): UN DESA mortality rates by single year of age and sex
-    """
+    """Validate the mortality inputs."""
     # Validate for each location
     for location in mortality_inputs["location"].unique():
         tests.validate_data(
-            table_name="Input Mortality Rates",
+            table_name=f"Input Mortality Rates for {location}",
             data=mortality_inputs[["age", "sex", "ethnicity"]]
             .loc[mortality_inputs["location"] == location]
             .rename(columns={"age": "age_cdc_deaths"}),
@@ -212,25 +222,7 @@ def _create_mortality_outputs(
     smooth_s: int = 5,
     smooth_k: int = 2,
 ) -> pd.DataFrame:
-    """Mortality rates are calculated for ages < 85 from CDC WONDER by simply
-    dividing raw deaths by population for each single year of age, sex, and
-    race/ethnicity category after setting "Suppressed" raw deaths (values < 10)
-    to values of 4.5 and 0 raw deaths to values of 1. This strategy avoids
-    missing value records and implausible 0% mortality rates.
-
-    For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
-    rates by age and sex, but not by race/ethnicity. To incorporate race-specific
-    variation,scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
-    mortality rates by sex and race/ethnicity. The scaling factor for each
-    sex and race/ethnicity combination equals the CDC 85+ mortality rate divided
-    by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to
-    each individual UN DESA age (85-99) to produce race/ethnicity-specific
-    mortality rates that match CDC's overall 85+ mortality pattern by
-    race/ethnicity.
-
-    The CDC WONDER mortality dataset for 2021 is unavailable, so 2020 data is
-    used as a substitute for year 2021. Smoothing is applied to the combined
-    CDC and scaled UN DESA dataset.
+    """Calculate mortality outputs by single year of age, sex, and race/ethnicity.
 
     Args:
         mortality_inputs (dict[str, pd.DataFrame]): Mortality inputs and inflation
@@ -344,17 +336,7 @@ def _deaths_recode(deaths: int, pop: int) -> float:
 
 
 def _substitute_geographies(mortality_inputs: pd.DataFrame) -> pd.DataFrame:
-    """Substitute missing or suppressed geographies with higher-level data.
-
-    Supplements county-level data with state- or national-level equivalents
-    when values are unavailable or suppressed.
-
-    Args:
-        mortality_inputs (pd.DataFrame): Mortality input DataFrame
-
-    Returns:
-        pd.DataFrame: A single DataFrame for ages 0-85 with mortality rates.
-    """
+    """Substitute missing or suppressed geographies with higher-level data."""
     # Pivot by location to get county, state, national as separate columns
     pivoted = (
         mortality_inputs.pivot_table(
@@ -493,12 +475,7 @@ def _smooth_rates(input_df: pd.DataFrame, s: int, k: int) -> pd.DataFrame:
 
 
 def _validate_mortality_outputs(mortality_outputs: pd.DataFrame) -> None:
-    """Validate the mortality outputs.
-
-    Args:
-        mortality_outputs (pd.DataFrame): The final mortality rates DataFrame.
-    """
-
+    """Validate the mortality outputs."""
     # Validate output has correct structure
     tests.validate_data(
         table_name="Output Mortality Rates",
