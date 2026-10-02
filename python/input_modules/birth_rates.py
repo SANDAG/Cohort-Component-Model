@@ -96,7 +96,7 @@ def _validate_fertility_inputs(fertility_inputs: pd.DataFrame) -> None:
             and race/ethnicity
     """
     # Loop through each location and validate the fertility inputs for that location
-    for location in fertility_inputs["location"]:
+    for location in fertility_inputs["location"].unique():
         # Validate input has correct structure
         tests.validate_data(
             table_name="Input Fertility Rates",
