@@ -19,7 +19,7 @@ def run_fertility_rates(year: int) -> pd.DataFrame:
     using data from the Centers for Disease Control and Prevention (CDC) natality
     database.
 
-    Functionality is plit apart for code encapsulation:
+    Functionality is split apart for code encapsulation:
         _get_fertility_inputs - Get fertility rates by age, sex, and ethnicity from CDC natality
             database
         _validate_fertility_inputs - Validate inputs from the above function
