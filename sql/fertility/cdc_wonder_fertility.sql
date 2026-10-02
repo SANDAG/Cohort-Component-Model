@@ -16,6 +16,8 @@
 */
 
 DECLARE @year INTEGER = :year;
+-- Data is not available before 2011, so default any earlier requested year to 2011
+IF @year < 2011 SET @year = 2011;
 DECLARE @msg nvarchar(49) = 'Data for CDC WONDER fertility year does not exist';
 DECLARE @product NVARCHAR(9) = CASE
     WHEN @year >= 2020 THEN '2020+'
