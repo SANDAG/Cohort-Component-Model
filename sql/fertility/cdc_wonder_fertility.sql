@@ -6,8 +6,8 @@
     values for both "Non-Hispanic, Two or More Races" and
     "Non-Hispanic, Hawaiian or Pacific Islander".
 
-    Note: This query only handles years from 2012 onwards as that is the
-    first five-year average available (2007-2012) in the 2007-2019 product.
+    Note: This query only handles years from 2011 onwards as that is the
+    first five-year average available (2007-2011) in the 2007-2019 product.
 
     Note: The 2007-2019 product corresponds to the 2007-2024 product. We prefer
     calling it the 2007-2019 product as race/ethnicity definitions change
@@ -16,6 +16,8 @@
 */
 
 DECLARE @year INTEGER = :year;
+-- Data is not available before 2011, so default any earlier requested year to 2011
+IF @year < 2011 SET @year = 2011;
 DECLARE @msg nvarchar(49) = 'Data for CDC WONDER fertility year does not exist';
 DECLARE @product NVARCHAR(9) = CASE
     WHEN @year >= 2020 THEN '2020+'

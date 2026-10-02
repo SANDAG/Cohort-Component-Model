@@ -35,9 +35,9 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
 
         rates = {
             # Crude Birth Rates
-            "births": birth_rates.get_birth_rates(year=increment),
+            "births": birth_rates.run_fertility_rates(year=increment),
             # Crude Death Rates
-            "deaths": death_rates.get_death_rates(
+            "deaths": death_rates.run_mortality_rates(
                 year=increment, population=population
             ),
             # Crude Migration Rates
@@ -64,13 +64,13 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
         logger.info("Calculating rates for increment year")
 
         if utils.FERTILITY_RATES is not None:
-            rates["births"] = birth_rates.get_birth_rates(year=increment)
+            rates["births"] = birth_rates.run_fertility_rates(year=increment)
         if utils.MIGRATION_CONTROLS is not None:
             rates["migration"] = migration_rates.run_migration_rates(
                 year=increment, population=population
             )
         if utils.MORTALITY_RATES is not None:
-            rates["deaths"] = death_rates.get_death_rates(
+            rates["deaths"] = death_rates.run_mortality_rates(
                 year=increment, population=population
             )
 
