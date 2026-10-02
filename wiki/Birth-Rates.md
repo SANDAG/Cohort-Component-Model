@@ -1,4 +1,4 @@
-This module generates fertility rates by single year of age and race/ethnicity for each increment year. Post-launch year rates are optionally adjusted from launch year rates to match asserted mortality rates.
+This module generates fertility rates by single year of age and race/ethnicity for each increment year. Post-launch year rates are optionally adjusted from launch year rates to match asserted fertility rates.
 
 # Inputs
 | Input | Module Source | Usage |
