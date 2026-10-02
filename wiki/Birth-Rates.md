@@ -8,4 +8,4 @@ This module generates fertility rates by single year of age and race/ethnicity f
 
 # Outputs
 ## Fertility Rates
-Fertility rates for San Diego County are provided by the CDC WONDER Natality. Rates are inflated to account for the % of births attributed to `Not Stated`, `Unknown`, `Not Reported`, `Not Available` or belonging to age groups `Under 15 years`, `45-49 years`, and `50 years and over`. CDC WONDER Natality data is limited up to 2024 and subsequent launch years will use 2024 data. Post-launch year, rates are optionally adjusted to use asserted mortality rates, if provided.
+Fertility rates for San Diego County are provided by the CDC WONDER Natality. Rates are inflated to account for the % of births attributed to `Not Stated`, `Unknown`, `Not Reported`, `Not Available` or belonging to age groups `Under 15 years`, `45-49 years`, and `50 years and over`. CDC WONDER Natality data is limited up to 2024 and subsequent launch years will use 2024 data. Post-launch year, rates are optionally adjusted to use asserted fertility rates, if provided.

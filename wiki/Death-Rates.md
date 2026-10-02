@@ -13,7 +13,7 @@ This module generates mortality rates by single year of age, sex, and race/ethni
 See [Launch Year Population](https://github.com/SANDAG/Cohort-Component-Model/wiki/Launch-Year-Population).
 
 ## Mortality Forecasting (Optional)
-An optional user-defined CSV file containing forecasted mortality rates. If provided, the CSV should include one row per post-launch increment year, age, sex, and race/ethnicity combination. See the [README.md](https://github.com/SANDAG/Cohort-Component-Model/blob/main/README.md) for more information regarding the file structure and how to update the configuration file.
+An optional user-defined CSV file containing forecasted mortality rates. If provided, the CSV should include one row per post-launch increment year, single year of age, sex, and race/ethnicity combination. See the [README.md](https://github.com/SANDAG/Cohort-Component-Model/blob/main/README.md) for more information regarding the file structure and how to update the configuration file.
 
 # Outputs
 ## Mortality Rates
