@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 _DISTINCT_COUNTS = {
     "age": 100,
     "age_cdc_deaths": 86,  # Mortality input only contains ages 0-85
-    "age_undesa_deaths": 16,  # UN DESA rates cover ages 85-99 (15) and an additional row for age 85+ from CDC(1)
+    "age_undesa_deaths": 16,  # UN DESA rates cover ages 85-99 plus one aggregate 85+ row
     "age_births": 30,  # Fertility limited to ages 15-44
     "age_group": 20,  # Estimates Program age groups
     "ethnicity": 7,
