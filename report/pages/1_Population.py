@@ -14,18 +14,24 @@ tab1, tab2, tab3 = st.tabs(["Total", "Components", "Demographics"])
 with tab1:
     # Load total population output and summarize by year
     total = (
-        st.session_state.population_data
-        .groupby("year")[["pop", "pop_mil", "gq"]]
+        st.session_state.population_data.groupby("year")[
+            ["pop", "gq_mil", "gq_prison", "gq_college", "gq_other"]
+        ]
         .sum()
         .reset_index()
-        .assign(pop_hh=lambda x: x["pop"] - x["gq"])
+        .assign(
+            pop_hh=lambda x: x["pop"]
+            - (x["gq_mil"] + x["gq_prison"] + x["gq_college"] + x["gq_other"])
+        )
         .rename(
             columns={
                 "year": "Year",
                 "pop": "Total Population",
                 "pop_hh": "Household Population",
-                "gq": "Group Quarters",
-                "pop_mil": "Military Population",
+                "gq_mil": "Military Group Quarters",
+                "gq_prison": "Prison Group Quarters",
+                "gq_college": "College Group Quarters",
+                "gq_other": "Other Group Quarters",
             }
         )
     )
@@ -50,16 +56,20 @@ with tab1:
             "Year",
             "Total Population",
             "Household Population",
-            "Group Quarters",
-            "Military Population",
+            "Military Group Quarters",
+            "Prison Group Quarters",
+            "College Group Quarters",
+            "Other Group Quarters",
         ],
         column_config={
             k: st.column_config.NumberColumn(format="localized")
             for k in [
                 "Total Population",
                 "Household Population",
-                "Group Quarters",
-                "Military Population",
+                "Military Group Quarters",
+                "Prison Group Quarters",
+                "College Group Quarters",
+                "Other Group Quarters",
             ]
         },
     )
@@ -68,8 +78,9 @@ with tab1:
 with tab2:
     # Load components of change output and summarize by year
     components = (
-        st.session_state.components_data
-        .groupby("year")[["births", "deaths", "ins", "outs"]]
+        st.session_state.components_data.groupby("year")[
+            ["births", "deaths", "ins", "outs"]
+        ]
         .sum()
         .reset_index()
         .assign(
@@ -136,8 +147,9 @@ with tab2:
 with tab3:
     # Load population pyramid output and summarize by year
     pyramid = (
-        st.session_state.population_data
-        .assign(age_grp=lambda x: x["age"].apply(report_utils.age_5y))
+        st.session_state.population_data.assign(
+            age_grp=lambda x: x["age"].apply(report_utils.age_5y)
+        )
         .groupby(["year", "sex", "age_grp"])["pop"]
         .sum()
         .reset_index()
@@ -175,22 +187,19 @@ with tab3:
     )
 
     data = []
-    for sex in ["F", "M"]:
+    for sex in ["Female", "Male"]:
         sex_data = pyramid_year[pyramid_year["Sex"] == sex]
         values = sex_data["Total Population"].values
 
-        if sex == "F":
-            name = "Female"
+        if sex == "Female":
             values = [-i for i in values]
-        else:
-            name = "Male"
 
         data.append(
             go.Bar(
                 y=list(report_utils.MAP_5Y_AGE_GROUPS.keys()),
                 x=values,
                 orientation="h",
-                name=name,
+                name=sex,
             )
         )
 
@@ -201,7 +210,7 @@ with tab3:
     demographics = st.session_state.population_data.query("year == @tab3_year")
 
     tbl = []
-    for field in ["age", "sex", "race"]:
+    for field in ["age", "sex", "ethnicity"]:
         if field != "age":
             df = (
                 demographics.rename(columns={field: "Category"})
@@ -215,8 +224,6 @@ with tab3:
                 .drop(columns=["pop"])
             )
 
-            if field == "sex":
-                df["Category"] = df["Category"].map({"F": "Female", "M": "Male"})
         else:
             ages = np.repeat(demographics["age"], demographics["pop"])
             df = pd.DataFrame(
