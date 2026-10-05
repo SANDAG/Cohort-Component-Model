@@ -1,24 +1,25 @@
 SELECT 
-      [year],
-      [race],
-      [sex],
-      [age],
-      [rate_birth],
-      [rate_death],
-      [rate_in],
-      [rate_out],
-      [rate_gq],
-      [rate_hh],
-      [rate_hh_head_lf],
-      [rate_size1],
-      [rate_size2],
-      [rate_size3],
-      [rate_child1],
-      [rate_senior1],
-      [rate_workers0],
-      [rate_workers1],
-      [rate_workers2],
-      [rate_workers3],
       [run_id]
+      ,[year]
+      ,[age]
+      ,[sex]
+      ,[ethnicity]
+      ,[rate_birth]
+      ,[rate_death]
+      ,[rate_in]
+      ,[rate_out]
+      ,[rate_gq_college]
+      ,[rate_gq_other]
+      ,[rate_hh]
+      ,[rate_hh_size1]
+      ,[rate_hh_size2]
+      ,[rate_hh_size3]
+      ,[rate_hh_workers0]
+      ,[rate_hh_workers1]
+      ,[rate_hh_workers2]
+      ,[rate_hh_workers3]
+      ,[rate_hh_head_lf]
+      ,[rate_hh_children]
+      ,[rate_hh_seniors]
 FROM [outputs].[rates]
 WHERE [run_id] = {run_id}

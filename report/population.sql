@@ -1,22 +1,24 @@
 SELECT 
-      [year],
-      [race],
-      [sex],
-      [age],
-      [pop],
-      [pop_mil],
-      [gq],
-      [hh],
-      [hh_head_lf],
-      [child1],
-      [senior1],
-      [size1],
-      [size2],
-      [size3],
-      [workers0],
-      [workers1],
-      [workers2],
-      [workers3],
       [run_id]
+      ,[year]
+      ,[age]
+      ,[sex]
+      ,[ethnicity]
+      ,[pop]
+      ,[gq_mil]
+      ,[gq_prison]
+      ,[gq_college]
+      ,[gq_other]
+      ,[hh]
+      ,[hh_size1]
+      ,[hh_size2]
+      ,[hh_size3]
+      ,[hh_workers0]
+      ,[hh_workers1]
+      ,[hh_workers2]
+      ,[hh_workers3]
+      ,[hh_head_lf]
+      ,[hh_children]
+      ,[hh_seniors]
 FROM [outputs].[population]
 WHERE [run_id] = {run_id}
