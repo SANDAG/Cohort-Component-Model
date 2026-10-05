@@ -18,20 +18,19 @@ def run_mortality_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
 
     This module generates mortality rates by single year of age, sex, and race/ethnicity
     using data from the Centers for Disease Control and Prevention (CDC) WONDER
-    mortality database.
+    mortality database and the United Nations Department of Economic and Social Affairs
+    (UN DESA) Life Table Survivors dataset.
 
     Mortality rates are calculated for ages < 85 from CDC WONDER by simply
     dividing raw deaths by population for each single year of age, sex, and
-    race/ethnicity category after setting "Suppressed" raw deaths (values < 10)
-    to values of 4.5 and 0 raw deaths to values of 1. This strategy avoids
-    missing value records and implausible 0% mortality rates. Any missing
-    county-level fertility rates are substituted following a county, state, then national
-    hierarchy. Should there be no county-, state-, or national-level data available,
-    a separate recoding formula will be used (see _deaths_recode function for details).
+    race/ethnicity category. Any missing county-level mortality rates are substituted
+    following a county, state, then national hierarchy. Should there be no county-, state-,
+    or national-level data available, a separate recoding formula will be used (see
+    _deaths_recode function for details).
 
     For ages >= 85, UN DESA life table data is used. UN DESA provides mortality
     rates by age and sex, but not by race/ethnicity. To incorporate race-specific
-    variation,scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
+    variation, scaling factors are calculated using CDC TYA (Ten-Year Age) 85+
     mortality rates by sex and race/ethnicity. The scaling factor for each
     sex and race/ethnicity combination equals the CDC 85+ mortality rate divided
     by the aggregate UN DESA 85-99 rate. This scaling factor is then applied to
@@ -45,7 +44,7 @@ def run_mortality_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
 
     Functionality is split apart for code encapsulation:
         _get_mortality_inputs - Get deaths by age, sex, and ethnicity from CDC WONDER
-            mortality database
+            mortality database and UN DESA survivor dataset
         _validate_mortality_inputs - Validate inputs from the above function
         _create_mortality_outputs - Calculate mortality rates by single year of age,
             sex, and race/ethnicity; replace missing San Diego County population with
@@ -80,7 +79,7 @@ def run_mortality_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
 def _get_mortality_inputs(
     year: int, population: pd.DataFrame
 ) -> dict[str, pd.DataFrame]:
-    """Retrieve mortality inputs from the CDC WONDER database for a given year."""
+    """Retrieve mortality inputs from the CDC WONDER database and UN DESA survivor dataset for a given year."""
     with utils.CCM_ENGINE.connect() as connection:
         # Load CDC WONDER data from database for the specific year only
         with open(utils.SQL_FOLDER / "mortality" / "cdc_wonder_mortality.sql") as file:
@@ -117,7 +116,7 @@ def _get_mortality_inputs(
             logger.info("UN DESA loaded from database:")
 
     # For years >= 2022 (2018+ product), merge SD County deaths with CCM population
-    if year >= 2022 and population is not None:
+    if year >= 2022:
 
         # Separate SYA (ages 0-84) and TYA (age 85) records
         sya_records = cdc_wonder[cdc_wonder["age"] < 85].copy()
@@ -281,10 +280,10 @@ def _create_mortality_outputs(
         .drop(columns=["scaling_factor"])
     )[["age", "sex", "ethnicity", "rates"]]
 
-    cdc_rates = cdc_data[cdc_data["age"] < 85]
-
     # Combine CDC rates (ages 0-84) with scaled UNDESA rates (ages 85-99)
-    combined_rates = pd.concat([cdc_rates, undesa_rates], ignore_index=True)
+    combined_rates = pd.concat(
+        [cdc_data[cdc_data["age"] < 85], undesa_rates], ignore_index=True
+    )
 
     # Apply smoothing to the combined dataset (ages 0-99)
     if smooth_s is not None and smooth_k is not None:

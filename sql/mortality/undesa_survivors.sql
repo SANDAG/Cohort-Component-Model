@@ -47,6 +47,7 @@ BEGIN
     ;WITH [data] AS (
         SELECT
             [year]
+            -- Convert to INTEGER so ages sort numerically for the later window function ORDER BY
             ,CASE
                 WHEN [age] = '100+' THEN 100
                 ELSE CONVERT(INTEGER, [age])
