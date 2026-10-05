@@ -12,142 +12,38 @@ import python.utils as utils
 logger = logging.getLogger(__name__)
 
 
-def calculate_birth_rates(year: int) -> pd.DataFrame:
-    """Calculate fertility rates by single year of age, sex, and race/ethnicity.
+def run_fertility_rates(year: int) -> pd.DataFrame:
+    """Orchestrator function to calculate fertility rates.
 
-    Fertility rates are provided using CDC WONDER Natality births for 5-year
-    age groups ranging from ages 15 to 44 then inflated to account for the %
-    of births attributed to:
-        1) Ages 15 and under
-        2) Ages 45 and over
-        3) "Unknown", "Not Stated", "Not Available", or "Not Reported" race/ethnicity groups
+    This module generates fertility rates by single year of age and race/ethnicity
+    using data from the Centers for Disease Control and Prevention (CDC) natality
+    database.
 
-    Args:
-        year (int): Increment year
+    Rates are calculated within age groups and then applied uniformly to all single years of
+    age within those age groups.  Rates are then inflated to account for the % of births
+    attributed to `Not Stated`, `Unknown`, `Not Reported`, `Not Available` or belonging to
+    age groups `Under 15 years`, `45-49 years`, and `50 years and over`. Any missing
+    county-level fertility rates are substituted following a county, state, then national
+    hierarchy.
 
-    Returns:
-        pd.DataFrame: Fertility rates by single year of age, sex, and
-            race/ethnicity
+    Functionality is split apart for code encapsulation:
+        _get_fertility_inputs - Get fertility rates by age and race/ethnicity from CDC
+            natality database
+        _validate_fertility_inputs - Validate inputs from the above function
+        _create_fertility_outputs - Calculate fertility rates and distribute to single
+            years of age within each age group, substituting missing data when necessary
+        _validate_fertility_outputs - Validate the output from the above function
     """
-    # Fertility rates calculated for the launch year
     if year == utils.LAUNCH_YEAR:
-        with utils.CCM_ENGINE.connect() as con:
-            # Load fertility rates
-            with open(
-                utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility.sql"
-            ) as file:
-                births = pd.read_sql_query(
-                    sql=sql.text(file.read()), con=con, params={"year": year}
-                )
-                logger.info("CDC WONDER fertility data loaded from database")
+        logger.info("Calculating fertility rates for launch year")
 
-            # Load inflation factors
-            with open(
-                utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility_inflation.sql"
-            ) as file:
-                inflation_factor = pd.read_sql_query(
-                    sql=sql.text(file.read()), con=con, params={"year": year}
-                )
-                logger.info(
-                    "CDC WONDER fertility inflation factors loaded from database"
-                )
+        fertility_rates_inputs = _get_fertility_inputs(year)
+        _validate_fertility_inputs(fertility_rates_inputs["fertility_inputs"])
 
-        # Inflate the fertility rates with unassigned births
-        result = (
-            pd.merge(births, inflation_factor, on=["location"])
-            .assign(rate=lambda x: x["rate"] * x["inflation_factor"])
-            .rename(columns={"rate": "rate_birth"})[
-                ["location", "age", "sex", "ethnicity", "rate_birth"]
-            ]
-        )
+        fertility_outputs = _create_fertility_outputs(fertility_rates_inputs)
+        _validate_fertility_outputs(fertility_outputs)
 
-        # Pivot by location to get county, state, national as separate columns
-        pivoted = (
-            result.pivot_table(
-                index=["age", "sex", "ethnicity"],
-                columns="location",
-                values=["rate_birth"],
-                aggfunc="first",
-            )
-            .pipe(lambda df: df.set_axis(["_".join(col) for col in df.columns], axis=1))
-            .reset_index()
-        )
-
-        # Retrieve fields
-        county, state, national = (
-            pivoted.get("rate_birth_San Diego County", pd.Series(dtype=float)),
-            pivoted.get("rate_birth_California", pd.Series(dtype=float)),
-            pivoted.get("rate_birth_United States", pd.Series(dtype=float)),
-        )
-
-        # Create Substitution methodology for null values based on geographic hierarchy
-        # County > State > National
-        pivoted["rate_birth"] = np.where(
-            (county.notna()) & (county > 0),
-            county,
-            np.where(
-                (state.notna()) & (state > 0),
-                state,
-                np.where(
-                    (national.notna()) & (national > 0),
-                    national,
-                    np.nan,
-                ),
-            ),
-        )
-
-        # Finalize combined dataset
-        df = (
-            pivoted[["age", "sex", "ethnicity", "rate_birth"]]
-            .sort_values(by=["age", "sex", "ethnicity"])
-            .reset_index(drop=True)
-        )
-
-        # Check for any null values in the rates column
-        if df["rate_birth"].isnull().any():
-            raise ValueError(
-                "Empty fertility rates found after applying geographic"
-                "hierarchy. Verify rates are available for geographies."
-            )
-
-        # Validate output has correct structure
-        tests.validate_data(
-            table_name=f"Fertility Rates (year {year})",
-            # Rename age column for test (birth data only 15-44)
-            data=df[["age", "ethnicity", "rate_birth"]].rename(
-                columns={"age": "age_births"}
-            ),
-            row_count={"key_columns": {"age_births", "ethnicity"}},
-            negative={"negative_ok": set()},
-            null={"null_ok": set()},
-        )
-
-        return df[["age", "sex", "ethnicity", "rate_birth"]]
-
-    else:
-        raise ValueError("Fertility rates not calculated past launch year")
-
-
-def get_birth_rates(year: int) -> pd.DataFrame:
-    """Create fertility rates by single year of age, sex, and race/ethnicity.
-
-    For the launch year, calculate the crude fertility rate within single year
-    of age, sex, and race/ethnicity. Post launch year, if fertility rates are
-    provided, use them. Otherwise, the function should not be called.
-
-    Args:
-        year (int): Increment year
-
-    Returns:
-        pd.DataFrame: Fertility rates by single year of age, sex, and
-            race/ethnicity
-    """
-    # Fertility rates calculated for the launch year
-    if year == utils.LAUNCH_YEAR:
-        return calculate_birth_rates(year=year)
-
-    # Fertility rates are not calculated past the launch year
-    # Post-launch rates are used directly if provided
+        return fertility_outputs
     else:
         if utils.FERTILITY_RATES is not None:
             # Use the provided rates directly
@@ -155,6 +51,133 @@ def get_birth_rates(year: int) -> pd.DataFrame:
                 ["age", "sex", "ethnicity", "rate_birth"]
             ]
         else:
-            raise ValueError(
-                "Function called post launch year but fertility rates not provided."
+            raise ValueError("No fertility rates provided post-launch year.")
+
+
+def _get_fertility_inputs(year: int) -> dict[str, pd.DataFrame]:
+    """Retrieve fertility inputs from the CDC natality database for a given year."""
+    with utils.CCM_ENGINE.connect() as connection:
+        with open(utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility.sql") as file:
+            fertility_inputs = utils.read_sql_query_fallback(
+                max_lookback=1,
+                sql=sql.text(file.read()),
+                con=connection,
+                params={"year": year},
             )
+            logger.info("CDC WONDER fertility data loaded from database")
+        # Load inflation factors
+        with open(
+            utils.SQL_FOLDER / "fertility" / "cdc_wonder_fertility_inflation.sql"
+        ) as file:
+            inflation_factor = utils.read_sql_query_fallback(
+                max_lookback=1,
+                sql=sql.text(file.read()),
+                con=connection,
+                params={"year": year},
+            )
+            logger.info("CDC WONDER fertility inflation factors loaded from database")
+
+    return {
+        "fertility_inputs": fertility_inputs,
+        "fertility_inflation": inflation_factor,
+    }
+
+
+def _validate_fertility_inputs(fertility_inputs: pd.DataFrame) -> None:
+    """Validate the fertility inputs."""
+    # Loop through each location and validate the fertility inputs for that location
+    for location in fertility_inputs["location"].unique():
+        # Validate input has correct structure
+        tests.validate_data(
+            table_name=f"Input Fertility Rates for {location}",
+            # Rename age column for test (birth data only 15-44)
+            data=fertility_inputs[["age", "ethnicity", "rate"]]
+            .rename(columns={"age": "age_births"})
+            .loc[fertility_inputs["location"] == location],
+            row_count={"key_columns": {"age_births", "ethnicity"}},
+            negative={"negative_ok": set()},
+            null={"null_ok": set()},
+        )
+
+
+def _create_fertility_outputs(
+    fertility_inputs: dict[str, pd.DataFrame],
+) -> pd.DataFrame:
+    """Create fertility outputs for a given year."""
+    fertility_data = fertility_inputs["fertility_inputs"]
+    inflation_factor = fertility_inputs["fertility_inflation"]
+
+    # Inflate the fertility rates with unassigned births
+    result = (
+        pd.merge(fertility_data, inflation_factor, on=["location"])
+        .assign(rate=lambda x: x["rate"] * x["inflation_factor"])
+        .rename(columns={"rate": "rate_birth"})[
+            ["location", "age", "sex", "ethnicity", "rate_birth"]
+        ]
+    )
+
+    # Pivot by location to get county, state, national as separate columns
+    pivoted = (
+        result.pivot_table(
+            index=["age", "sex", "ethnicity"],
+            columns="location",
+            values=["rate_birth"],
+            aggfunc="first",
+        )
+        .pipe(lambda df: df.set_axis(["_".join(col) for col in df.columns], axis=1))
+        .reset_index()
+    )
+
+    # Retrieve fields
+    county, state, national = (
+        pivoted.get("rate_birth_San Diego County", pd.Series(dtype=float)),
+        pivoted.get("rate_birth_California", pd.Series(dtype=float)),
+        pivoted.get("rate_birth_United States", pd.Series(dtype=float)),
+    )
+
+    # Create Substitution methodology for null values based on geographic hierarchy
+    # County > State > National
+    pivoted["rate_birth"] = np.where(
+        (county.notna()) & (county > 0),
+        county,
+        np.where(
+            (state.notna()) & (state > 0),
+            state,
+            np.where(
+                (national.notna()) & (national > 0),
+                national,
+                np.nan,
+            ),
+        ),
+    )
+
+    # Finalize combined dataset
+    df = (
+        pivoted[["age", "sex", "ethnicity", "rate_birth"]]
+        .sort_values(by=["age", "sex", "ethnicity"])
+        .reset_index(drop=True)
+    )
+
+    # Check for any null values in the rates column
+    if df["rate_birth"].isnull().any():
+        raise ValueError(
+            "Empty fertility rates found after applying geographic"
+            "hierarchy. Verify rates are available for geographies."
+        )
+
+    return df[["age", "sex", "ethnicity", "rate_birth"]]
+
+
+def _validate_fertility_outputs(fertility_outputs: pd.DataFrame) -> None:
+    """Validate the fertility outputs."""
+    # Validate output has correct structure
+    tests.validate_data(
+        table_name="Output Fertility Rates",
+        # Rename age column for test (birth data only 15-44)
+        data=fertility_outputs[["age", "ethnicity", "rate_birth"]].rename(
+            columns={"age": "age_births"}
+        ),
+        row_count={"key_columns": {"age_births", "ethnicity"}},
+        negative={"negative_ok": set()},
+        null={"null_ok": set()},
+    )

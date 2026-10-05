@@ -18,16 +18,22 @@
 */
 
 DECLARE @year INTEGER = :year;
+DECLARE @msg nvarchar(49) = 'Data for UN DESA year does not exist';
 DECLARE @undesa_id INTEGER = 2;  -- updated based on latest version
+
+-- Send error message if no data exists --------------------------------------
+IF NOT EXISTS (
+    SELECT TOP (1) *
+    FROM [socioec_data].[vital_statistics].[undesa_survivors] 
+    WHERE [undesa_id] = @undesa_id AND [year] = @year
+)
+SELECT @msg AS [msg]
+ELSE
 
 BEGIN
     -- Add check with THROW statement if the UN DESA ID provided does not exist
     IF NOT EXISTS (SELECT 1 FROM [socioec_data].[vital_statistics].[undesa] WHERE [undesa_id] = @undesa_id)
         THROW 50001, 'The provided UN DESA ID does not exist in this dataset', 1
-
-    -- Add check with THROW statement if the year provided does not exist in the dataset
-    IF NOT EXISTS (SELECT 1 FROM [socioec_data].[vital_statistics].[undesa_survivors] WHERE [undesa_id] = @undesa_id AND [year] = @year)
-        THROW 50002, 'The provided year does not exist in the dataset corresponding to the provided UN DESA ID', 1
 
     -- Add check with THROW statement if 5 years of rolling data is not available
     IF (
@@ -36,60 +42,61 @@ BEGIN
         WHERE [undesa_id] = @undesa_id AND [year] BETWEEN @year - 4 AND @year
     ) < 5
         THROW 50003, 'Five year moving averages are not available for this year and UN DESA ID', 1
+
+    -- Select UN DESA version and five years of rolling data
+    ;WITH [data] AS (
+        SELECT
+            [year]
+            -- Convert to INTEGER so ages sort numerically for the later window function ORDER BY
+            ,CASE
+                WHEN [age] = '100+' THEN 100
+                ELSE CONVERT(INTEGER, [age])
+            END AS [age]
+            ,[sex]
+            ,[survivors]
+        FROM [socioec_data].[vital_statistics].[undesa_survivors]
+        WHERE
+            [undesa_id] = @undesa_id
+            AND [year] BETWEEN @year-4 AND @year
+    ),
+    -- Calculate deaths as difference in survivors from next age group
+    [deaths_calculated] AS (
+        SELECT
+            [year]
+            ,[age]
+            ,[sex]
+            ,[survivors]
+            ,[survivors] - LEAD([survivors], 1) OVER (PARTITION BY [year], [sex] ORDER BY [age]) AS [deaths_single_year]
+        FROM [data]
+    ),
+    -- Sum across the 5 years by age and sex
+    [five_year_totals] AS (
+        SELECT
+            [age]
+            ,[sex]
+            ,SUM([survivors]) AS [survivors_5yr]
+            ,SUM([deaths_single_year]) AS [deaths_5yr]
+        FROM [deaths_calculated]
+        GROUP BY [sex], [age]
+    )
+    -- Return individual ages 85-99 for age-specific rate scaling
+    SELECT
+        CAST([age] AS VARCHAR(10)) AS [age],
+        [sex],
+        [deaths_5yr] / [survivors_5yr] AS [rates]
+    FROM [five_year_totals]
+    WHERE [age] BETWEEN 85 AND 99
+
+    UNION ALL
+
+    -- Return aggregate 85+ rate for calculating scaling factor
+    SELECT
+        '85+' AS [age],
+        [sex],
+        SUM([deaths_5yr]) / SUM([survivors_5yr]) AS [rates]
+    FROM [five_year_totals]
+    WHERE [age] BETWEEN 85 AND 99
+    GROUP BY [sex]
+
+    ORDER BY [age], [sex]
 END;
-
--- Select UN DESA version and five years of rolling data
-WITH [data] AS (
-    SELECT
-        [year]
-        ,CASE
-            WHEN [age] = '100+' THEN 100
-            ELSE CONVERT(INTEGER, [age])
-        END AS [age]
-        ,[sex]
-        ,[survivors]
-    FROM [socioec_data].[vital_statistics].[undesa_survivors]
-    WHERE
-        [undesa_id] = @undesa_id
-        AND [year] BETWEEN @year-4 AND @year
-),
--- Calculate deaths as difference in survivors from next age group
-[deaths_calculated] AS (
-    SELECT
-        [year]
-        ,[age]
-        ,[sex]
-        ,[survivors]
-        ,[survivors] - LEAD([survivors], 1) OVER (PARTITION BY [year], [sex] ORDER BY [age]) AS [deaths_single_year]
-    FROM [data]
-),
--- Sum across the 5 years by age and sex
-[five_year_totals] AS (
-    SELECT
-        [age]
-        ,[sex]
-        ,SUM([survivors]) AS [survivors_5yr]
-        ,SUM([deaths_single_year]) AS [deaths_5yr]
-    FROM [deaths_calculated]
-    GROUP BY [sex], [age]
-)
--- Return individual ages 85-99 for age-specific rate scaling
-SELECT
-    CAST([age] AS VARCHAR(10)) AS [age],
-    [sex],
-    [deaths_5yr] / [survivors_5yr] AS [rates]
-FROM [five_year_totals]
-WHERE [age] BETWEEN 85 AND 99
-
-UNION ALL
-
--- Return aggregate 85+ rate for calculating scaling factor
-SELECT
-    '85+' AS [age],
-    [sex],
-    SUM([deaths_5yr]) / SUM([survivors_5yr]) AS [rates]
-FROM [five_year_totals]
-WHERE [age] BETWEEN 85 AND 99
-GROUP BY [sex]
-
-ORDER BY [age], [sex]
