@@ -100,8 +100,8 @@ direction TB
         run_id INT UK, FK
         year INT UK
         age INT UK
-        sex NVARCHAR(5) UK
-        ethnicity NVARCHAR(150) UK
+        sex NVARCHAR(6) UK
+        ethnicity NVARCHAR(50) UK
         births INT
         deaths INT
         ins INT
@@ -112,8 +112,8 @@ direction TB
         run_id INT UK, FK
         year INT UK
         age INT UK
-        sex NVARCHAR(5) UK
-        ethnicity NVARCHAR(150) UK
+        sex NVARCHAR(6) UK
+        ethnicity NVARCHAR(50) UK
         pop INT
         gq_mil INT
         gq_prison INT
@@ -136,8 +136,8 @@ direction TB
         run_id INT UK, FK
         year INT UK
         age INT UK
-        sex NVARCHAR(5) UK
-        ethnicity NVARCHAR(150) UK
+        sex NVARCHAR(6) UK
+        ethnicity NVARCHAR(50) UK
         rate_birth FLOAT
         rate_death FLOAT
         rate_in FLOAT
