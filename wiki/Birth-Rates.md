@@ -18,6 +18,8 @@ An optional user-defined CSV file containing forecasted fertility rates. If prov
 
 # Outputs
 ## Fertility Rates
-Fertility Rates are calculated using the CDC WONDER natality datasets for age groups and then uniformly assigned to single years of age within that age group and inflated to account for the % of births attributed to `Not Stated`, `Unknown`, `Not Reported`, `Not Available` or belonging to age groups `Under 15 years`, `45-49 years`, and `50 years and over`. Missing San Diego County data is substituted with data from larger geographies (California, then the United States). CDC WONDER Natality data is limited up to 2024 and subsequent launch years will use 2024 data. Post-launch year, asserted fertility rates are used if provided.
+Fertility Rates are calculated using the CDC WONDER natality datasets for age groups and then uniformly assigned to single years of age within that age group and inflated to account for the % of births attributed to `Not Stated`, `Unknown`, `Not Reported`, `Not Available` or belonging to age groups `Under 15 years`, `45-49 years`, and `50 years and over`. Missing San Diego County data is substituted with data from larger geographies (California, then the United States). CDC WONDER Natality data is limited up to 2024 and subsequent launch years will use 2024 data. 
+
+Post-launch year, asserted fertility rates are used if provided.
 
 *See the **python/input_modules/birth_rates.py** file and **sql/fertility** folder for underlying code used by the module.*
