@@ -77,7 +77,15 @@ elif data_selector == "SQL Database":
         run_df = metadata[True]
         runs = st.dataframe(
             data=run_df[
-                ["run_id", "user", "date", "version", "comments", "launch", "horizon"]
+                [
+                    "run_id",
+                    "user",
+                    "start_date",
+                    "version",
+                    "comments",
+                    "launch",
+                    "horizon",
+                ]
             ],
             hide_index=True,
             column_config={"year": st.column_config.TextColumn("year", max_chars=4)},

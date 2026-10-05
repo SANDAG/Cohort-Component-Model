@@ -11,7 +11,7 @@ from typing import List
 # Add the parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from python.utils import CCM_ENGINE as SQL_ENGINE
+from python.utils import CCM_ENGINE
 
 # Define mapping of 5-year age groups
 MAP_5Y_AGE_GROUPS = {
@@ -128,7 +128,7 @@ def get_data(data_selector: str, run_id: int | None = None) -> dict:
                 raise ValueError("Parameter: @run_id must be set to access database")
             else:
                 try:
-                    with SQL_ENGINE.connect() as connection:
+                    with CCM_ENGINE.connect() as connection:
                         with open(locations["qry"], "r") as query:
                             df = pd.read_sql_query(
                                 sql.text(query.read().format(run_id=run_id)),
@@ -146,7 +146,7 @@ def get_data(data_selector: str, run_id: int | None = None) -> dict:
 # Function to check table existence
 def get_metadata() -> dict:
     try:
-        with SQL_ENGINE.connect() as connection:
+        with CCM_ENGINE.connect() as connection:
             with open("report/metadata.sql", "r") as query:
                 df = pd.read_sql_query(
                     sql.text(query.read()),
