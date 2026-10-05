@@ -48,15 +48,15 @@ year,ins,outs
 ```
 
 ### Mortality Rates File Format
-If mortality rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include both sexes (M and F), each of the seven races (American Indian or Alaska Native alone, Asian alone, Black or African American alone, Hispanic, Native Hawaiian or Other Pacific Islander alone, Two or More Races, White alone), and all 100 ages (0-99) to create 1400 rows per year:
+If mortality rates are provided, the CSV should include one row per year, age, sex, and race grouping with no null values in any of the columns. Each year should include both sexes (`Male` and `Female`), each of the seven race/ethnicity categories (`Non-Hispanic, American Indian or Alaska Native`; `Non-Hispanic, Asian`; `Non-Hispanic, Black`; `Non-Hispanic, Hawaiian or Pacific Islander`; `Non-Hispanic, Two or More Races`; `Non-Hispanic, White`), and all 100 ages (0-99) to create 1400 rows per year:
 
 ```csv
 year,age,sex,race,rate_death
-2023,0.0,F,American Indian or Alaska Native alone,0.0013964641191015427
+2023,0.0,F,"Non-Hispanic, American Indian or Alaska Native",0.0013964641191015427
 ...
-2024,45.0,M,Hispanic,0.0022017810643757416
+2024,45.0,M,"Hispanic",0.0022017810643757416
 ...
-2025,99.0,M,White alone,0.16650980
+2025,99.0,M,"Non-Hispanic, White",0.16650980
 ```
 
 ### Configuration of Private Data in secrets.yml
