@@ -79,29 +79,31 @@ sql:
 ```
 
 ### Production Database Schema
+For more details regarding individual tables and fields see the [Model Outputs](https://github.com/SANDAG/Cohort-Component-Model/wiki/Model-Outputs) section of the Wiki.
 ```mermaid
 erDiagram
 direction TB
 
     metadata_run {
         run_id INT PK
-        user NVARCHAR(100)
-        date DATETIME
-        version NVARCHAR(50)
-        comments NVARCHAR(200)
-        loaded BIT
         launch INT
         horizon INT
+        user NVARCHAR(100)
+        start_date DATETIME
+        end_date DATETIME
+        version NVARCHAR(50)
+        comments NVARCHAR(MAX)
+        complete BIT
     }
 
     outputs_components {
         run_id INT UK, FK
         year INT UK
-        race NVARCHAR(150) UK
-        sex NVARCHAR(5) UK
         age INT UK
-        deaths INT
+        sex NVARCHAR(6) UK
+        ethnicity NVARCHAR(50) UK
         births INT
+        deaths INT
         ins INT
         outs INT
     }
@@ -109,47 +111,50 @@ direction TB
     outputs_population {
         run_id INT UK, FK
         year INT UK
-        race NVARCHAR(150) UK
-        sex NVARCHAR(3) UK
         age INT UK
+        sex NVARCHAR(6) UK
+        ethnicity NVARCHAR(50) UK
         pop INT
-        pop_mil INT
-        gq INT
+        gq_mil INT
+        gq_prison INT
+        gq_college INT
+        gq_other INT
         hh INT
+        hh_size1 INT
+        hh_size2 INT
+        hh_size3 INT
+        hh_workers0 INT
+        hh_workers1 INT
+        hh_workers2 INT
+        hh_workers3 INT
         hh_head_lf INT
-        child1 INT
-        senior1 INT
-        size1 INT
-        size2 INT
-        size3 INT
-        workers0 INT
-        workers1 INT
-        workers2 INT
-        workers3 INT
+        hh_children INT
+        hh_seniors INT
     }
     
     outputs_rates {
         run_id INT UK, FK
         year INT UK
-        race NVARCHAR(150) UK
-        sex NVARCHAR(3) UK
         age INT UK
+        sex NVARCHAR(6) UK
+        ethnicity NVARCHAR(50) UK
         rate_birth FLOAT
         rate_death FLOAT
         rate_in FLOAT
         rate_out FLOAT
-        rate_gq FLOAT
+        rate_gq_college FLOAT
+        rate_gq_other FLOAT
         rate_hh FLOAT
+        rate_hh_size1 FLOAT
+        rate_hh_size2 FLOAT
+        rate_hh_size3 FLOAT
+        rate_hh_workers0 FLOAT
+        rate_hh_workers1 FLOAT
+        rate_hh_workers2 FLOAT
+        rate_hh_workers3 FLOAT
         rate_hh_head_lf FLOAT
-        rate_size1 FLOAT
-        rate_size2 FLOAT
-        rate_size3 FLOAT
-        rate_child1 FLOAT
-        rate_senior1 FLOAT
-        rate_workers0 FLOAT
-        rate_workers1 FLOAT
-        rate_workers2 FLOAT
-        rate_workers3 FLOAT
+        rate_hh_children FLOAT
+        rate_hh_seniors FLOAT
     }
 
     outputs_components ||--o{ metadata_run : "run_id"

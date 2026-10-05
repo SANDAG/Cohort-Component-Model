@@ -4,6 +4,7 @@ import logging
 
 import python.annual_cycle as annual_cycle
 import python.calculate_population as calculate_population
+import python.etl as etl
 import python.input_modules.birth_rates as birth_rates
 import python.input_modules.death_rates as death_rates
 import python.input_modules.formation_rates as formation_rates
@@ -101,5 +102,9 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
 
     # Set population for next increment and finish annual cycle ----
     population = increment_data["population"].copy()  # type: ignore
+
+# Optionally load data to SQL database
+if utils.LOAD_TO_DATABASE:
+    etl.run_etl()
 
 logger.info("Completed")
