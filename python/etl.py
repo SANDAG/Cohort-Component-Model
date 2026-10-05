@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def get_run_id() -> int:
     """Get the next available run identifier from the database."""
-    with utils.SQL_ENGINE.connect() as connection:
+    with utils.CCM_ENGINE.connect() as connection:
         result = connection.execute(
             sql.text("SELECT COALESCE(MAX([run_id]), 0) AS [id] FROM [metadata].[run]")
         ).scalar()
@@ -27,7 +27,7 @@ def insert_csv(run_id: int, fp: pathlib.Path, tbl: str) -> None:
     df = pd.read_csv(fp)
     df["run_id"] = run_id
 
-    with utils.SQL_ENGINE.connect() as connection:
+    with utils.CCM_ENGINE.connect() as connection:
         with connection.begin():
             df.to_sql(
                 name=tbl,
@@ -40,17 +40,17 @@ def insert_csv(run_id: int, fp: pathlib.Path, tbl: str) -> None:
 
 def insert_metadata(run_id: int) -> None:
     """Inserts run metadata to the database."""
-    with utils.SQL_ENGINE.connect() as connection:
+    with utils.CCM_ENGINE.connect() as connection:
         pd.DataFrame(
             {
                 "run_id": run_id,
-                "user": getpass.getuser(),
-                "date": pd.Timestamp.now(),
-                "version": utils.VERSION,
-                "comments": utils.COMMENTS,
-                "loaded": 0,
                 "launch": utils.LAUNCH_YEAR,
                 "horizon": utils.HORIZON_YEAR,
+                "user": getpass.getuser(),
+                "start_date": pd.Timestamp.now(),
+                "version": utils.VERSION,
+                "comments": utils.COMMENTS,
+                "complete": 0,
             },
             index=[0],
         ).to_sql(
@@ -64,10 +64,7 @@ def insert_metadata(run_id: int) -> None:
 
 def run_etl() -> None:
     """Runs the ETL process loading data into the database."""
-
-    # Load the configuration to get the launch and horizon values
-
-    run_id = get_run_id()
+    run_id = get_run_id()  # Get the run identifier
 
     logger.info("Loading output files to database as [run_id]: " + str(run_id))
     insert_metadata(run_id=run_id)
@@ -81,10 +78,14 @@ def run_etl() -> None:
     for k, v in output_files.items():
         insert_csv(run_id=run_id, fp=v, tbl=k)
 
-    with utils.SQL_ENGINE.connect() as connection:
+    with utils.CCM_ENGINE.connect() as connection:
         with connection.begin():
             connection.execute(
-                sql.text("UPDATE metadata.run SET loaded = 1 WHERE run_id = :run_id"),
-                {"run_id": run_id},
+                sql.text(
+                    "UPDATE [metadata].[run] SET [complete] = 1, "
+                    "[end_date] = :end_date WHERE [run_id] = :run_id"
+                ),
+                {"run_id": run_id, "end_date": pd.Timestamp.now()},
             )
+
     logger.info("Output data loaded to database.")
