@@ -1,8 +1,9 @@
 import report_utils
 
 import pandas as pd
-import plotly.express as px
 import streamlit as st
+
+import plotly.express as px
 
 # Rates
 # Sub-tabs for fertility, mortality, and migration rates
@@ -12,9 +13,9 @@ tab1, tab2, tab3 = st.tabs(["Fertility", "Mortality", "Migration"])
 with tab1:
     # Load fertility rate data
     fertility = (
-        st.session_state.rates_data[["year", "race", "sex", "age", "rate_birth"]]
-        .loc[lambda x: (x["sex"] == "F") & (x["age"] >= 15) & (x["age"] <= 45)]
-        .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
+        st.session_state.rates_data[["year", "ethnicity", "sex", "age", "rate_birth"]]
+        .loc[lambda x: (x["sex"] == "Female") & (x["age"] >= 15) & (x["age"] < 45)]
+        .rename(columns={"year": "Year", "ethnicity": "Race/Ethnicity", "age": "Age"})
     ).sort_values(by=["Race/Ethnicity", "Age"])
 
     # Create year slider and filter dataset
@@ -33,7 +34,7 @@ with tab1:
         x="Age",
         y="rate_birth",
         range_x=[15, 45],
-        range_y=[0, fertility["rate_birth"].max() + 0.01],
+        range_y=[0, fertility["rate_birth"].max() + 0.02],
         color="Race/Ethnicity",
         title="San Diego Region: Fertility Rates",
         labels={"rate_birth": "", "Race/Ethnicity": ""},
@@ -54,11 +55,11 @@ with tab1:
     tfr_sd = (
         st.session_state.components_data.loc[
             (st.session_state.components_data["year"] == tab1_year)
-            & (st.session_state.components_data["sex"] == "F")
+            & (st.session_state.components_data["sex"] == "Female")
         ]
         .merge(
             right=st.session_state.population_data,
-            on=["year", "race", "sex", "age"],
+            on=["year", "ethnicity", "sex", "age"],
         )
         .groupby("age")[["births", "pop"]]
         .sum()
@@ -94,8 +95,8 @@ with tab2:
 
     # Load mortality rate data
     mortality = (
-        st.session_state.rates_data[["year", "race", "sex", "age", "rate_death"]]
-        .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
+        st.session_state.rates_data[["year", "ethnicity", "sex", "age", "rate_death"]]
+        .rename(columns={"year": "Year", "ethnicity": "Race/Ethnicity", "age": "Age"})
         .sort_values(by=["Year", "Race/Ethnicity", "Age"])
     )
 
@@ -114,9 +115,9 @@ with tab2:
         # Create sex selector and filter line chart
         sub_tab1_sex = st.pills(
             label="**Sex:**",
-            options=["M", "F"],
+            options=["Male", "Female"],
             selection_mode="single",
-            default="M",
+            default="Male",
             key="sub_tab1_sex",
         )
 
@@ -128,7 +129,7 @@ with tab2:
             x="Age",
             y="rate_death",
             range_x=[0, 99],
-            range_y=[0, df["rate_death"].max() + 0.01],
+            range_y=[0, df["rate_death"].max() + 0.15],
             color="Race/Ethnicity",
             title="San Diego Region: Mortality Rates",
             labels={"rate_death": "", "Race/Ethnicity": ""},
@@ -154,7 +155,7 @@ with tab2:
                 ]
                 .merge(
                     right=st.session_state.population_data,
-                    on=["year", "race", "sex", "age"],
+                    on=["year", "ethnicity", "sex", "age"],
                 )
                 .groupby("age")[["deaths", "pop"]]
                 .sum()
@@ -192,9 +193,9 @@ with tab2:
         # Create sex selector and filter line chart
         sub_tab2_sex = st.pills(
             label="**Sex:**",
-            options=["M", "F"],
+            options=["Male", "Female"],
             selection_mode="single",
-            default="M",
+            default="Male",
             key="sub_tab2_sex",
         )
 
@@ -213,6 +214,10 @@ with tab2:
                 lfe,
                 x="Year",
                 y="Life Expectancy",
+                range_y=[
+                    lfe["Life Expectancy"].min() - 4,
+                    lfe["Life Expectancy"].max() + 4,
+                ],
                 color="Race/Ethnicity",
                 title="San Diego Region: Life Expectancy at Birth",
                 labels={"Race/Ethnicity": ""},
@@ -232,9 +237,9 @@ with tab3:
     # Load migration rate data
     migration = (
         st.session_state.rates_data[
-            ["year", "race", "sex", "age", "rate_in", "rate_out"]
+            ["year", "ethnicity", "sex", "age", "rate_in", "rate_out"]
         ]
-        .rename(columns={"year": "Year", "race": "Race/Ethnicity", "age": "Age"})
+        .rename(columns={"year": "Year", "ethnicity": "Race/Ethnicity", "age": "Age"})
         .assign(rate_net=lambda x: x["rate_in"] - x["rate_out"])
     )
 
@@ -249,9 +254,9 @@ with tab3:
     # Create sex selector and filter line chart
     tab3_sex = st.pills(
         label="**Sex:**",
-        options=["M", "F"],
+        options=["Male", "Female"],
         selection_mode="single",
-        default="M",
+        default="Male",
         key="tab3_sex",
     )
 
@@ -266,8 +271,8 @@ with tab3:
         y="rate_net",
         range_x=[0, 99],
         range_y=[
-            -abs(migration["rate_net"]).max() - 0.01,
-            abs(migration["rate_net"]).max() + 0.01,
+            -abs(migration["rate_net"]).max() - 0.05,
+            abs(migration["rate_net"]).max() + 0.05,
         ],
         color="Race/Ethnicity",
         title="San Diego Region: Net Migration Rates",
@@ -283,13 +288,13 @@ with tab3:
             (st.session_state.components_data["year"] == tab3_year)
             & (st.session_state.components_data["sex"] == tab3_sex)
         ]
-        .groupby("race")[["ins", "outs"]]
+        .groupby("ethnicity")[["ins", "outs"]]
         .sum()
         .assign(net=lambda x: x["ins"] - x["outs"])
         .reset_index()
         .rename(
             columns={
-                "race": "Race/Ethnicity",
+                "ethnicity": "Race/Ethnicity",
                 "net": "Net Migrants",
                 "ins": "In-Migrants",
                 "outs": "Out-Migrants",

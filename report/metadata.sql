@@ -1,10 +1,12 @@
-SELECT
-    [run_id],
-    [user],
-    [date],
-    [version],
-    [comments],
-    [launch],
-    [horizon]
+SELECT 
+    [run_id]
+    ,[launch]
+    ,[horizon]
+    ,[user]
+    ,[start_date]
+    ,[end_date]
+    ,[version]
+    ,[comments]
+    ,[complete]
 FROM [metadata].[run]
-WHERE [loaded] = 1
+WHERE [complete] = 1
