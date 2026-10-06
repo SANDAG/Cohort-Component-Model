@@ -52,11 +52,11 @@ If mortality rates are provided, the CSV should include one row per year, age, s
 
 ```csv
 year,age,sex,ethnicity,rate_death
-2023,0.0,F,"Non-Hispanic, American Indian or Alaska Native",0.0013964641191015427
+2023,0.0,Female,"Non-Hispanic, American Indian or Alaska Native",0.0013964641191015427
 ...
-2024,45.0,M,"Hispanic",0.0022017810643757416
+2024,45.0,Male,"Hispanic",0.0022017810643757416
 ...
-2025,99.0,M,"Non-Hispanic, White",0.16650980
+2025,99.0,Male,"Non-Hispanic, White",0.16650980
 ```
 
 ### Configuration of Private Data in secrets.yml
