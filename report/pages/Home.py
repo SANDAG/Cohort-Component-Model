@@ -31,7 +31,7 @@ for key in ["population_data", "components_data", "rates_data"]:
 st.markdown("#### Select which data source you want to use for report generation")
 # Create radio buttons for selectiong the data source to be used in report generation
 data_selector = st.radio(
-    "", ["CSV", "SQL Database"], index=None, label_visibility="collapsed"
+    "Data source", ["CSV", "SQL Database"], index=None, label_visibility="collapsed"
 )
 
 # CSV section for what to do if "CSV" option selected
