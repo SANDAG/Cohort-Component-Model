@@ -26,7 +26,7 @@ sql:  # SQL server options
 ```
 
 ### Fertility Rates File Format
-If fertility rates are provided, the CSV should include one row per year, age, sex, and race/ethnicity grouping with no null values in any of the columns. Each year should include female sex (`Female`) only, each of the seven race/ethnicity categories (`Non-Hispanic, American Indian or Alaska Native`; `Non-Hispanic, Asian`; `Non-Hispanic, Black`; `Non-Hispanic, Hawaiian or Pacific Islander`; `Non-Hispanic, Two or More Races`; `Non-Hispanic, White`), and 30 single year of age values (`15-44`) to create 210 rows per year:
+If fertility rates are provided, the CSV should include one row per year, age, sex, and race/ethnicity grouping with no null values in any of the columns. Each year should include female sex (`Female`) only, each of the seven race/ethnicity categories (`Hispanic`; `Non-Hispanic, American Indian or Alaska Native`; `Non-Hispanic, Asian`; `Non-Hispanic, Black`; `Non-Hispanic, Hawaiian or Pacific Islander`; `Non-Hispanic, Two or More Races`; `Non-Hispanic, White`), and 30 single year of age values (`15-44`) to create 210 rows per year:
 
 ```csv
 year,age,sex,ethnicity,rate_birth
@@ -48,7 +48,7 @@ year,ins,outs
 ```
 
 ### Mortality Rates File Format
-If mortality rates are provided, the CSV should include one row per year, age, sex, and race/ethnicity grouping with no null values in any of the columns. Each year should include both sexes (`Male` and `Female`), each of the seven race/ethnicity categories (`Non-Hispanic, American Indian or Alaska Native`; `Non-Hispanic, Asian`; `Non-Hispanic, Black`; `Non-Hispanic, Hawaiian or Pacific Islander`; `Non-Hispanic, Two or More Races`; `Non-Hispanic, White`), and all 100 ages (0-99) to create 1400 rows per year:
+If mortality rates are provided, the CSV should include one row per year, age, sex, and race/ethnicity grouping with no null values in any of the columns. Each year should include both sexes (`Male` and `Female`), each of the seven race/ethnicity categories (`Hispanic`; `Non-Hispanic, American Indian or Alaska Native`; `Non-Hispanic, Asian`; `Non-Hispanic, Black`; `Non-Hispanic, Hawaiian or Pacific Islander`; `Non-Hispanic, Two or More Races`; `Non-Hispanic, White`), and all 100 ages (0-99) to create 1400 rows per year:
 
 ```csv
 year,age,sex,ethnicity,rate_death
