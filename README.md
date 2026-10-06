@@ -170,7 +170,7 @@ streamlit run report/report.py
 ```
 
 # Versioning and Releases
-This repository follows a non-standard release schedule. Rather than doing a new release after changes, bug fixes, or new features, a release is generally made when there is new output data ready to be shared with non- Estimates & Forecasts team members or if data is planned to be used for any official purposes.
+This repository follows a non-standard release schedule. Rather than doing a new release after changes, bug fixes, or new features, a release is generally made when there is new output data ready to be shared with members outside the Estimates & Forecasts team or if data is planned to be used for any official purposes.
 
 ## Release Format
 Releases follow a standard format which can be seen on any release on the [Releases page](https://github.com/SANDAG/Cohort-Component-Model/releases). Each release is associated with a newly created Git tag for the released version in the format `X.X.X` (also see [Semantic Versioning](https://semver.org/)). The release title matches the tagged version in this format: `Cohort Component Model X.X.X`. Release notes begin with metadata describing the purpose of the release and the production database `[run_id]`(s) for external consumption associated with that release. An optional `Major Update(s)` section follows, summarizing the automatically generated release notes listed below it. The automatically generated release notes are created by clicking the "Generate release notes" button.
