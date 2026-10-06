@@ -84,7 +84,7 @@ class InputParser:
         # Check all keys are present and key types using Cerberus. For help, see their
         # website here: https://docs.python-cerberus.org/usage.html
         schema = {
-            "version": {"type": "string", "allowed": ["0.0.0-dev"]},
+            "version": {"type": "string", "allowed": ["0.0.0-dev", "1.0.0"]},
             "comments": {"type": "string"},
             "configurations": {
                 "type": "dict",
