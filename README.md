@@ -166,14 +166,14 @@ direction TB
 This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder or from the production SQL database specified in `secrets.yml`. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/. Run the Streamlit app in the base project directory with the following command.
 
 ```cmd
-streamlit run report/CCM_Validation_Report.py
+streamlit run report/report.py
 ```
 
 # Versioning and Releases
 This repository follows a non-standard release schedule. Rather than doing a new release after changes, bug fixes, or new features, a release is generally made when there is new output data ready to be shared with non- Estimates & Forecasts team members or if data is planned to be used for any official purposes.
 
 ## Release Format
-Releases follow a standard format which can be seen on any release on the [Releases page](https://github.com/SANDAG/Cohort-Component-Model/releases). Each release is associated with a newly created Git tag for the released version in the format `X.X.X` (also see [Semantic Versioning](https://semver.org/)). The release title matches the tagged version in this format: `Cohort Component Model X.X.X`. Release notes begin with metadata describing the purpose of the release and the production database `[run_id]`(s) for external consumption associated with that release. An optional `Major Update(s)` section follows, summarizing the automatically generated release notes listed below it. The automatically generated release notes are created by clicking the "Generate release notes" button
+Releases follow a standard format which can be seen on any release on the [Releases page](https://github.com/SANDAG/Cohort-Component-Model/releases). Each release is associated with a newly created Git tag for the released version in the format `X.X.X` (also see [Semantic Versioning](https://semver.org/)). The release title matches the tagged version in this format: `Cohort Component Model X.X.X`. Release notes begin with metadata describing the purpose of the release and the production database `[run_id]`(s) for external consumption associated with that release. An optional `Major Update(s)` section follows, summarizing the automatically generated release notes listed below it. The automatically generated release notes are created by clicking the "Generate release notes" button.
 
 ## How to Release
 Once a production run is ready for external consumption, the following manual steps are performed. Note, these changes can be made directly to the `main` branch:
