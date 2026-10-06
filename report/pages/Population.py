@@ -219,7 +219,7 @@ with tab3:
                 .sum()
                 .reset_index()
                 .assign(
-                    Metric="Pct of Total - " + field,
+                    Metric="Pct of Total - " + field.capitalize(),
                     Value=lambda x: 100 * x["pop"] / x["pop"].sum(),
                 )
                 .drop(columns=["pop"])
