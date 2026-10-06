@@ -2,7 +2,7 @@
 
 The Cohort Component Model (CCM) is a demographic modeling system used to project the population and households of the region. The Cohort Component Method is used to developed SANDAG's Regional Forecast using assumptions regarding fertility, mortality, migration and headship rates that align with the future economy of the San Diego Metropolitan Area. [For documentation see the project Wikipedia](https://github.com/SANDAG/Cohort-Component-Model/wiki).
 
-## Setup
+# Setup
 Clone the repository and ensure an installation of [uv](https://docs.astral.sh/uv/getting-started/installation/) exists. Create a local virtual environment by running `uv venv` then `uv sync` in the command line. Ensure that a `secrets.yml` file exists in the project root directory (see "Configuration of Private Data in secrets.yml" below for details).
 
 Set the configuration file **config.yml** parameters specific to the model run of interest and run the **main.py** entry point file located in the project root directory.
@@ -78,7 +78,7 @@ sql:
     database: "<SqlDatabaseName>"
 ```
 
-### Production Database Schema
+# Production Database Schema
 For more details regarding individual tables and fields see the [Model Outputs](https://github.com/SANDAG/Cohort-Component-Model/wiki/Model-Outputs) section of the Wiki.
 ```mermaid
 erDiagram
@@ -162,9 +162,25 @@ direction TB
     outputs_rates ||--o{ metadata_run : "run_id"
 ```
 
-### Streamlit Report App
+# Streamlit Report App
 This repository contains a Streamlit app that generates reports for outputs stored locally in the `output` folder or from the production SQL database specified in `secrets.yml`. You can use it to visualize the results of the run interactively using Streamlit's easy-to-use interface. The documentation can be found here https://docs.streamlit.io/. Run the Streamlit app in the base project directory with the following command.
 
 ```cmd
 streamlit run report/CCM_Validation_Report.py
 ```
+
+# Versioning and Releases
+This repository follows a non-standard release schedule. Rather than doing a new release after changes, bug fixes, or new features, a release is generally made when there is new output data ready to be shared with non- Estimates & Forecasts team members or if data is planned to be used for any official purposes.
+
+## Release Format
+Releases follow a standard format which can be seen on any release on the [Releases page](https://github.com/SANDAG/Cohort-Component-Model/releases). Each release is associated with a newly created Git tag for the released version in the format `X.X.X` (also see [Semantic Versioning](https://semver.org/)). The release title matches the tagged version in this format: `Cohort Component Model X.X.X`. Release notes begin with metadata describing the purpose of the release and the production database `[run_id]`(s) for external consumption associated with that release. An optional `Major Update(s)` section follows, summarizing the automatically generated release notes listed below it. The automatically generated release notes are created by clicking the "Generate release notes" button
+
+## How to Release
+Once a production run is ready for external consumption, the following manual steps are performed. Note, these changes can be made directly to the `main` branch:
+
+1. Set the `config.yml` default version to the new release version `X.X.X`
+2. Add the new release version `X.X.X` to the allowed versions defined in `_validate_config()` in the file `python/parsers.py`
+3. Update the default configuration example in `README.md` to show `X.X.X`
+4. A tag and release is made following the release format described above.
+5. Any associated `[run_id]`(s) in the production database identified in the release notes have the `[version]` field in the `[metadata].[run]` table manually updated to reflect the release version `X.X.X`.
+6. Repeat steps 1-3 but with version `X.X.X-dev`
