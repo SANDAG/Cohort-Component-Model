@@ -21,6 +21,9 @@ Only the **Group Quarters - Other** population is calculated using group quarter
 ## Household Formation Rates
 Household formation rates are applied only to the household population (the total population excluding group quarters). See [Formation Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Formation-Rates).
 
+## Household Characteristics Rates
+Household characteristics rates are applied only to the formed households. See [Household Characteristics Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Household-Characteristics-Rates).
+
 ## Death Rates
 Death or mortality rates are applied to the population excluding *College, Military, and Institutional Correctional Facilities* group quarters. Deaths are calculated by single year of age, sex, and race/ethnicity to create the survived population that is eligible for birth and migration. See [Death Rates](https://github.com/SANDAG/Cohort-Component-Model/wiki/Death-Rates).
 
