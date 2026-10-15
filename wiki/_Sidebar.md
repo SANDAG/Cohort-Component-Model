@@ -12,8 +12,5 @@
         <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Household-Characteristics-Rates">Household Characteristics Rates</a></li>
     </ul>
 </details>
-<li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Population-Calculator">Population Calculator</a></li>
-<li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Control-Population">Control Population</a></li>
-<li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Integerization-and-Reallocation">Integerization and Reallocation</a></li>
-<li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Components-of-Change">Components of Change</a></li>
+<li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Annual-Cycle">Annual Cycle</a></li>
 <li><a href="https://github.com/SANDAG/Cohort-Component-Model/wiki/Model-Outputs">Outputs</a></li>
