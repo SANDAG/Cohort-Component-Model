@@ -19,10 +19,11 @@ def calculate_population(
     by single year of age, sex, and race/ethnicity.
 
     Takes the population and applies the group quarters formation rates to the
-    population, excluding "Group Quarters - Military" and "Group Quarters -
-    Institutional Correctional Facilities". Then applies the household
-    formation rate to the remaining household population. Finally, applies the
-    household characteristics rates to the formed households.
+    population, excluding "Group Quarters - College", "Group Quarters - Military",
+    and "Group Quarters - Institutional Correctional Facilities". Then applies
+    the household formation rate to the remaining household population.
+    Finally, applies the household characteristics rates to the formed
+    households.
 
     All values are integerized to ensure whole number counts respecting
     logical consistency and regional totals.
@@ -39,27 +40,21 @@ def calculate_population(
     """
     result = (
         # Merge the population with the formation rates
-        # It is assumed that the pop, gq_mil, and gq_prison fields are integer values
-        population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison"]]
+        # Assumed that pop, gq_college, gq_mil, and gq_prison are integers
+        population[
+            ["age", "sex", "ethnicity", "pop", "gq_college", "gq_mil", "gq_prison"]
+        ]
         .merge(rates["formation_gq_hh"], on=["age", "sex", "ethnicity"])
         .assign(
             # Apply Group Quarters Formation rates to the population
-            # Excluding the "Group Quarters - Military" and "Group Quarters -
-            # Institutional Correctional Facilities" populations
-            gq_college=lambda x: x["rate_gq_college"]
-            * (x["pop"] - x["gq_mil"] - x["gq_prison"]),
+            # Excluding the "Group Quarters - College", "Group Quarters -
+            # Military", and "Group Quarters - Institutional Correctional
+            # Facilities" populations
             gq_other=lambda x: x["rate_gq_other"]
-            * (x["pop"] - x["gq_mil"] - x["gq_prison"]),
+            * (x["pop"] - x["gq_college"] - x["gq_mil"] - x["gq_prison"]),
         )
     )
 
-    # Integerize formed group quarters populations preserving integerized sum
-    result["gq_college"] = utils.integerize_1d(
-        result["gq_college"],
-        control=round(result["gq_college"].sum()),
-        methodology="weighted_random",
-        generator=generator,
-    )
     result["gq_other"] = utils.integerize_1d(
         result["gq_other"],
         control=int(round(result["gq_other"].sum())),
@@ -69,11 +64,11 @@ def calculate_population(
 
     # Next, make sure the integerized formed group quarters populations
     # Do not exceed the total population row-wise, excluding the "Group
-    # Quarters - Military" and "Group Quarters - Institutional Correctional
-    #  Facilities" populations
+    # Quarters - College", "Group Quarters - Military". and "Group Quarters -
+    # Institutional Correctional Facilities" populations
     # Adjust the "Group Quarters - Other" population if it does
     result["pop_remainder"] = (
-        result["pop"] - result["gq_mil"] - result["gq_prison"] - result["gq_college"]
+        result["pop"] - result["gq_college"] - result["gq_mil"] - result["gq_prison"]
     ).astype(int)
 
     result["gq_other"] = utils.reallocate_integers(

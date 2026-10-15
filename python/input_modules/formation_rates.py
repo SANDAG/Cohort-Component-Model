@@ -24,10 +24,10 @@ def run_formation_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
     SANADG's Estimates Program. Rates are calculated within age groups and
     then applied uniformly to all single years of age within those age groups.
 
-    The Group Quarters formation rates are only calculated for College and
-    Other group quarters categories as it is assumed that the Military and
-    Institutional Correctional Facilities group quarters population will remain
-    fixed through the forecast.
+    The Group Quarters formation rates are only calculated for Other group
+    quarters categories as it is assumed that the College, Military, and
+    Institutional Correctional Facilities group quarters population will
+    remain fixed through the forecast.
 
     The Household formation rates are only applied to the household population,
     excluding those in Group Quarters.
@@ -168,19 +168,14 @@ def _create_formation_outputs(
             on=["age", "sex", "ethnicity"],
         ).assign(
             # First calculate the implied group quarters using the rates
-            implied_gq_college=lambda df: df["rate_gq_college"]
-            * (df["pop"] - df["gq_mil"] - df["gq_prison"]),
             implied_gq_other=lambda df: df["rate_gq_other"]
             * (df["pop"] - df["gq_mil"] - df["gq_prison"]),
             # Then adjust the rates to match the actual group quarters
-            rate_gq_college=lambda df: df["gq_college"]
-            / df["implied_gq_college"].replace(0, 1)
-            * df["rate_gq_college"],
             rate_gq_other=lambda df: df["gq_other"]
             / df["implied_gq_other"].replace(0, 1)
             * df["rate_gq_other"],
         )
-    )[["age", "sex", "ethnicity", "rate_gq_college", "rate_gq_other"]]
+    )[["age", "sex", "ethnicity", "rate_gq_other"]]
 
     # Distribute household formation rates to single year of age
     # And scale rates to match total households from SANDAG's Estimates Program

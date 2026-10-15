@@ -92,7 +92,6 @@ CREATE TABLE [outputs].[rates]
     [rate_death] FLOAT NOT NULL,
     [rate_in] FLOAT NOT NULL,
     [rate_out] FLOAT NOT NULL,
-    [rate_gq_college] FLOAT NOT NULL,
     [rate_gq_other] FLOAT NOT NULL,
     [rate_hh] FLOAT NOT NULL,
     [rate_hh_size1] FLOAT NOT NULL,

@@ -12,10 +12,10 @@ def calculate_births(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
     """Calculate births by single year of age, sex, and race/ethnicity.
 
     Birth rates are applied to the total survived population excluding "Group
-    Quarters - Military" and "Group Quarters - Institutional Correctional
-    Facilities" populations. Note that the survived population is assigned
-    birth rates for the next single year of age increment as the population
-    ages through the annual cycle.
+    Quarters - College", "Group Quarters - Military" and "Group Quarters -
+    Institutional Correctional Facilities" populations. Note that the survived
+    population is assigned birth rates for the next single year of age
+    increment as the population ages through the annual cycle.
 
     Args:
         population (pd.DataFrame): Population data broken down by single year
@@ -30,9 +30,24 @@ def calculate_births(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
     # Apply Birth Rates to the Survived Population
     # Note the Population Ages +1 before applying Birth Rates
     births = (
-        population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison", "deaths"]]
+        population[
+            [
+                "age",
+                "sex",
+                "ethnicity",
+                "pop",
+                "gq_college",
+                "gq_mil",
+                "gq_prison",
+                "deaths",
+            ]
+        ]
         .assign(
-            pop_surv=lambda x: x["pop"] - x["gq_mil"] - x["gq_prison"] - x["deaths"],
+            pop_surv=lambda x: x["pop"]
+            - x["gq_college"]
+            - x["gq_mil"]
+            - x["gq_prison"]
+            - x["deaths"],
             age_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
         .groupby(["age", "sex", "ethnicity", "age_surv"])
@@ -66,8 +81,8 @@ def calculate_deaths(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
     """Calculate deaths by single year of age, sex, and race/ethnicity.
 
     Death rates are applied to the total population excluding "Group
-    Quarters - Military" and "Group Quarters - Institutional Correctional
-    Facilities" populations.
+    Quarters - College", "Group Quarters - Military", and "Group Quarters -
+    Institutional Correctional Facilities" populations.
 
     Args:
         population (pd.DataFrame): Population by single year of age, sex, and
@@ -79,12 +94,16 @@ def calculate_deaths(population: pd.DataFrame, rate: pd.DataFrame) -> pd.DataFra
         pd.DataFrame: Deaths by single year of age, sex, and race/ethnicity
     """
     # Merge Population with Death Rates
-    # Apply Death Rates to the Non-Military/Prison population
+    # Apply Death Rates to the Non-College/Military/Prison population
     deaths = (
-        population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison"]]
+        population[
+            ["age", "sex", "ethnicity", "pop", "gq_college", "gq_mil", "gq_prison"]
+        ]
         .merge(right=rate, how="left", on=["age", "sex", "ethnicity"])
         .assign(
-            pop_eligible=lambda x: (x["pop"] - x["gq_mil"] - x["gq_prison"]).astype(int)
+            pop_eligible=lambda x: (
+                x["pop"] - x["gq_college"] - x["gq_mil"] - x["gq_prison"]
+            ).astype(int)
         )
         .assign(deaths=lambda x: x["pop_eligible"] * x["rate_death"])
         .sort_values(by=["age", "sex", "ethnicity"])
@@ -111,10 +130,10 @@ def calculate_migration(population: pd.DataFrame, rate: pd.DataFrame) -> pd.Data
     """Calculate migration by single year of age, sex, and race/ethnicity.
 
     Migration rates are applied to the survived population excluding "Group
-    Quarters - Military" and "Group Quarters - Institutional Correctional
-    Facilities" populations. Note that the survived population is assigned
-    migration rates for the next single year of age increment as the
-    population ages through the annual cycle.
+    Quarters - College", "Group Quarters - Military", and "Group Quarters -
+    Institutional Correctional Facilities" populations. Note that the survived
+    population is assigned migration rates for the next single year of age
+    increment as the population ages through the annual cycle.
 
     Args:
         population (pd.DataFrame): Population by single year of age, sex, and
@@ -130,10 +149,21 @@ def calculate_migration(population: pd.DataFrame, rate: pd.DataFrame) -> pd.Data
     # Apply Migration Rates to the Survived Population
     # Note the Population Ages +1 before applying Migration Rates
     migrants = (
-        population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison", "deaths"]]
+        population[
+            [
+                "age",
+                "sex",
+                "ethnicity",
+                "pop",
+                "gq_college",
+                "gq_mil",
+                "gq_prison",
+                "deaths",
+            ]
+        ]
         .assign(
             pop_surv=lambda x: (
-                x["pop"] - x["gq_mil"] - x["gq_prison"] - x["deaths"]
+                x["pop"] - x["gq_college"] - x["gq_mil"] - x["gq_prison"] - x["deaths"]
             ).astype(int),
             age_surv=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
@@ -277,12 +307,16 @@ def increment_population(
         .reset_index()
     )
 
-    # Shift the "Group Quarters - Military" and "Group Quarters - Institutional
-    # Correctional Facilities" populations back in age increment as both are
-    # held constant in the forecast
+    # Shift the "Group Quarters - College", "Group Quarters - Military" and
+    # "Group Quarters - Institutional Correctional Facilities" populations
+    # back in age increment as both are held constant in the forecast
     incremented_population = incremented_population.sort_values(
         by=["ethnicity", "sex", "age"]
     ).reset_index()
+
+    incremented_population["gq_college"] = incremented_population["gq_college"].shift(
+        periods=-1, fill_value=0
+    )
 
     incremented_population["gq_mil"] = incremented_population["gq_mil"].shift(
         periods=-1, fill_value=0
@@ -292,29 +326,44 @@ def increment_population(
         periods=-1, fill_value=0
     )
 
-    # Ensure the "Group Quarters - Military" and "Group Quarters - Institutional
-    # Correctional Facilities" populations are not greater than the total
-    # population in each single year of age, sex, and ethnicity group
+    # Ensure the "Group Quarters - College", "Group Quarters - Military" and
+    # "Group Quarters - Institutional Correctional Facilities" populations are
+    # not greater than the total population in each single year of age, sex,
+    # and ethnicity group
 
-    # Check Military first is not greater than total population
+    # Check College first is not greater than total population
+    incremented_population["gq_college"] = utils.reallocate_integers(
+        df=incremented_population, subset="gq_college", total="pop"
+    )
+
+    # Check Military is not greater than the total population
+    # Subtracting the College population
+    incremented_population["pop_no_college"] = (
+        incremented_population["pop"] - incremented_population["gq_college"]
+    ).astype(int)
     incremented_population["gq_mil"] = utils.reallocate_integers(
-        df=incremented_population, subset="gq_mil", total="pop"
+        df=incremented_population, subset="gq_mil", total="pop_no_college"
     )
 
     # Then check Prison population is not greater than the total population
-    # Subtracting the Military population
-    incremented_population["pop_no_mil"] = (
-        incremented_population["pop"] - incremented_population["gq_mil"]
+    # Subtracting the College and Military populations
+    incremented_population["pop_no_college_mil"] = (
+        incremented_population["pop"]
+        - incremented_population["gq_college"]
+        - incremented_population["gq_mil"]
     ).astype(int)
     incremented_population["gq_prison"] = utils.reallocate_integers(
-        df=incremented_population, subset="gq_prison", total="pop_no_mil"
+        df=incremented_population, subset="gq_prison", total="pop_no_college_mil"
     )
-    # Drop the temporary column used for reallocation
-    incremented_population = incremented_population.drop(columns=["pop_no_mil"])
+
+    # Drop the temporary columns used for reallocation
+    incremented_population = incremented_population.drop(
+        columns=["pop_no_college", "pop_no_college_mil"]
+    )
 
     # Add the newborns into the dataset
     incremented_population = pd.concat(
-        [newborns.assign(gq_mil=0, gq_prison=0), incremented_population]
+        [newborns.assign(gq_college=0, gq_mil=0, gq_prison=0), incremented_population]
     )
 
     # Return the Components of Change and the incremented Population
@@ -323,6 +372,6 @@ def increment_population(
             ["age", "sex", "ethnicity", "births", "deaths", "ins", "outs"]
         ],
         "population": incremented_population[
-            ["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison"]
+            ["age", "sex", "ethnicity", "pop", "gq_college", "gq_mil", "gq_prison"]
         ],
     }

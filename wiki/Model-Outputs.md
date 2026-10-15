@@ -40,7 +40,6 @@ The individual datasets are described below.
 | **rate_death**       | float   | *Death rate* |
 | **rate_in**          | float   | *In migration rate; includes both foreign and domestic* |
 | **rate_out**         | float   | *Out migration rate* |
-| **rate_gq_college**  | float   | *College group quarters formation rate* |
 | **rate_gq_other**    | float   | *Other group quarters formation rate* |
 | **rate_hh**          | float   | *Household formation rate* |
 | **rate_hh_size1**    | float   | *Household characteristic rate; households with 1 person* |
