@@ -34,6 +34,6 @@ In/out migration rates are applied to the survived population, which excludes *C
 ## Population for Next Increment
 The population for the current increment by single year of age, sex, and race/ethnicity, and including the *College, Military, and Institutional Correctional Facilities* group quarters, is used to derive the *Group Quarters - Other* population and the number of formed households. Household characteristics rates are then applied to the formed households, generating the complete population for the current increment.
 
-The current increment population is then survived, birthed, migrated, and aged one year producing both the next increment's population and the components of change: births, deaths, and migration. This output feeds back into the annual cycle and is iteratively processed until the forecast reaches the horizon year.
+The current increment population is then survived, birthed, migrated, and aged one year producing both the next increment's population and the components of change: births, deaths, and migration. Birth and migration rates are applied up using the eligible survivors' next single year of age, capped at 99, rather than their current increment age. This output feeds back into the annual cycle and is iteratively processed until the forecast reaches the horizon year.
 
 *See the **python/annual_cycle.py** and **python/calculate_population.py** files for underlying code used by the module.*
