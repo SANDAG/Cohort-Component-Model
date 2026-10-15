@@ -132,7 +132,7 @@ BEGIN
                     OR ([persons].[AGEP] > 99 AND [age_group].[name] = ''85 and Older'')
                 WHERE
                     -- Remove "Group Quarters - College"
-                    NOT ([SCHG] IN (''15'',''16'') AND (' + @gq_noninst + ' OR ' + @gq_inst + '))
+                    NOT ([SCHG] IS NOT NULL AND [SCHG] IN (''15'',''16'') AND (' + @gq_noninst + ' OR ' + @gq_inst + '))
                     -- Remove "Group Quarters - Military"
                     AND NOT ([MIL] = 1 AND ' + @gq_noninst + ')
                     -- Remove "Group Quarters - Institutional Correctional Facilities"

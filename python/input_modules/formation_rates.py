@@ -169,7 +169,7 @@ def _create_formation_outputs(
         ).assign(
             # First calculate the implied group quarters using the rates
             implied_gq_other=lambda df: df["rate_gq_other"]
-            * (df["pop"] - df["gq_mil"] - df["gq_prison"]),
+            * (df["pop"] - df["gq_college"] - df["gq_mil"] - df["gq_prison"]),
             # Then adjust the rates to match the actual group quarters
             rate_gq_other=lambda df: df["gq_other"]
             / df["implied_gq_other"].replace(0, 1)

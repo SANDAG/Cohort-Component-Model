@@ -282,7 +282,7 @@ BEGIN
             OR ([#pums_migrants_tbl].[AGEP] > 99 AND [age_group].[name] = '85 and Older')
         WHERE
             -- Remove "Group Quarters - College"
-            NOT ([SCHG] IN ('15','16')AND ((@year BETWEEN 2012 AND 2018 AND [RELP] IN ('16','17')) OR (@year > 2018 AND [RELSHIPP] IN ('37','38'))))
+            NOT ([SCHG] IS NOT NULL AND [SCHG] IN ('15','16')AND ((@year BETWEEN 2012 AND 2018 AND [RELP] IN ('16','17')) OR (@year > 2018 AND [RELSHIPP] IN ('37','38'))))
             -- Remove "Group Quarters - Military"
             AND NOT ([MIL] = 1 AND ((@year BETWEEN 2012 AND 2018 AND [RELP] = '17') OR (@year > 2018 AND [RELSHIPP] = '38')))
             -- Remove "Group Quarters - Institutional Correctional Facilities
