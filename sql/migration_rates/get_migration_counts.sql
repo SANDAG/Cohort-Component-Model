@@ -3,9 +3,9 @@ Calculate in/out migration counts by age group, sex, and race/ethnicity for San 
 
 Using the ACS 5-year PUMS, in/out migration counts are calculated within SANDAG
 Estimates Program age groups, sex, and race/ethnicity categories. The "Group
-Quarters - Military" and "Group Quarters - Institutional Correctional
-Facilities" populations are excluded as these populations are held constant
-for the duration of the forecast.
+Quarters - College", "Group Quarters - Military" and "Group Quarters -
+Institutional Correctional Facilities" populations are excluded as these
+populations are held constant for the duration of the forecast.
 
 The ACS 5-year PUMS changes both field names and definitions through the years
 that impact the calculations of in/out migration counts. These field name and
@@ -177,6 +177,7 @@ BEGIN
         [SEX] varchar(1) NOT NULL,
         [HISP] varchar(2) NOT NULL,
         [RAC1P] varchar(1) NOT NULL,
+        [SCHG] varchar(2) NULL,
         [DIS] varchar(1) NOT NULL,
         [MIL] varchar(1) NULL,
         [MIGSP05] varchar(3) NULL,
@@ -194,11 +195,11 @@ BEGIN
     -- Build ACS PUMS query based on year and filter to migrants using [MIG] field
     DECLARE @pums_qry nvarchar(max) =
         CASE 
-            WHEN @year BETWEEN 2012 AND 2015 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], [PUMA00], [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [DIS], [MIL], [MIGSP05], [MIGSP12], NULL AS [MIGSP], [MIGPUMA00], [MIGPUMA10], NULL AS [MIGPUMA20], [RELP], NULL AS [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
-            WHEN @year BETWEEN 2016 AND 2018 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], NULL AS [PUMA00], [PUMA] AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], [MIGPUMA] AS [MIGPUMA10], NULL AS [MIGPUMA20], [RELP], NULL AS [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
-            WHEN @year BETWEEN 2019 AND 2021 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], NULL AS [PUMA00], [PUMA] AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], [MIGPUMA] AS [MIGPUMA10], NULL AS [MIGPUMA20], NULL AS [RELP], [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
-            WHEN @year = 2022 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], NULL AS [PUMA00], [PUMA10], [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], [MIGPUMA10], [MIGPUMA20], NULL AS [RELP], [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
-            WHEN @year BETWEEN 2023 AND @max_year THEN 'SELECT [SERIALNO], [SPORDER], [STATE], NULL AS [PUMA00], NULL AS [PUMA10], [PUMA] AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], NULL AS [MIGPUMA10], [MIGPUMA] AS [MIGPUMA20], NULL AS [RELP], [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
+            WHEN @year BETWEEN 2012 AND 2015 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], [PUMA00], [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [SCHG], [DIS], [MIL], [MIGSP05], [MIGSP12], NULL AS [MIGSP], [MIGPUMA00], [MIGPUMA10], NULL AS [MIGPUMA20], [RELP], NULL AS [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
+            WHEN @year BETWEEN 2016 AND 2018 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], NULL AS [PUMA00], [PUMA] AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [SCHG], [DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], [MIGPUMA] AS [MIGPUMA10], NULL AS [MIGPUMA20], [RELP], NULL AS [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
+            WHEN @year BETWEEN 2019 AND 2021 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], NULL AS [PUMA00], [PUMA] AS [PUMA10], NULL AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [SCHG],[DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], [MIGPUMA] AS [MIGPUMA10], NULL AS [MIGPUMA20], NULL AS [RELP], [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
+            WHEN @year = 2022 THEN 'SELECT [SERIALNO], [SPORDER], [ST] AS [STATE], NULL AS [PUMA00], [PUMA10], [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [SCHG], [DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], [MIGPUMA10], [MIGPUMA20], NULL AS [RELP], [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
+            WHEN @year BETWEEN 2023 AND @max_year THEN 'SELECT [SERIALNO], [SPORDER], [STATE], NULL AS [PUMA00], NULL AS [PUMA10], [PUMA] AS [PUMA20], [AGEP], [SEX], [HISP], [RAC1P], [SCHG], [DIS], [MIL], NULL AS [MIGSP05], NULL AS [MIGSP12], [MIGSP], NULL AS [MIGPUMA00], NULL AS [MIGPUMA10], [MIGPUMA] AS [MIGPUMA20], NULL AS [RELP], [RELSHIPP], [PWGTP] FROM [acs].[pums].[5y_' + @pums_5yr + '_persons] WHERE [MIG] IN (''2'', ''3'')'
             ELSE NULL
         END
 
@@ -279,9 +280,11 @@ BEGIN
         INNER JOIN [demographic_warehouse].[dim].[age_group]
             ON [#pums_migrants_tbl].[AGEP] BETWEEN [age_group].[lower_bound] AND [age_group].[upper_bound]
             OR ([#pums_migrants_tbl].[AGEP] > 99 AND [age_group].[name] = '85 and Older')
-        WHERE 
+        WHERE
+            -- Remove "Group Quarters - College"
+            NOT ([SCHG] IS NOT NULL AND [SCHG] IN ('15','16')AND ((@year BETWEEN 2012 AND 2018 AND [RELP] IN ('16','17')) OR (@year > 2018 AND [RELSHIPP] IN ('37','38'))))
             -- Remove "Group Quarters - Military"
-            NOT ([MIL] = 1 AND ((@year BETWEEN 2012 AND 2018 AND [RELP] = '17') OR (@year > 2018 AND [RELSHIPP] = '38')))
+            AND NOT ([MIL] = 1 AND ((@year BETWEEN 2012 AND 2018 AND [RELP] = '17') OR (@year > 2018 AND [RELSHIPP] = '38')))
             -- Remove "Group Quarters - Institutional Correctional Facilities
             AND NOT ([DIS] = '2' AND [AGEP] >= 10 AND ((@year BETWEEN 2012 AND 2018 AND [RELP] = '16') OR (@year > 2018 AND [RELSHIPP] = '37')))
     )

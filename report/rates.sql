@@ -8,7 +8,6 @@ SELECT
       ,[rate_death]
       ,[rate_in]
       ,[rate_out]
-      ,[rate_gq_college]
       ,[rate_gq_other]
       ,[rate_hh]
       ,[rate_hh_size1]

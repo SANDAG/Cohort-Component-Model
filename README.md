@@ -142,7 +142,6 @@ direction TB
         rate_death FLOAT
         rate_in FLOAT
         rate_out FLOAT
-        rate_gq_college FLOAT
         rate_gq_other FLOAT
         rate_hh FLOAT
         rate_hh_size1 FLOAT

@@ -25,10 +25,10 @@ def run_migration_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
     years, migration rates are scaled based on control totals, if provided.
 
     Migration rates are calculated from the ACS 5-year PUMS, excluding the
-    Military and Institutional Correctional Facilities group quarters
-    populations as it is assumed those populations will remain fixed through
-    the forecast. Rates are calculated within age groups and then applied
-    uniformly to all single years of age within those age groups.
+    College, Military, and Institutional Correctional Facilities group
+    quarters populations as it is assumed those populations will remain fixed
+    through the forecast. Rates are calculated within age groups and then
+    applied uniformly to all single years of age within those age groups.
 
     Functionality is split apart for code encapsulation:
         _get_migration_inputs - Get migration ins/outs and migration-eligible
@@ -196,8 +196,8 @@ def _control_migration_rates(
     migration-eligible population at the current increment. It then scales
     the rates to match input in/out migration control totals, applying the
     maximum rate cap specified in the project utilities. Migration-eligible
-    population is defined as the population excluding the Military and
-    Institutional Correctional Facilities group quarters populations.
+    population is defined as the population excluding the College, Military,
+    and Institutional Correctional Facilities group quarters populations.
 
     Note, this calculation uses the migration-eligible population rather than
     the survived migration-eligible population, which is where the migration
@@ -225,10 +225,15 @@ def _control_migration_rates(
 
         # Calculate the total in/out migrants from the rates and population
         controlled_rates = (
-            population[["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison"]]
+            population[
+                ["age", "sex", "ethnicity", "pop", "gq_college", "gq_mil", "gq_prison"]
+            ]
             .merge(migration_outputs, how="left", on=["age", "sex", "ethnicity"])
             .assign(
-                pop_eligible=lambda x: x["pop"] - x["gq_mil"] - x["gq_prison"],
+                pop_eligible=lambda x: x["pop"]
+                - x["gq_college"]
+                - x["gq_mil"]
+                - x["gq_prison"],
                 ins=lambda x: x["rate_in"] * x["pop_eligible"],
                 outs=lambda x: x["rate_out"] * x["pop_eligible"],
             )

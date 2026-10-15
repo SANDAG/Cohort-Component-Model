@@ -3,9 +3,9 @@ Calculate San Diego migration-eligible resident population by age group, sex, an
 
 Using the ACS 5-year PUMS, migration eligible residents are calculated within
 SANDAG Estimates Program age groups, sex, and race/ethnicity categories. The
-"Group Quarters - Military" and "Group Quarters - Institutional Correctional
-Facilities" populations are excluded as these populations are held constant
-for the duration of the forecast.
+"Group Quarters - College", "Group Quarters - Military", and "Group Quarters
+- Institutional Correctional Facilities" populations are excluded as these
+populations are held constant for the duration of the forecast.
 */
 
 SET NOCOUNT ON;
@@ -130,9 +130,11 @@ BEGIN
                 INNER JOIN [demographic_warehouse].[dim].[age_group]
                     ON [persons].[AGEP] BETWEEN [age_group].[lower_bound] AND [age_group].[upper_bound]
                     OR ([persons].[AGEP] > 99 AND [age_group].[name] = ''85 and Older'')
-                WHERE 
+                WHERE
+                    -- Remove "Group Quarters - College"
+                    NOT ([SCHG] IS NOT NULL AND [SCHG] IN (''15'',''16'') AND (' + @gq_noninst + ' OR ' + @gq_inst + '))
                     -- Remove "Group Quarters - Military"
-                    NOT ([MIL] = 1 AND ' + @gq_noninst + ')
+                    AND NOT ([MIL] = 1 AND ' + @gq_noninst + ')
                     -- Remove "Group Quarters - Institutional Correctional Facilities"
                     AND NOT ([DIS] = ''2'' AND [AGEP] >= 10 AND ' + @gq_inst + ')
             ) AS [migration_eligible]
