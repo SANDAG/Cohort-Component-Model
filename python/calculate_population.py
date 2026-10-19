@@ -102,6 +102,10 @@ def calculate_population(
             hh_size1=lambda x: x["hh"] * x["rate_hh_size1"],
             hh_size2=lambda x: x["hh"] * x["rate_hh_size2"],
             hh_size3=lambda x: x["hh"] * x["rate_hh_size3"],
+            hh_size4=lambda x: x["hh"] * x["rate_hh_size4"],
+            hh_size5=lambda x: x["hh"] * x["rate_hh_size5"],
+            hh_size6=lambda x: x["hh"] * x["rate_hh_size6"],
+            hh_size7=lambda x: x["hh"] * x["rate_hh_size7"],
             hh_workers0=lambda x: x["hh"] * x["rate_hh_workers0"],
             hh_workers1=lambda x: x["hh"] * x["rate_hh_workers1"],
             hh_workers2=lambda x: x["hh"] * x["rate_hh_workers2"],
@@ -117,6 +121,10 @@ def calculate_population(
         "hh_size1",
         "hh_size2",
         "hh_size3",
+        "hh_size4",
+        "hh_size5",
+        "hh_size6",
+        "hh_size7",
         "hh_workers0",
         "hh_workers1",
         "hh_workers2",
@@ -134,8 +142,28 @@ def calculate_population(
 
     # Then adjust the implied counts row-wise to ensure consistency with
     # The total household count within single year of age, sex, and race/ethnicity
-    result[["hh_size1", "hh_size2", "hh_size3"]] = utils.reallocate_group_integers(
-        df=result, cols=["hh_size1", "hh_size2", "hh_size3"], total="hh"
+    result[
+        [
+            "hh_size1",
+            "hh_size2",
+            "hh_size3",
+            "hh_size4",
+            "hh_size5",
+            "hh_size6",
+            "hh_size7",
+        ]
+    ] = utils.reallocate_group_integers(
+        df=result,
+        cols=[
+            "hh_size1",
+            "hh_size2",
+            "hh_size3",
+            "hh_size4",
+            "hh_size5",
+            "hh_size6",
+            "hh_size7",
+        ],
+        total="hh",
     )
 
     result[["hh_workers0", "hh_workers1", "hh_workers2", "hh_workers3"]] = (
@@ -172,6 +200,10 @@ def calculate_population(
             "hh_size1",
             "hh_size2",
             "hh_size3",
+            "hh_size4",
+            "hh_size5",
+            "hh_size6",
+            "hh_size7",
             "hh_workers0",
             "hh_workers1",
             "hh_workers2",
