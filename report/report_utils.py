@@ -57,7 +57,11 @@ def hh_metrics(category: str) -> str:
     elif category in [
         "Households with 1 Person",
         "Households with 2 Persons",
-        "Households with 3+ Persons",
+        "Households with 3 Persons",
+        "Households with 4 Persons",
+        "Households with 5 Persons",
+        "Households with 6 Persons",
+        "Households with 7+ Persons",
     ]:
         return "Pct of Total - Size"
     elif category in [
