@@ -177,6 +177,10 @@ def _create_hh_characteristics_rates_outputs(
             hh_size1=lambda x: x["hh"] * x["rate_hh_size1"],
             hh_size2=lambda x: x["hh"] * x["rate_hh_size2"],
             hh_size3=lambda x: x["hh"] * x["rate_hh_size3"],
+            hh_size4=lambda x: x["hh"] * x["rate_hh_size4"],
+            hh_size5=lambda x: x["hh"] * x["rate_hh_size5"],
+            hh_size6=lambda x: x["hh"] * x["rate_hh_size6"],
+            hh_size7=lambda x: x["hh"] * x["rate_hh_size7"],
             hh_workers0=lambda x: x["hh"] * x["rate_hh_workers0"],
             hh_workers1=lambda x: x["hh"] * x["rate_hh_workers1"],
             hh_workers2=lambda x: x["hh"] * x["rate_hh_workers2"],
@@ -193,6 +197,10 @@ def _create_hh_characteristics_rates_outputs(
         "hh_size1",
         "hh_size2",
         "hh_size3",
+        "hh_size4",
+        "hh_size5",
+        "hh_size6",
+        "hh_size7",
         "hh_workers0",
         "hh_workers1",
         "hh_workers2",
@@ -222,8 +230,28 @@ def _create_hh_characteristics_rates_outputs(
 
     # Then adjust the implied counts row-wise to ensure consistency with
     # The total household count within single year of age, sex, and race/ethnicity
-    hh_rates[["hh_size1", "hh_size2", "hh_size3"]] = utils.reallocate_group_integers(
-        df=hh_rates, cols=["hh_size1", "hh_size2", "hh_size3"], total="hh"
+    hh_rates[
+        [
+            "hh_size1",
+            "hh_size2",
+            "hh_size3",
+            "hh_size4",
+            "hh_size5",
+            "hh_size6",
+            "hh_size7",
+        ]
+    ] = utils.reallocate_group_integers(
+        df=hh_rates,
+        cols=[
+            "hh_size1",
+            "hh_size2",
+            "hh_size3",
+            "hh_size4",
+            "hh_size5",
+            "hh_size6",
+            "hh_size7",
+        ],
+        total="hh",
     )
 
     hh_rates[["hh_workers0", "hh_workers1", "hh_workers2", "hh_workers3"]] = (
@@ -251,6 +279,10 @@ def _create_hh_characteristics_rates_outputs(
         rate_hh_size1=lambda x: x["hh_size1"] / x["hh"].replace({0: 1}),
         rate_hh_size2=lambda x: x["hh_size2"] / x["hh"].replace({0: 1}),
         rate_hh_size3=lambda x: x["hh_size3"] / x["hh"].replace({0: 1}),
+        rate_hh_size4=lambda x: x["hh_size4"] / x["hh"].replace({0: 1}),
+        rate_hh_size5=lambda x: x["hh_size5"] / x["hh"].replace({0: 1}),
+        rate_hh_size6=lambda x: x["hh_size6"] / x["hh"].replace({0: 1}),
+        rate_hh_size7=lambda x: x["hh_size7"] / x["hh"].replace({0: 1}),
         rate_hh_workers0=lambda x: x["hh_workers0"] / x["hh"].replace({0: 1}),
         rate_hh_workers1=lambda x: x["hh_workers1"] / x["hh"].replace({0: 1}),
         rate_hh_workers2=lambda x: x["hh_workers2"] / x["hh"].replace({0: 1}),
@@ -269,6 +301,10 @@ def _create_hh_characteristics_rates_outputs(
             "rate_hh_size1",
             "rate_hh_size2",
             "rate_hh_size3",
+            "rate_hh_size4",
+            "rate_hh_size5",
+            "rate_hh_size6",
+            "rate_hh_size7",
             "rate_hh_workers0",
             "rate_hh_workers1",
             "rate_hh_workers2",

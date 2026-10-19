@@ -123,6 +123,10 @@ direction TB
         hh_size1 INT
         hh_size2 INT
         hh_size3 INT
+        hh_size4 INT
+        hh_size5 INT
+        hh_size6 INT
+        hh_size7 INT
         hh_workers0 INT
         hh_workers1 INT
         hh_workers2 INT
@@ -147,6 +151,10 @@ direction TB
         rate_hh_size1 FLOAT
         rate_hh_size2 FLOAT
         rate_hh_size3 FLOAT
+        rate_hh_size4 FLOAT
+        rate_hh_size5 FLOAT
+        rate_hh_size6 FLOAT
+        rate_hh_size7 FLOAT
         rate_hh_workers0 FLOAT
         rate_hh_workers1 FLOAT
         rate_hh_workers2 FLOAT
