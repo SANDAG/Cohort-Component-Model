@@ -25,21 +25,23 @@ with tab1:
         max_value=fertility["Year"].max(),
         key="tab1_year",
     )
-
     fertility = fertility.loc[fertility["Year"] == tab1_year]
-
     # Show fertility rates in a line chart
-    fig = px.line(
-        fertility,
-        x="Age",
-        y="rate_birth",
-        range_x=[15, 45],
-        range_y=[0, fertility["rate_birth"].max() + 0.02],
-        color="Race/Ethnicity",
-        title="San Diego Region: Fertility Rates",
-        labels={"rate_birth": "", "Race/Ethnicity": ""},
-        line_shape="spline",
-    ).update_layout(legend=dict(orientation="h", y=1.15))
+    fig = (
+        px.line(
+            fertility,
+            x="Age",
+            y="rate_birth",
+            range_x=[15, 46],
+            range_y=[0, fertility["rate_birth"].max() + 0.02],
+            color="Race/Ethnicity",
+            title="San Diego Region: Fertility Rates",
+            labels={"rate_birth": "", "Race/Ethnicity": ""},
+            line_shape="spline",
+        )
+        .update_layout(legend=dict(orientation="h", y=1.15))
+        .update_xaxes(tickvals=[15, 20, 25, 30, 35, 40, 44])
+    )
 
     st.plotly_chart(fig)
 
@@ -124,17 +126,21 @@ with tab2:
         df = df.loc[(df["Year"] == tab2_year) & (df["sex"] == sub_tab1_sex)]
 
         # Show mortality rates in a line chart
-        fig = px.line(
-            df,
-            x="Age",
-            y="rate_death",
-            range_x=[0, 99],
-            range_y=[0, df["rate_death"].max() + 0.15],
-            color="Race/Ethnicity",
-            title="San Diego Region: Mortality Rates",
-            labels={"rate_death": "", "Race/Ethnicity": ""},
-            line_shape="spline",
-        ).update_layout(legend=dict(orientation="h", y=1.15))
+        fig = (
+            px.line(
+                df,
+                x="Age",
+                y="rate_death",
+                range_x=[0, 100],
+                range_y=[0, df["rate_death"].max() + 0.15],
+                color="Race/Ethnicity",
+                title="San Diego Region: Mortality Rates",
+                labels={"rate_death": "", "Race/Ethnicity": ""},
+                line_shape="spline",
+            )
+            .update_layout(legend=dict(orientation="h", y=1.15))
+            .update_xaxes(tickvals=[0, 20, 40, 60, 80, 99])
+        )
 
         st.plotly_chart(fig)
 
