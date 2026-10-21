@@ -138,14 +138,10 @@ class LeeCarterModel(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
         last_year = int(X["year"].max())
         first_year = int(X["year"].min())
 
-        if forecast_year is None:
-            steps = last_year - first_year
-        else:
-            steps = forecast_year - last_year
-            if steps < 1:
-                raise ValueError(
-                    "forecast_year must be after the last year in training data."
-                )
+        if forecast_year is not None and (forecast_year - last_year) < 1:
+            raise ValueError(
+                "forecast_year must be after the last year in training data."
+            )
 
         mtx = X[["year", "age"]].copy()
         mtx["rates"] = y.values
