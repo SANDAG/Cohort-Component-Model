@@ -71,6 +71,7 @@ def run_etl() -> None:
 
     output_files = {
         "components": utils.OUTPUT_FOLDER / "components.csv",
+        "housing": utils.OUTPUT_FOLDER / "housing.csv",
         "population": utils.OUTPUT_FOLDER / "population.csv",
         "rates": utils.OUTPUT_FOLDER / "rates.csv",
     }

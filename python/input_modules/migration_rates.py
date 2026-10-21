@@ -113,8 +113,8 @@ def _validate_migration_inputs(migration_inputs: dict[str, pd.DataFrame]) -> Non
         table_name="Input Eligible Migrant Population",
         data=migration_inputs["eligible_population"],
         row_count={"key_columns": {"age_group", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
     # Validate the migration counts
@@ -122,8 +122,8 @@ def _validate_migration_inputs(migration_inputs: dict[str, pd.DataFrame]) -> Non
         table_name="Input Migration Counts",
         data=migration_inputs["migration_counts"],
         row_count={"key_columns": {"age_group", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
 
@@ -180,8 +180,8 @@ def _validate_migration_outputs(migration_outputs: pd.DataFrame) -> None:
         table_name="Output Migration Rates",
         data=migration_outputs,
         row_count={"key_columns": {"age", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
 

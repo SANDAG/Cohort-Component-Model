@@ -2,7 +2,6 @@
 
 import logging
 import math
-import os.path
 import pathlib
 import yaml
 
@@ -711,7 +710,7 @@ def weighted_moving_average(
 def wipe_output_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
     """Delete model output CSV files and return count deleted."""
     deleted = 0
-    for filename in ["components.csv", "population.csv", "rates.csv"]:
+    for filename in ["components.csv", "housing.csv", "population.csv", "rates.csv"]:
         file_path = folder / filename
         if file_path.is_file():
             file_path.unlink()
@@ -723,10 +722,17 @@ def wipe_output_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
 
 def write_df(year: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
     """Write DataFrame for increment year."""
-    df = df.sort_values(by=["age", "sex", "ethnicity"])
+    # If DataFrame has age/sex/ethnicity then sort
+    if {"age", "sex", "ethnicity"}.issubset(df.columns):
+        df = df.sort_values(by=["age", "sex", "ethnicity"])
+    elif {"structure_type"}.issubset(df.columns):
+        df = df.sort_values(by=["structure_type"])
+
+    # Insert increment
     df.insert(0, "year", year)
 
-    if os.path.isfile(fp):
+    # Append if the file already exists, otherwise write a new file
+    if fp.is_file():
         df.to_csv(fp, mode="a", index=False, header=False)
     else:
         df.to_csv(fp, mode="w", index=False)

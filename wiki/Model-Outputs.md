@@ -1,4 +1,4 @@
-The Cohort Component model outputs three core datasets; the Population/Households/Group Quarters information, the Rates used to increment the Population and create Households/Group Quarters information, and the Components of Change.
+The Cohort Component model outputs three core datasets; the Population/Households/Group Quarters information, the Rates used to increment the Population and create Households/Group Quarters information, the households and housing units by structure type, and the Components of Change.
 
 The individual datasets are described below.
 
@@ -54,7 +54,16 @@ The individual datasets are described below.
 | **rate_hh_seniors**  | float   | *Household characteristic rate; households with 1 or more seniors (>=65)* |
 
 
-## Table 3: Components of Change
+## Table 3: Housing
+| Field | Type | Description | 
+| :---: | :--: | ----------- |
+| **year**           | integer | *The increment year; includes the launch up to horizon year* |
+| **structure_type** | string  | *Structure type (Mobile Home, Multifamily, Single Family)* |
+| **hs**             | integer | *Housing Units* |
+| **hh**             | integer | *Households* |
+
+
+## Table 4: Components of Change
 | Field | Type | Description | 
 | :---: | :--: | ----------- |
 | **year**      | integer | *The increment year; includes the launch up to horizon year* |
@@ -67,6 +76,6 @@ The individual datasets are described below.
 | **outs**      | integer | *Out migrants* |
 
 # Storage Location
-Output files for each increment year from launch to horizon are written to the **output** folder as csv files; **population.csv**, **rates.csv**, and **components.csv**.
+Output files for each increment year from launch to horizon are written to the **output** folder as csv files; **population.csv**, **rates.csv**, **housing.csv**, and **components.csv**.
 
 Optionally, these outputs are assigned a run identifier and loaded to the production SQL database.

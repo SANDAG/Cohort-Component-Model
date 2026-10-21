@@ -5,12 +5,15 @@ import logging
 import python.annual_cycle as annual_cycle
 import python.calculate_population as calculate_population
 import python.etl as etl
+
 import python.input_modules.birth_rates as birth_rates
 import python.input_modules.death_rates as death_rates
 import python.input_modules.formation_rates as formation_rates
 import python.input_modules.hh_characteristics_rates as hh_characteristics_rates
+import python.input_modules.housing as housing
 import python.input_modules.launch_year as launch_year
 import python.input_modules.migration_rates as migration_rates
+
 import python.utils as utils
 
 logger = logging.getLogger(__name__)
@@ -86,6 +89,18 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
         year=increment, df=population, fp=utils.OUTPUT_FOLDER / "population.csv"
     )
     utils.write_rates(year=increment, rates=rates, fp=utils.OUTPUT_FOLDER / "rates.csv")
+
+    # Calculate households and housing units by structure type ----
+    logger.info("Calculating households and housing units by structure type")
+    if increment > utils.LAUNCH_YEAR:
+        housing_data = housing.run_housing(
+            year=increment, population=population, prior_housing_data=housing_data
+        )
+    else:
+        housing_data = housing.run_housing(year=increment, population=population)
+    utils.write_df(
+        year=increment, df=housing_data, fp=utils.OUTPUT_FOLDER / "housing.csv"
+    )
 
     # Calculate Components of Change and create new population ----
     logger.info("Calculating components of change and incremented population")

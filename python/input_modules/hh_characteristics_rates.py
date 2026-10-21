@@ -117,16 +117,16 @@ def _validate_hh_characteristics_rates_inputs(
         table_name="Input Household Characteristics Rates",
         data=hh_characteristics_rates_inputs["hh_characteristics_rates"],
         row_count={"key_columns": {"age_group", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
     # Validate the total HH count
     tests.validate_data(
         table_name="Total Household Characteristics Counts",
         data=hh_characteristics_rates_inputs["total_hh_characteristics"],
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
 
@@ -325,6 +325,6 @@ def _validate_hh_characteristics_rates_outputs(
         table_name="Output Household Characteristics Rates",
         data=hh_characteristics_rates_outputs,
         row_count={"key_columns": {"age", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
