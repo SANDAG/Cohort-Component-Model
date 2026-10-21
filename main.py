@@ -5,6 +5,7 @@ import logging
 import python.annual_cycle as annual_cycle
 import python.calculate_population as calculate_population
 import python.etl as etl
+
 import python.input_modules.birth_rates as birth_rates
 import python.input_modules.death_rates as death_rates
 import python.input_modules.formation_rates as formation_rates
@@ -12,6 +13,7 @@ import python.input_modules.hh_characteristics_rates as hh_characteristics_rates
 import python.input_modules.housing as housing
 import python.input_modules.launch_year as launch_year
 import python.input_modules.migration_rates as migration_rates
+
 import python.utils as utils
 
 logger = logging.getLogger(__name__)

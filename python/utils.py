@@ -2,7 +2,6 @@
 
 import logging
 import math
-import os.path
 import pathlib
 import yaml
 
@@ -733,7 +732,7 @@ def write_df(year: int, df: pd.DataFrame, fp: pathlib.Path) -> None:
     df.insert(0, "year", year)
 
     # Append if the file already exists, otherwise write a new file
-    if os.path.isfile(fp):
+    if fp.is_file():
         df.to_csv(fp, mode="a", index=False, header=False)
     else:
         df.to_csv(fp, mode="w", index=False)

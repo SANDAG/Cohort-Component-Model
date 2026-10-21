@@ -290,8 +290,8 @@ class InputParser:
                 table_name=f"Mortality Rates (year {year})",
                 data=mortality_rates[mortality_rates["year"] == year],
                 row_count={"key_columns": {"age", "sex", "ethnicity"}},
-                negative={"negative_ok": set()},
-                null={"null_ok": set()},
+                negative={},
+                null={},
             )
 
         return mortality_rates[["year", "age", "sex", "ethnicity", "rate_death"]]
@@ -368,8 +368,8 @@ class InputParser:
                     columns={"age": "age_births"}
                 ),
                 row_count={"key_columns": {"ethnicity", "age_births"}},
-                negative={"negative_ok": set()},
-                null={"null_ok": set()},
+                negative={},
+                null={},
             )
 
         return fertility_rates[["year", "age", "sex", "ethnicity", "rate_birth"]]

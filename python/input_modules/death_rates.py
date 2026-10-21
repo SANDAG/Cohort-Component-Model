@@ -204,15 +204,15 @@ def _validate_mortality_inputs(
             .loc[mortality_inputs["location"] == location]
             .rename(columns={"age": "age_cdc_deaths"}),
             row_count={"key_columns": {"age_cdc_deaths", "sex", "ethnicity"}},
-            negative={"negative_ok": set()},
-            null={"null_ok": set()},
+            negative={},
+            null={},
         )
     tests.validate_data(
         table_name="Input UN DESA Rates",
         data=undesa_rates[["age", "sex"]].rename(columns={"age": "age_undesa_deaths"}),
         row_count={"key_columns": {"age_undesa_deaths", "sex"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
 
@@ -486,6 +486,6 @@ def _validate_mortality_outputs(mortality_outputs: pd.DataFrame) -> None:
                 "ethnicity",
             }
         },
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )

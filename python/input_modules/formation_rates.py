@@ -117,8 +117,8 @@ def _validate_formation_inputs(formation_inputs: dict[str, pd.DataFrame]) -> Non
         table_name="Input Group Quarters Formation Rates",
         data=formation_inputs["gq_formation_rates"],
         row_count={"key_columns": {"age_group", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
     # Validate the HH formation rates
@@ -126,16 +126,16 @@ def _validate_formation_inputs(formation_inputs: dict[str, pd.DataFrame]) -> Non
         table_name="Input Household Formation Rates",
         data=formation_inputs["hh_formation_rates"],
         row_count={"key_columns": {"age_group", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
     # Validate the total HH count
     tests.validate_data(
         table_name="Total Household Count",
         data=formation_inputs["total_hh"],
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
 
@@ -221,6 +221,6 @@ def _validate_formation_outputs(formation_outputs: pd.DataFrame) -> None:
         table_name="OutputFormation Rates",
         data=formation_outputs,
         row_count={"key_columns": {"age", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )

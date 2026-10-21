@@ -56,7 +56,6 @@ def run_housing(
     else:
         logger.info("Calculating housing for post-launch year")
         housing_inputs = _get_housing_inputs(utils.LAUNCH_YEAR)
-
     _validate_housing_inputs(housing_inputs)
 
     housing_outputs = _create_housing_outputs(
@@ -96,7 +95,7 @@ def _validate_housing_inputs(
         table_name="Input Households and Housing Units by Structure Type",
         data=housing_inputs,
         row_count={"key_columns": {"structure_type"}},
-        negative={"negative_ok": set()},
+        negative={},
         null={"null_ok": {"hh_pct", "vacancy_rate"}},
     )
 
@@ -108,7 +107,7 @@ def _create_housing_outputs(
     prior_housing_data: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Create households and housing units by structure type."""
-    housing = housing_inputs.copy()
+    housing = housing_inputs
 
     if year == utils.LAUNCH_YEAR:
         return housing[["structure_type", "hs", "hh"]]
@@ -146,13 +145,15 @@ def _create_housing_outputs(
 
         # Use the prior year housing data to ensure no housing units are lost
         # For non-Mobile Home structure types
+        # Households are included in the max function to avoid edge-cases
+        # Where the calculated housing units may be less than the number of households
         if prior_housing_data is not None:
             prior_housing_non_mh = prior_housing_data.loc[
                 prior_housing_data["structure_type"] != "Mobile Home"
             ][["structure_type", "hs"]]
             housing_non_mh = housing_non_mh.merge(
                 right=prior_housing_non_mh, on="structure_type", suffixes=("", "_prior")
-            ).assign(hs=lambda x: x[["hs", "hs_prior"]].max(axis=1))[
+            ).assign(hs=lambda x: x[["hs", "hs_prior", "hh"]].max(axis=1))[
                 ["structure_type", "hs", "hh"]
             ]
         else:
@@ -178,6 +179,6 @@ def _validate_housing_outputs(housing_outputs: pd.DataFrame) -> None:
         table_name="Output Households and Housing Units by Structure Type",
         data=housing_outputs,
         row_count={"key_columns": {"structure_type"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )

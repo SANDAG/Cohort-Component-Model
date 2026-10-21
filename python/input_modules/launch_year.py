@@ -79,8 +79,8 @@ def _validate_launch_inputs(launch_inputs: dict[str, pd.DataFrame]) -> None:
         table_name="California DOF Age/Sex/Ethnicity Distribution",
         data=launch_inputs["dof_ase"],
         row_count={"key_columns": {"age", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
     # Validate the Estimates Program launch year population data
@@ -88,8 +88,8 @@ def _validate_launch_inputs(launch_inputs: dict[str, pd.DataFrame]) -> None:
         table_name="Estimates Program Launch Year Population",
         data=launch_inputs["estimates"],
         row_count={"key_columns": {"pop_type", "age_group", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )
 
 
@@ -191,6 +191,6 @@ def _validate_launch_outputs(launch_population: pd.DataFrame) -> None:
         table_name="Launch Year Population",
         data=launch_population,
         row_count={"key_columns": {"age", "sex", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )

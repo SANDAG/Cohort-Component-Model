@@ -1,6 +1,6 @@
 """This module contains utility functions used in report generation."""
 
-import os
+import pathlib
 import sys
 
 import pandas as pd
@@ -9,7 +9,9 @@ import sqlalchemy as sql
 from typing import List
 
 # Add the parent directory to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Add the parent directory to sys.path
+sys.path.append(str(pathlib.Path(__file__).resolve().parent.parent))
 
 import python.utils as utils
 

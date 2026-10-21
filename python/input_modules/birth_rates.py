@@ -95,8 +95,8 @@ def _validate_fertility_inputs(fertility_inputs: pd.DataFrame) -> None:
             .rename(columns={"age": "age_births"})
             .loc[fertility_inputs["location"] == location],
             row_count={"key_columns": {"age_births", "ethnicity"}},
-            negative={"negative_ok": set()},
-            null={"null_ok": set()},
+            negative={},
+            null={},
         )
 
 
@@ -178,6 +178,6 @@ def _validate_fertility_outputs(fertility_outputs: pd.DataFrame) -> None:
             columns={"age": "age_births"}
         ),
         row_count={"key_columns": {"age_births", "ethnicity"}},
-        negative={"negative_ok": set()},
-        null={"null_ok": set()},
+        negative={},
+        null={},
     )

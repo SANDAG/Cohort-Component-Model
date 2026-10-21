@@ -44,7 +44,7 @@ CREATE TABLE [outputs].[components]
     [outs] INT NOT NULL,
     INDEX [ccsi_outputs_components] CLUSTERED COLUMNSTORE,
     CONSTRAINT [ixuq_outputs_components] UNIQUE ([run_id], [year], [age], [sex], [ethnicity]) WITH (DATA_COMPRESSION = PAGE),
-    CONSTRAINT [fk_outputs_components_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+    CONSTRAINT [fk_outputs_components_run_id] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
 )
 GO
 
@@ -59,7 +59,7 @@ CREATE TABLE [outputs].[housing]
     [hh] INTEGER NOT NULL,
     INDEX [ccsi_outputs_housing] CLUSTERED COLUMNSTORE,
     CONSTRAINT [ixuq_outputs_housing] UNIQUE ([run_id], [year], [structure_type]) WITH (DATA_COMPRESSION = PAGE),
-    CONSTRAINT [fk_outputs_housing_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+    CONSTRAINT [fk_outputs_housing_run_id] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
 )
 GO
 
@@ -94,7 +94,7 @@ CREATE TABLE [outputs].[population]
     [hh_seniors] INT NOT NULL,
     INDEX [ccsi_outputs_population] CLUSTERED COLUMNSTORE,
     CONSTRAINT [ixuq_outputs_population] UNIQUE ([run_id], [year], [age], [sex], [ethnicity]) WITH (DATA_COMPRESSION = PAGE),
-    CONSTRAINT [fk_outputs_population_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+    CONSTRAINT [fk_outputs_population_run_id] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
 )
 GO
 
@@ -129,6 +129,6 @@ CREATE TABLE [outputs].[rates]
     [rate_hh_seniors] FLOAT NOT NULL,
     INDEX [ccsi_outputs_rates] CLUSTERED COLUMNSTORE,
     CONSTRAINT [ixuq_outputs_rates] UNIQUE ([run_id], [year], [age], [sex], [ethnicity]) WITH (DATA_COMPRESSION = PAGE),
-    CONSTRAINT [fk_outputs_rates_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+    CONSTRAINT [fk_outputs_rates_run_id] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
 )
 GO
