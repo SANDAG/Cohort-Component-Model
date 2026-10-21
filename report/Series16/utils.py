@@ -71,7 +71,7 @@ def _calculate_mortality_rates(year: int) -> pd.DataFrame:
         inputs["mortality_inputs"], inputs["undesa_rates"]
     )
 
-    outputs = death_rates._create_mortality_outputs(inputs)
+    outputs = death_rates._create_mortality_outputs(inputs, year)
     death_rates._validate_mortality_outputs(outputs)
 
     return outputs
