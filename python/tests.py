@@ -24,6 +24,7 @@ _DISTINCT_COUNTS = {
     "ethnicity": 7,
     "pop_type": 5,
     "sex": 2,
+    "structure_type": 3,  # Estimates Program categories with combined "Single Family"
 }
 
 #########

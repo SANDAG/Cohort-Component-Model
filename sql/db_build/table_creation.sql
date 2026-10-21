@@ -49,6 +49,21 @@ CREATE TABLE [outputs].[components]
 GO
 
 
+-- Create Table 'outputs.housing'
+CREATE TABLE [outputs].[housing]
+(
+    [run_id] INT NOT NULL,
+    [year] INT NOT NULL,
+    [structure_type] NVARCHAR(35) NOT NULL,
+    [hs] INTEGER NOT NULL,
+    [hh] INTEGER NOT NULL,
+    INDEX [ccsi_outputs_housing] CLUSTERED COLUMNSTORE,
+    CONSTRAINT [ixuq_outputs_housing] UNIQUE ([run_id], [year], [structure_type]) WITH (DATA_COMPRESSION = PAGE),
+    CONSTRAINT [fk_outputs_housing_run] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+)
+GO
+
+
 -- Create Table 'outputs.population'
 CREATE TABLE [outputs].[population]
 (
