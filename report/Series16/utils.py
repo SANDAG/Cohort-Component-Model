@@ -136,7 +136,6 @@ class LeeCarterModel(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
             raise ValueError("X and y must have the same length")
 
         last_year = int(X["year"].max())
-        first_year = int(X["year"].min())
 
         if forecast_year is not None and (forecast_year - last_year) < 1:
             raise ValueError(
