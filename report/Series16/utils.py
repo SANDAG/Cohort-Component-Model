@@ -234,7 +234,7 @@ class LeeCarterModel(sklearn.base.BaseEstimator, sklearn.base.RegressorMixin):
 
         for _, row in X.iterrows():
             age = int(row["age"])
-            n_steps = row["year"] - self.last_year
+            n_steps = int(row["year"]) - self.last_year
             if self.phi is not None:
                 drift_sum = sum(
                     self.drift * (self.phi**i) for i in range(1, n_steps + 1)
