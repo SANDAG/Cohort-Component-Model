@@ -15,11 +15,12 @@ comments: "No Comments" # Add comments pertaining to the run
 configurations:
   estimates_run_id: 237  # the SANDAG Estimates Program production run to use for the launch year population
 csv:
-  fertility_rates: null # optional csv with columns: (year, age, sex, race, rate_birth)
+  fertility_rates: null  # optional csv with columns: (year, age, sex, race, rate_birth)
+  gq_controls: null  # optional csv with columns: (year, gq_mil, gq_prison, gq_college)
   migration_controls: null  # optional csv with columns: (year,ins,outs)
-  mortality_rates: null # optional csv with columns: (year, age, sex, race, rate_death)
+  mortality_rates: null  # optional csv with columns: (year, age, sex, race, rate_death)
 interval:  # forecast interval
-  launch: 2020  # last year before forecast starts
+  launch: 2025  # last year before forecast starts
   horizon: 2050  # forecast end year
 sql:  # SQL server options
   load_to_database: False # Set as True if output has to be loaded to database
@@ -30,21 +31,33 @@ If fertility rates are provided, the CSV should include one row per year, age, s
 
 ```csv
 year,age,sex,ethnicity,rate_birth
-2023,15,Female,"Non-Hispanic, American Indian or Alaska Native",0.01431606
+2026,15,Female,"Non-Hispanic, American Indian or Alaska Native",0.01431606
 ...
-2024,30,Female,"Hispanic",0.09667108
+2027,30,Female,"Hispanic",0.09667108
 ...
-2025,44,Female,"Non-Hispanic, White",0.01539245
+2050,44,Female,"Non-Hispanic, White",0.01539245
+```
+
+### Group Quarters Controls File Format
+If group quarters controls are provided, the CSV should include one row per year post-launch year with all values >= 0:
+
+```csv
+year,gq_mil,gq_prison,gq_college
+2026,34505,10708,40299
+2027,36789,10708,45682
+...
+2050,36789,11231,52430
 ```
 
 ### Migration Controls File Format
-If migration controls are provided, the CSV should include one row per year post launch year with ins/outs totals >= 0:
+If migration controls are provided, the CSV should include one row per year post-launch year with ins/outs totals >= 0:
 
 ```csv
 year,ins,outs
-2023,52000,47000
-2024,54000,50000
-2025,53250,49100
+2026,52000,47000
+2027,54000,50000
+...
+2050,53250,49100
 ```
 
 ### Mortality Rates File Format
@@ -52,11 +65,11 @@ If mortality rates are provided, the CSV should include one row per year, age, s
 
 ```csv
 year,age,sex,ethnicity,rate_death
-2023,0.0,Female,"Non-Hispanic, American Indian or Alaska Native",0.0013964641191015427
+2026,0.0,Female,"Non-Hispanic, American Indian or Alaska Native",0.0013964641191015427
 ...
-2024,45.0,Male,"Hispanic",0.0022017810643757416
+2027,45.0,Male,"Hispanic",0.0022017810643757416
 ...
-2025,99.0,Male,"Non-Hispanic, White",0.16650980
+2050,99.0,Male,"Non-Hispanic, White",0.16650980
 ```
 
 ### Configuration of Private Data in secrets.yml

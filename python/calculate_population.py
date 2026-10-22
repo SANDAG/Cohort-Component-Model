@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def calculate_population(
+    year: int,
     population: pd.DataFrame,
     rates: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
@@ -29,6 +30,7 @@ def calculate_population(
     logical consistency and regional totals.
 
     Args:
+        year (int): Increment year
         population (pd.DataFrame): Population by single year of age, sex, and
             race/ethnicity within type
         rates (dict): Dictionary containing formation rates and household
@@ -85,6 +87,28 @@ def calculate_population(
         - x["gq_other"],
         hh=lambda x: x["hhp"] * x["rate_hh"],
     )
+
+    # If the increment is post-launch year
+    # Check if the group quarters controls DataFrame is valid
+    if year > utils.LAUNCH_YEAR and utils.GQ_CONTROLS is not None:
+        controls = utils.GQ_CONTROLS.loc[utils.GQ_CONTROLS["year"] == year]
+        # Apply the group quarters controls for the given year
+        for gq_type in ["gq_mil", "gq_prison", "gq_college"]:
+            result[gq_type] = utils.integerize_1d(
+                result[gq_type],
+                control=controls[gq_type].sum(),
+                methodology="weighted_random",
+                generator=generator,
+            )
+
+        # Recalculate the total population field after applying GQ controls
+        result["pop"] = (
+            result["gq_mil"]
+            + result["gq_prison"]
+            + result["gq_college"]
+            + result["gq_other"]
+            + result["hhp"]
+        )
 
     # Integerize formed households preserving integerized sum
     result["hh"] = utils.integerize_1d(

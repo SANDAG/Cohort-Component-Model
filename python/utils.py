@@ -105,14 +105,21 @@ HORIZON_YEAR = input_parser.horizon_year
 VERSION = input_parser.version
 COMMENTS = input_parser.comments
 ESTIMATES_RUN_ID = input_parser.estimates_run_id
+FERTILITY_RATES = input_parser.fertility_rates
+GQ_CONTROLS = input_parser.gq_controls
 MIGRATION_CONTROLS = input_parser.migration_controls
 MORTALITY_RATES = input_parser.mortality_rates
-FERTILITY_RATES = input_parser.fertility_rates
 LOAD_TO_DATABASE = input_parser.load_to_database
 
 logger.info(
     f"Runtime configuration loaded: launch_year={LAUNCH_YEAR}, horizon_year={HORIZON_YEAR}"
 )
+
+if FERTILITY_RATES is not None:
+    logger.info("Fertility rates loaded from configuration file")
+
+if GQ_CONTROLS is not None:
+    logger.info("GQ controls loaded from configuration file")
 
 if MIGRATION_CONTROLS is not None:
     logger.info("Migration controls loaded from configuration file")
@@ -120,8 +127,6 @@ if MIGRATION_CONTROLS is not None:
 if MORTALITY_RATES is not None:
     logger.info("Mortality rates loaded from configuration file")
 
-if FERTILITY_RATES is not None:
-    logger.info("Fertility rates loaded from configuration file")
 
 ##############################
 # UTILITY LISTS AND MAPPINGS #

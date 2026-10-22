@@ -81,7 +81,7 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
     # Calculate population for the increment ----
     logger.info("Calculating population, households, and household characteristics")
     population = calculate_population.calculate_population(
-        population=population, rates=rates
+        year=increment, population=population, rates=rates
     )
 
     # Write out calculated population and rates ----
