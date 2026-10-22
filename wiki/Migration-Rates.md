@@ -18,7 +18,7 @@ The launch year counts of in/out migrants to/from San Diego County are calculate
 See [Population Calculator](https://github.com/SANDAG/Cohort-Component-Model/wiki/Population-Calculator).
 
 ## Migration Controls (Optional)
-An optional user defined CSV file containing control totals for in/out migrants. If provided, the CSV should include one row per increment year, post-launch year, with ins/outs totals greater than or equal to zero. See the [README.md](https://github.com/SANDAG/Cohort-Component-Model/blob/main/README.md) for more information regarding the file structure and how to update the configuration file.
+An optional user defined CSV file containing control totals for in/out migrants. If provided, the CSV should include one row per increment year, post-launch year, with ins/outs totals greater than zero. See the [README.md](https://github.com/SANDAG/Cohort-Component-Model/blob/main/README.md) for more information regarding the file structure and how to update the configuration file.
 
 # Outputs
 ## Migration Rates

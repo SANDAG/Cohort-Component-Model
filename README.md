@@ -39,7 +39,7 @@ year,age,sex,ethnicity,rate_birth
 ```
 
 ### Group Quarters Controls File Format
-If group quarters controls are provided, the CSV should include one row per year post-launch year with all values >= 0:
+If group quarters controls are provided, the CSV should include one row per year post-launch year with all values > 0:
 
 ```csv
 year,gq_mil,gq_prison,gq_college
@@ -50,7 +50,7 @@ year,gq_mil,gq_prison,gq_college
 ```
 
 ### Migration Controls File Format
-If migration controls are provided, the CSV should include one row per year post-launch year with ins/outs totals >= 0:
+If migration controls are provided, the CSV should include one row per year post-launch year with ins/outs totals > 0:
 
 ```csv
 year,ins,outs

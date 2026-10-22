@@ -278,13 +278,13 @@ class InputParser:
                 "GQ controls must contain columns: (year, gq_mil, gq_prison, gq_college)"
             )
 
-        # Check control totals are >= 0
+        # Check control totals are > 0
         if (
-            any(gq_controls["gq_mil"] < 0)
-            or any(gq_controls["gq_prison"] < 0)
-            or any(gq_controls["gq_college"] < 0)
+            any(gq_controls["gq_mil"] <= 0)
+            or any(gq_controls["gq_prison"] <= 0)
+            or any(gq_controls["gq_college"] <= 0)
         ):
-            raise ValueError("GQ control totals must be >= 0")
+            raise ValueError("GQ control totals must be > 0")
 
         # Check all control totals are integers
         if not all(
@@ -337,9 +337,9 @@ class InputParser:
                 "Migration controls must contain columns: (year, ins, outs)"
             )
 
-        # Check control totals are >= 0
-        if any(migration_controls["ins"] < 0) or any(migration_controls["outs"] < 0):
-            raise ValueError("Migration control totals must be >= 0")
+        # Check control totals are > 0
+        if any(migration_controls["ins"] <= 0) or any(migration_controls["outs"] <= 0):
+            raise ValueError("Migration control totals must be > 0")
 
         # Check for duplicate years in migration controls
         if migration_controls["year"].duplicated().any():
