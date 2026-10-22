@@ -62,7 +62,7 @@ def run_mortality_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
             mortality_rates_inputs["undesa_rates"],
         )
 
-        mortality_outputs = _create_mortality_outputs(mortality_rates_inputs)
+        mortality_outputs = _create_mortality_outputs(mortality_rates_inputs, year)
         _validate_mortality_outputs(mortality_outputs)
 
         return mortality_outputs
@@ -218,6 +218,7 @@ def _validate_mortality_inputs(
 
 def _create_mortality_outputs(
     mortality_inputs: dict[str, pd.DataFrame],
+    year: int,
     smooth_s: int = 5,
     smooth_k: int = 2,
 ) -> pd.DataFrame:
@@ -226,6 +227,8 @@ def _create_mortality_outputs(
     Args:
         mortality_inputs (dict[str, pd.DataFrame]): Mortality inputs and inflation
             factors by single year of age, sex, and race/ethnicity
+        year (int): Year mortality rates are calculated for. Determines the
+            geography hierarchy used for the CDC WONDER product.
         smooth_s (int): Smoothing factor for spline interpolation. Defaults to 5.
         smooth_k (int): Degree of spline polynomial (1-5). Defaults to 2.
 
@@ -236,7 +239,7 @@ def _create_mortality_outputs(
     undesa_data = mortality_inputs["undesa_rates"]
 
     # Load mortality data for this specific year
-    cdc_data = _substitute_geographies(mortality_data)[
+    cdc_data = _substitute_geographies(mortality_data, year)[
         ["age", "sex", "ethnicity", "rates"]
     ]
 
@@ -334,7 +337,7 @@ def _deaths_recode(deaths: int, pop: int) -> float:
         return float(deaths)
 
 
-def _substitute_geographies(mortality_inputs: pd.DataFrame) -> pd.DataFrame:
+def _substitute_geographies(mortality_inputs: pd.DataFrame, year: int) -> pd.DataFrame:
     """Substitute missing or suppressed geographies with higher-level data."""
     # Pivot by location to get county, state, national as separate columns
     pivoted = (
@@ -364,10 +367,14 @@ def _substitute_geographies(mortality_inputs: pd.DataFrame) -> pd.DataFrame:
         np.nan,
     )
 
-    # For Non-Hispanic, Hawaiian or Pacific Islander, use State > National
-    # Mix of county and state level data causes discontinuity in rates
+    # For Non-Hispanic, Hawaiian or Pacific Islander in the 2018+ CDC product (years
+    # 2022 onward), use State > National. Mix of county and state level data causes
+    # discontinuity in rates. Earlier years use the "All Races" placeholder shared
+    # with Two or More Races, so both follow the same County > State > National
+    # hierarchy.
     pivoted["rates"] = np.where(
-        pivoted["ethnicity"] == "Non-Hispanic, Hawaiian or Pacific Islander",
+        (pivoted["ethnicity"] == "Non-Hispanic, Hawaiian or Pacific Islander")
+        & (year >= 2022),
         np.where(
             (state.notna()) & (state > 0),
             state,
