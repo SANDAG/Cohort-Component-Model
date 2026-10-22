@@ -8,5 +8,8 @@ SELECT
       ,[deaths]
       ,[ins]
       ,[outs]
+      ,[gq_mil_adj]
+      ,[gq_prison_adj]
+      ,[gq_college_adj]
 FROM [outputs].[components]
 WHERE [run_id] = {run_id}
