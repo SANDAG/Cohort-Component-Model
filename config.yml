@@ -4,6 +4,7 @@ configurations:
   estimates_run_id: 237  # Estimates 2025 run
 csv:
   fertility_rates: null
+  gq_controls: null
   migration_controls: null
   mortality_rates: null
 interval:
