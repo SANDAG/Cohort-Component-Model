@@ -95,8 +95,8 @@ with tab2:
         .assign(
             net=lambda x: x["ins"] - x["outs"],
             natural=lambda x: x["births"] - x["deaths"],
-            total=lambda x: x["net"] + x["natural"],
             gq_adj=lambda x: x["gq_mil_adj"] + x["gq_prison_adj"] + x["gq_college_adj"],
+            total=lambda x: x["net"] + x["natural"] + x["gq_adj"],
         )
         .rename(
             columns={
