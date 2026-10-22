@@ -304,6 +304,13 @@ def generate_rate_forecast(
                     }
                 )
                 future_data[rate_col] = model.predict(future_data)
+                if rate_col == "rate_death" and not (
+                    np.isfinite(future_data[rate_col])
+                    & future_data[rate_col].between(0, 1)
+                ).all():
+                    raise ValueError(
+                        "Forecasted mortality probabilities must be finite and within [0, 1]."
+                    )
                 forecast_results.append(future_data)
 
     df_forecast = pd.concat(forecast_results, ignore_index=True)
