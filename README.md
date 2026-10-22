@@ -119,6 +119,9 @@ direction TB
         deaths INT
         ins INT
         outs INT
+        gq_mil_adj INT
+        gq_prison_adj INT
+        gq_college_adj INT
     }
 
     outputs_population {

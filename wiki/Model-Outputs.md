@@ -66,14 +66,17 @@ The individual datasets are described below.
 ## Table 4: Components of Change
 | Field | Type | Description | 
 | :---: | :--: | ----------- |
-| **year**      | integer | *The increment year; includes the launch up to horizon year* |
-| **age**       | integer | *Single year of age* |
-| **sex**       | string  | *Sex category* |
-| **ethnicity** | string  | *Race/ethnicity category* |
-| **births**    | integer | *Births* |
-| **deaths**    | integer | *Deaths* |
-| **ins**       | integer | *In migrants; includes both foreign and domestic* |
-| **outs**      | integer | *Out migrants* |
+| **year**           | integer | *The increment year; includes the launch up to horizon year* |
+| **age**            | integer | *Single year of age* |
+| **sex**            | string  | *Sex category* |
+| **ethnicity**      | string  | *Race/ethnicity category* |
+| **births**         | integer | *Births* |
+| **deaths**         | integer | *Deaths* |
+| **ins**            | integer | *In migrants; includes both foreign and domestic* |
+| **outs**           | integer | *Out migrants* |
+| **gq_mil_adj**     | integer | *Adjustments made to military group quarters* |
+| **gq_prison_adj**  | integer | *Adjustments made to prison group quarters* |
+| **gq_college_adj** | integer | *Adjustments made to college group quarters* |
 
 # Storage Location
 Output files for each increment year from launch to horizon are written to the **output** folder as csv files; **population.csv**, **rates.csv**, **housing.csv**, and **components.csv**.
