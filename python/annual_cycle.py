@@ -306,8 +306,8 @@ def increment_population(
             - x["gq_prison"]
             - x["gq_college"]
             - x["deaths"]
-            - x["ins"]
-            + x["outs"],
+            + x["ins"]
+            - x["outs"],
             age=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
         .groupby(["age", "sex", "ethnicity"])["non_constant_gq_pop"]
