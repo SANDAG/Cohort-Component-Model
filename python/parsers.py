@@ -218,6 +218,10 @@ class InputParser:
                 "(year, age, sex, ethnicity, rate_birth)"
             )
 
+        # Ensure no columns contain null values
+        if fertility_rates[required_cols].isnull().any().any():
+            raise ValueError("Fertility rates contain null values")
+
         # Check fertility rates are > 0 and < 1
         if any(fertility_rates["rate_birth"] < 0) or any(
             fertility_rates["rate_birth"] > 1
@@ -286,6 +290,10 @@ class InputParser:
                 "GQ controls must contain columns: (year, gq_mil, gq_prison, gq_college)"
             )
 
+        # Ensure no columns contain null values
+        if gq_controls[required_cols].isnull().any().any():
+            raise ValueError("GQ controls contain null values")
+
         # Check control totals are > 0
         if (
             any(gq_controls["gq_mil"] <= 0)
@@ -353,6 +361,10 @@ class InputParser:
                 "Housing controls must contain columns: (year, hh_mh, hs_mh, hh_mf_pct, hh_sf_pct, vr_mf, vr_sf)"
             )
 
+        # Ensure no columns contain null values
+        if housing_controls[required_cols].isnull().any().any():
+            raise ValueError("Housing controls contain null values")
+
         # Check control totals are >= 0
         if (
             any(housing_controls["hh_mh"] < 0)
@@ -363,6 +375,12 @@ class InputParser:
             or any(housing_controls["vr_sf"] < 0)
         ):
             raise ValueError("Housing control totals must be >= 0")
+
+        # Check that the Mobile Home households and housing stock are integers
+        if not pd.api.types.is_integer_dtype(housing_controls["hh_mh"]):
+            raise ValueError("Mobile Home households must be integers")
+        if not pd.api.types.is_integer_dtype(housing_controls["hs_mh"]):
+            raise ValueError("Mobile Home housing stock must be integers")
 
         # Check that the Mobile Home housing stock is >= the households
         if any(housing_controls["hs_mh"] < housing_controls["hh_mh"]):
@@ -376,14 +394,14 @@ class InputParser:
                 "The sum of Multifamily and Single Family household proportions must be equal to 1"
             )
 
-        # Check that the proportions and vacancy rates are <= 1
+        # Check that the proportions and vacancy rates are < 1
         if (
-            any(housing_controls["hh_mf_pct"] > 1)
-            or any(housing_controls["hh_sf_pct"] > 1)
-            or any(housing_controls["vr_mf"] > 1)
-            or any(housing_controls["vr_sf"] > 1)
+            any(housing_controls["hh_mf_pct"] >= 1)
+            or any(housing_controls["hh_sf_pct"] >= 1)
+            or any(housing_controls["vr_mf"] >= 1)
+            or any(housing_controls["vr_sf"] >= 1)
         ):
-            raise ValueError("Household proportions and vacancy rates must be <= 1")
+            raise ValueError("Household proportions and vacancy rates must be < 1")
 
         # Check for duplicate years in housing controls
         if housing_controls["year"].duplicated().any():
@@ -430,6 +448,10 @@ class InputParser:
             raise ValueError(
                 "Migration controls must contain columns: (year, ins, outs)"
             )
+
+        # Ensure no columns contain null values
+        if migration_controls[required_cols].isnull().any().any():
+            raise ValueError("Migration controls contain null values")
 
         # Check control totals are > 0
         if any(migration_controls["ins"] <= 0) or any(migration_controls["outs"] <= 0):
