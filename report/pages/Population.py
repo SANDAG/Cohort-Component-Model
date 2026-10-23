@@ -29,10 +29,10 @@ with tab1:
                 "year": "Year",
                 "pop": "Total Population",
                 "pop_hh": "Household Population",
-                "gq_mil": "Military Group Quarters",
-                "gq_prison": "Prison Group Quarters",
-                "gq_college": "College Group Quarters",
-                "gq_other": "Other Group Quarters",
+                "gq_mil": "Military GQ",
+                "gq_prison": "Prison GQ",
+                "gq_college": "College GQ",
+                "gq_other": "Other GQ",
             }
         )
     )
@@ -57,20 +57,20 @@ with tab1:
             "Year",
             "Total Population",
             "Household Population",
-            "Military Group Quarters",
-            "Prison Group Quarters",
-            "College Group Quarters",
-            "Other Group Quarters",
+            "Military GQ",
+            "Prison GQ",
+            "College GQ",
+            "Other GQ",
         ],
         column_config={
             k: st.column_config.NumberColumn(format="localized")
             for k in [
                 "Total Population",
                 "Household Population",
-                "Military Group Quarters",
-                "Prison Group Quarters",
-                "College Group Quarters",
-                "Other Group Quarters",
+                "Military GQ",
+                "Prison GQ",
+                "College GQ",
+                "Other GQ",
             ]
         },
     )
@@ -80,14 +80,23 @@ with tab2:
     # Load components of change output and summarize by year
     components = (
         st.session_state.components_data.groupby("year")[
-            ["births", "deaths", "ins", "outs"]
+            [
+                "births",
+                "deaths",
+                "ins",
+                "outs",
+                "gq_mil_adj",
+                "gq_prison_adj",
+                "gq_college_adj",
+            ]
         ]
         .sum()
         .reset_index()
         .assign(
             net=lambda x: x["ins"] - x["outs"],
             natural=lambda x: x["births"] - x["deaths"],
-            total=lambda x: x["net"] + x["natural"],
+            gq_adj=lambda x: x["gq_mil_adj"] + x["gq_prison_adj"] + x["gq_college_adj"],
+            total=lambda x: x["net"] + x["natural"] + x["gq_adj"],
         )
         .rename(
             columns={
@@ -99,6 +108,7 @@ with tab2:
                 "net": "Net Migration",
                 "ins": "In-Migration",
                 "outs": "Out-Migration",
+                "gq_adj": "GQ Adjustments",
             }
         )
     )
@@ -107,7 +117,7 @@ with tab2:
     fig = px.line(
         components,
         x="Year",
-        y=["Natural Change", "Net Migration"],
+        y=["Natural Change", "Net Migration", "GQ Adjustments"],
         title="San Diego Region: Components of Population Change",
         labels={"Year": "", "value": ""},
         line_shape="spline",
@@ -129,6 +139,7 @@ with tab2:
             "Net Migration",
             "In-Migration",
             "Out-Migration",
+            "GQ Adjustments",
         ],
         column_config={
             k: st.column_config.NumberColumn(format="localized")
@@ -140,6 +151,7 @@ with tab2:
                 "Net Migration",
                 "In-Migration",
                 "Out-Migration",
+                "GQ Adjustments",
             ]
         },
     )

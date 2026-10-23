@@ -1,5 +1,7 @@
 """Methods to increment through the annual cycle."""
 
+from unittest import result
+
 import numpy as np
 import pandas as pd
 
@@ -250,6 +252,7 @@ def create_newborns(population: pd.DataFrame) -> pd.DataFrame:
 
 
 def increment_population(
+    year: int,
     population: pd.DataFrame,
     rates: dict[str, pd.DataFrame],
 ) -> dict[str, pd.DataFrame]:
@@ -257,6 +260,7 @@ def increment_population(
     increment.
 
     Args:
+        year (int): Increment year
         population (pd.DataFrame): Population by single year of age, sex, and
             race/ethnicity
         rates (dict): Dictionary containing birth, death, and migration rates
@@ -269,8 +273,8 @@ def increment_population(
             increment
     """
     # Calculate Components of Change; Births, Deaths, and Migration
-    # Deaths are calculated first as Births and Migration depend on the
-    # survived population
+    # Deaths are calculated first as Births and Migration depend on the survived population
+    # All calculations remove constant group quarters populations
 
     # Calculate Deaths
     population = population.merge(
@@ -293,75 +297,84 @@ def increment_population(
         on=["age", "sex", "ethnicity"],
     )
 
-    # Calculate the newborn population for the next increment
-    newborns = create_newborns(population=population)
-
-    # Create the incremented population total population and age +1 year
+    # Create the incremented population and age +1 year
+    # Note this excludes the constant group quarters populations
     incremented_population = (
         population.assign(
-            pop=lambda x: x["pop"] - x["deaths"] + x["ins"] - x["outs"],
+            non_constant_gq_pop=lambda x: x["pop"]
+            - x["gq_mil"]
+            - x["gq_prison"]
+            - x["gq_college"]
+            - x["deaths"]
+            + x["ins"]
+            - x["outs"],
             age=lambda x: np.clip(a=(x["age"] + 1), a_min=None, a_max=99),
         )
-        .groupby(["age", "sex", "ethnicity"])
+        .groupby(["age", "sex", "ethnicity"])["non_constant_gq_pop"]
         .sum()
         .reset_index()
     )
 
-    # Shift the "Group Quarters - College", "Group Quarters - Military" and
-    # "Group Quarters - Institutional Correctional Facilities" populations
-    # back in age increment as both are held constant in the forecast
-    incremented_population = incremented_population.sort_values(
-        by=["ethnicity", "sex", "age"]
-    ).reset_index()
+    # Get the constant group quarters populations
+    gq_population = population[
+        ["age", "sex", "ethnicity", "gq_mil", "gq_prison", "gq_college"]
+    ]
 
-    incremented_population["gq_college"] = incremented_population["gq_college"].shift(
-        periods=-1, fill_value=0
+    # Check if the group quarters controls DataFrame is optionally provided
+    # If so, get and apply controls for the next increment year
+    if utils.GQ_CONTROLS is not None:
+        controls = utils.GQ_CONTROLS.loc[utils.GQ_CONTROLS["year"] == (year + 1)]
+        # Apply the group quarters controls
+        for gq_type in ["gq_mil", "gq_prison", "gq_college"]:
+            gq_adj = gq_population[["age", "sex", "ethnicity", gq_type]]
+            gq_adj[gq_type + "_adj"] = (
+                utils.integerize_1d(
+                    gq_population[gq_type],
+                    control=controls[gq_type].sum(),
+                    methodology="weighted_random",
+                    generator=generator,
+                )
+                - gq_adj[gq_type]
+            )
+
+            # Store adjustments made in the components of change
+            population = population.merge(
+                right=gq_adj[["age", "sex", "ethnicity", gq_type + "_adj"]],
+                on=["age", "sex", "ethnicity"],
+            )
+
+            # Update the group quarters population
+            gq_population = gq_population.merge(
+                right=gq_adj[["age", "sex", "ethnicity", gq_type + "_adj"]],
+                on=["age", "sex", "ethnicity"],
+            )
+
+            gq_population[gq_type] = (
+                gq_population[gq_type + "_adj"] + gq_population[gq_type]
+            )
+
+            gq_population.drop(columns=[gq_type + "_adj"], inplace=True)
+    else:
+        # No adjustments made to constant group quarters populations
+        population[["gq_mil_adj", "gq_prison_adj", "gq_college_adj"]] = 0
+
+    # Add the constant group quarters populations back to the incremented population
+    # And recalculate the total population field
+    incremented_population = (
+        incremented_population.merge(
+            right=gq_population, how="left", on=["age", "sex", "ethnicity"]
+        )
+        .assign(
+            pop=lambda x: x["non_constant_gq_pop"]
+            + x["gq_mil"]
+            + x["gq_prison"]
+            + x["gq_college"]
+        )
+        .drop(columns=["non_constant_gq_pop"])
     )
 
-    incremented_population["gq_mil"] = incremented_population["gq_mil"].shift(
-        periods=-1, fill_value=0
-    )
-
-    incremented_population["gq_prison"] = incremented_population["gq_prison"].shift(
-        periods=-1, fill_value=0
-    )
-
-    # Ensure the "Group Quarters - College", "Group Quarters - Military" and
-    # "Group Quarters - Institutional Correctional Facilities" populations are
-    # not greater than the total population in each single year of age, sex,
-    # and ethnicity group
-
-    # Check College first is not greater than total population
-    incremented_population["gq_college"] = utils.reallocate_integers(
-        df=incremented_population, subset="gq_college", total="pop"
-    )
-
-    # Check Military is not greater than the total population
-    # Subtracting the College population
-    incremented_population["pop_no_college"] = (
-        incremented_population["pop"] - incremented_population["gq_college"]
-    ).astype(int)
-    incremented_population["gq_mil"] = utils.reallocate_integers(
-        df=incremented_population, subset="gq_mil", total="pop_no_college"
-    )
-
-    # Then check Prison population is not greater than the total population
-    # Subtracting the College and Military populations
-    incremented_population["pop_no_college_mil"] = (
-        incremented_population["pop"]
-        - incremented_population["gq_college"]
-        - incremented_population["gq_mil"]
-    ).astype(int)
-    incremented_population["gq_prison"] = utils.reallocate_integers(
-        df=incremented_population, subset="gq_prison", total="pop_no_college_mil"
-    )
-
-    # Drop the temporary columns used for reallocation
-    incremented_population = incremented_population.drop(
-        columns=["pop_no_college", "pop_no_college_mil"]
-    )
-
-    # Add the newborns into the dataset
+    # Calculate the newborn population for the next increment
+    newborns = create_newborns(population=population)
     incremented_population = pd.concat(
         [newborns.assign(gq_college=0, gq_mil=0, gq_prison=0), incremented_population]
     )
@@ -369,9 +382,20 @@ def increment_population(
     # Return the Components of Change and the incremented Population
     return {
         "components": population[
-            ["age", "sex", "ethnicity", "births", "deaths", "ins", "outs"]
+            [
+                "age",
+                "sex",
+                "ethnicity",
+                "births",
+                "deaths",
+                "ins",
+                "outs",
+                "gq_mil_adj",
+                "gq_prison_adj",
+                "gq_college_adj",
+            ]
         ],
         "population": incremented_population[
-            ["age", "sex", "ethnicity", "pop", "gq_college", "gq_mil", "gq_prison"]
+            ["age", "sex", "ethnicity", "pop", "gq_mil", "gq_prison", "gq_college"]
         ],
     }

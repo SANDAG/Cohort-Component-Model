@@ -1,4 +1,4 @@
-This module generates groups quarters and household formation rates by single year of age, sex, and race/ethnicity for the launch year. At this time, formation rates are held constant through the entirety of the forecast. The "Group Quarters - College", "Group Quarters - Military", and "Group Quarters - Institutional Correctional Facilities" populations are excluded from this module and held constant from the launch year.
+This module generates groups quarters and household formation rates by single year of age, sex, and race/ethnicity for the launch year. At this time, formation rates are held constant through the entirety of the forecast. The "Group Quarters - College", "Group Quarters - Military", and "Group Quarters - Institutional Correctional Facilities" populations are excluded from this module and held constant from the launch year, unless optional control totals are provided for post-launch years.
 
 # Inputs
 | Input | Module Source | Usage |
@@ -21,7 +21,7 @@ When household formation rates are applied to the [Launch Year Population](https
 ## Group Quarters Formation Rates
 Group quarters formations rates are retrieved directly from SANDAG's Estimates Program by age group, sex, and ethnicity. The rates are then uniformly assigned to the launch year population across single year of age wthin each age group. They are then adjusted such that when applied within each single year of age, sex, and ethnicity category the resulting group quarters value is equal to the launch year population value. This ensure consistency between launch year group quarters populations and formation rates.
 
-Only *Group Quarters - Other* rates are calculated as the regional forecast assumes constant *Group Quarters - College*, *Group Quarters - Military*, and *Group Quarters - Institutional Correctional Facilities* populations for the entirety of the forecast.
+Only *Group Quarters - Other* rates are calculated as the regional forecast assumes constant *Group Quarters - College*, *Group Quarters - Military*, and *Group Quarters - Institutional Correctional Facilities* populations for the entirety of the forecast, unless optional control totals are provided for post-launch years.
 
 ## Household Formation Rates
 Household formation rates are calculated from the Census Bureau ACS 5-year PUMS by age group, sex, and ethnicity. The rates are then uniformly assigned to the launch year population across single year of age wthin each age group. They are then adjusted such that when applied they result in integer values within single year of age, sex, and ethnicity categories and that the regional total equals the total households from SANDAG's Estimates Program.

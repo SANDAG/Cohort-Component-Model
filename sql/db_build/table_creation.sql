@@ -42,6 +42,9 @@ CREATE TABLE [outputs].[components]
     [deaths] INT NOT NULL,
     [ins] INT NOT NULL,
     [outs] INT NOT NULL,
+    [gq_mil_adj] INT NOT NULL,
+    [gq_prison_adj] INT NOT NULL,
+    [gq_college_adj] INT NOT NULL,
     INDEX [ccsi_outputs_components] CLUSTERED COLUMNSTORE,
     CONSTRAINT [ixuq_outputs_components] UNIQUE ([run_id], [year], [age], [sex], [ethnicity]) WITH (DATA_COMPRESSION = PAGE),
     CONSTRAINT [fk_outputs_components_run_id] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])

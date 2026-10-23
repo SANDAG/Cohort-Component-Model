@@ -21,12 +21,15 @@ class InputParser:
         version (str): The software version of the current run
         comments (str): Any comments associated with the current run
         estimates_run_id (int): The run ID for the Estimates Program launch year run
-        migration_controls (pd.DataFrame | None): Optional migration control totals (ins/outs)
-            for each post-launch increment year. If not provided, set to None.
-        mortality_rates (pd.DataFrame | None): Optional mortality rates by
-            age, sex, and race. If not provided, set to None.
         fertility_rates (pd.DataFrame | None): Optional fertility rates by
             race, sex, and age. If not provided, set to None.
+        gq_controls (pd.DataFrame | None): Optional group quarters population
+            totals. If not provided, set to None.
+        migration_controls (pd.DataFrame | None): Optional migration control
+            totals (ins/outs) for each post-launch increment year. If not
+            provided, set to None.
+        mortality_rates (pd.DataFrame | None): Optional mortality rates by
+            age, sex, and race. If not provided, set to None.
         load_to_database (bool): Whether to load the run results into a database.
 
     Methods:
@@ -35,12 +38,14 @@ class InputParser:
         _parse_years(): Parses the run launch and horizon years
         _parse_estimates_run_id(): Parses the Estimates Program run ID from the
             configuration file and sets the estimates_run_id attribute
+        _parse_fertility_rates(): Parses the fertility rate controls from the
+            configuration file and sets the fertility_rates attribute
+        _parse_gq_controls(): Parses the group quarters population totals from the
+            configuration file and sets the gq_controls attribute
         _parse_migration_controls(): Parses the migration controls mapping from the
             configuration file and sets the migration_controls attribute
         _parse_mortality_rates(): Parses the mortality rate controls from the
             configuration file and sets the mortality_rates attribute
-        _parse_fertility_rates(): Parses the fertility rate controls from the
-            configuration file and sets the fertility_rates attribute
     """
 
     def __init__(self, config: dict, engine: sql.Engine) -> None:
@@ -72,9 +77,10 @@ class InputParser:
         self.comments = self._config.get("comments")
         self.version = self._config.get("version")
         self.estimates_run_id = self._parse_estimates_run_id()
+        self.fertility_rates = self._parse_fertility_rates()
+        self.gq_controls = self._parse_gq_controls()
         self.migration_controls = self._parse_migration_controls()
         self.mortality_rates = self._parse_mortality_rates()
-        self.fertility_rates = self._parse_fertility_rates()
         self.load_to_database = self._config.get("sql", {}).get(
             "load_to_database", False
         )
@@ -98,9 +104,10 @@ class InputParser:
             "csv": {
                 "type": "dict",
                 "schema": {
+                    "fertility_rates": {"type": "string", "nullable": True},
+                    "gq_controls": {"type": "string", "nullable": True},
                     "migration_controls": {"type": "string", "nullable": True},
                     "mortality_rates": {"type": "string", "nullable": True},
-                    "fertility_rates": {"type": "string", "nullable": True},
                 },
             },
             "interval": {
@@ -166,6 +173,141 @@ class InputParser:
             else:
                 return estimates_run_id
 
+    def _parse_fertility_rates(self) -> pd.DataFrame | None:
+        """Parse the fertility rates CSV file from the configuration file.
+
+        The CSV file must contain fertility rates by year, age, sex, and ethnicity.
+
+        Returns:
+            pd.DataFrame | None: DataFrame with columns (year, age, sex, ethnicity, rate_birth),
+                or None if no file is provided.
+        """
+        # Check if fertility rate file is provided
+        fertility_rates_fp = self._config["csv"].get("fertility_rates")
+        if fertility_rates_fp is None:
+            return None
+
+        fertility_rates_path = pathlib.Path(fertility_rates_fp)
+        if not fertility_rates_path.is_absolute():
+            fertility_rates_path = (
+                pathlib.Path(__file__).resolve().parent.parent / fertility_rates_path
+            )
+        try:
+            with open(fertility_rates_path, "r") as f:
+                fertility_rates = pd.read_csv(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Fertility rate file not found: {fertility_rates_fp}"
+            )
+        except pd.errors.ParserError as e:
+            raise ValueError(f"Error parsing fertility rate CSV file: {e}")
+
+        # Ensure DataFrame contains required columns
+        required_cols = {"year", "age", "sex", "ethnicity", "rate_birth"}
+        if not required_cols.issubset(fertility_rates.columns):
+            raise ValueError(
+                "Fertility rates must contain columns: "
+                "(year, age, sex, ethnicity, rate_birth)"
+            )
+
+        # Check fertility rates are > 0 and < 1
+        if any(fertility_rates["rate_birth"] < 0) or any(
+            fertility_rates["rate_birth"] > 1
+        ):
+            raise ValueError("Fertility rates must be greater than 0 and less than 1")
+
+        # Check fertility sex is only Female
+        if not all(fertility_rates["sex"] == "Female"):
+            raise ValueError("Fertility rates must be for females only")
+
+        # Check age range is valid (15-44)
+        if any(fertility_rates["age"] < 15) or any(fertility_rates["age"] > 44):
+            raise ValueError("Age values must be between 15 and 44")
+
+        # Validate year column
+        control_years = set(fertility_rates["year"].unique())
+        post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
+        missing_years = set(post_launch_years) - control_years
+
+        if missing_years:
+            raise ValueError(
+                f"Missing required years in fertility rates: {sorted(missing_years)}. "
+                f"Required years: {list(post_launch_years)}"
+            )
+
+        # Validate each year has the correct structure
+        for year in fertility_rates["year"].unique():
+            year_data = fertility_rates[fertility_rates["year"] == year]
+            tests.validate_data(
+                table_name=f"Birth Rates (year {year})",
+                # Rename age column for test (birth data only 15-44)
+                data=year_data[["age", "ethnicity", "rate_birth"]].rename(
+                    columns={"age": "age_births"}
+                ),
+                row_count={"key_columns": {"ethnicity", "age_births"}},
+                negative={},
+                null={},
+            )
+
+        return fertility_rates[["year", "age", "sex", "ethnicity", "rate_birth"]]
+
+    def _parse_gq_controls(self) -> pd.DataFrame | None:
+        """Parse the group quarters (GQ) controls CSV file from the configuration file."""
+        # Check the GQ controls file exists and is a valid CSV file
+        gq_controls_fp = self._config["csv"].get("gq_controls")
+        if gq_controls_fp is None:
+            return None
+
+        gq_controls_path = pathlib.Path(gq_controls_fp)
+        if not gq_controls_path.is_absolute():
+            gq_controls_path = (
+                pathlib.Path(__file__).resolve().parent.parent / gq_controls_path
+            )
+        try:
+            with open(gq_controls_path, "r") as f:
+                gq_controls = pd.read_csv(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"GQ controls file not found: {gq_controls_fp}")
+        except pd.errors.ParserError as e:
+            raise ValueError(f"Error parsing GQ controls CSV file: {e}")
+
+        # Ensure DataFrame contains required columns
+        required_cols = {"year", "gq_mil", "gq_prison", "gq_college"}
+        if not required_cols.issubset(gq_controls.columns):
+            raise ValueError(
+                "GQ controls must contain columns: (year, gq_mil, gq_prison, gq_college)"
+            )
+
+        # Check control totals are > 0
+        if (
+            any(gq_controls["gq_mil"] <= 0)
+            or any(gq_controls["gq_prison"] <= 0)
+            or any(gq_controls["gq_college"] <= 0)
+        ):
+            raise ValueError("GQ control totals must be > 0")
+
+        # Check all control totals are integers
+        if not all(
+            pd.api.types.is_integer_dtype(gq_controls[col])
+            for col in ["gq_mil", "gq_prison", "gq_college"]
+        ):
+            raise ValueError("GQ control totals must be integers")
+
+        # Check for duplicate years in GQ controls
+        if gq_controls["year"].duplicated().any():
+            raise ValueError("Duplicate years found in GQ controls")
+
+        # Check that all years in migration controls are post-launch years
+        post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
+        if not all(year in post_launch_years for year in gq_controls["year"]):
+            raise ValueError("GQ controls must only contain post-launch years")
+
+        # Check that all post-launch years are present in GQ controls
+        if not all(year in gq_controls["year"].values for year in post_launch_years):
+            raise ValueError("GQ controls must contain all post-launch years")
+
+        return gq_controls[["year", "gq_mil", "gq_prison", "gq_college"]]
+
     def _parse_migration_controls(self) -> pd.DataFrame | None:
         """Parse the migration controls CSV file from the configuration file."""
         # Check the migration controls file exists and is a valid CSV file
@@ -195,9 +337,9 @@ class InputParser:
                 "Migration controls must contain columns: (year, ins, outs)"
             )
 
-        # Check control totals are >= 0
-        if any(migration_controls["ins"] < 0) or any(migration_controls["outs"] < 0):
-            raise ValueError("Migration control totals must be >= 0")
+        # Check control totals are > 0
+        if any(migration_controls["ins"] <= 0) or any(migration_controls["outs"] <= 0):
+            raise ValueError("Migration control totals must be > 0")
 
         # Check for duplicate years in migration controls
         if migration_controls["year"].duplicated().any():
@@ -295,81 +437,3 @@ class InputParser:
             )
 
         return mortality_rates[["year", "age", "sex", "ethnicity", "rate_death"]]
-
-    def _parse_fertility_rates(self) -> pd.DataFrame | None:
-        """Parse the fertility rates CSV file from the configuration file.
-
-        The CSV file must contain fertility rates by year, age, sex, and ethnicity.
-
-        Returns:
-            pd.DataFrame | None: DataFrame with columns (year, age, sex, ethnicity, rate_birth),
-                or None if no file is provided.
-        """
-        # Check if fertility rate file is provided
-        fertility_rates_fp = self._config["csv"].get("fertility_rates")
-        if fertility_rates_fp is None:
-            return None
-
-        fertility_rates_path = pathlib.Path(fertility_rates_fp)
-        if not fertility_rates_path.is_absolute():
-            fertility_rates_path = (
-                pathlib.Path(__file__).resolve().parent.parent / fertility_rates_path
-            )
-        try:
-            with open(fertility_rates_path, "r") as f:
-                fertility_rates = pd.read_csv(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Fertility rate file not found: {fertility_rates_fp}"
-            )
-        except pd.errors.ParserError as e:
-            raise ValueError(f"Error parsing fertility rate CSV file: {e}")
-
-        # Ensure DataFrame contains required columns
-        required_cols = {"year", "age", "sex", "ethnicity", "rate_birth"}
-        if not required_cols.issubset(fertility_rates.columns):
-            raise ValueError(
-                "Fertility rates must contain columns: "
-                "(year, age, sex, ethnicity, rate_birth)"
-            )
-
-        # Check fertility rates are > 0 and < 1
-        if any(fertility_rates["rate_birth"] < 0) or any(
-            fertility_rates["rate_birth"] > 1
-        ):
-            raise ValueError("Fertility rates must be greater than 0 and less than 1")
-
-        # Check fertility sex is only Female
-        if not all(fertility_rates["sex"] == "Female"):
-            raise ValueError("Fertility rates must be for females only")
-
-        # Check age range is valid (15-44)
-        if any(fertility_rates["age"] < 15) or any(fertility_rates["age"] > 44):
-            raise ValueError("Age values must be between 15 and 44")
-
-        # Validate year column
-        control_years = set(fertility_rates["year"].unique())
-        post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
-        missing_years = set(post_launch_years) - control_years
-
-        if missing_years:
-            raise ValueError(
-                f"Missing required years in fertility rates: {sorted(missing_years)}. "
-                f"Required years: {list(post_launch_years)}"
-            )
-
-        # Validate each year has the correct structure
-        for year in fertility_rates["year"].unique():
-            year_data = fertility_rates[fertility_rates["year"] == year]
-            tests.validate_data(
-                table_name=f"Birth Rates (year {year})",
-                # Rename age column for test (birth data only 15-44)
-                data=year_data[["age", "ethnicity", "rate_birth"]].rename(
-                    columns={"age": "age_births"}
-                ),
-                row_count={"key_columns": {"ethnicity", "age_births"}},
-                negative={},
-                null={},
-            )
-
-        return fertility_rates[["year", "age", "sex", "ethnicity", "rate_birth"]]

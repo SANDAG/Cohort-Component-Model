@@ -4,10 +4,11 @@ configurations:
   estimates_run_id: 237  # Estimates 2025 run
 csv:
   fertility_rates: null
+  gq_controls: null
   migration_controls: null
   mortality_rates: null
 interval:
-  launch: 2022
+  launch: 2025
   horizon: 2050
 sql:
   load_to_database: False
