@@ -394,14 +394,16 @@ class InputParser:
                 "The sum of Multifamily and Single Family household proportions must be equal to 1"
             )
 
-        # Check that the proportions and vacancy rates are < 1
+        # Check that proportions are <= 1 and vacancy rates are < 1
         if (
-            any(housing_controls["hh_mf_pct"] >= 1)
-            or any(housing_controls["hh_sf_pct"] >= 1)
+            any(housing_controls["hh_mf_pct"] > 1)
+            or any(housing_controls["hh_sf_pct"] > 1)
             or any(housing_controls["vr_mf"] >= 1)
             or any(housing_controls["vr_sf"] >= 1)
         ):
-            raise ValueError("Household proportions and vacancy rates must be < 1")
+            raise ValueError(
+                "Household proportions must be <= 1 and vacancy rates must be < 1"
+            )
 
         # Check for duplicate years in housing controls
         if housing_controls["year"].duplicated().any():
