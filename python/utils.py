@@ -159,7 +159,8 @@ AGE_MAPPING = {
     "85 and Older": {"min": 85, "max": 99},
 }
 
-# Hardcoded percentage of newborns that are Male sex
+# Percentage of newborns that are Male sex
+# See https://github.com/SANDAG/Cohort-Component-Model/issues/220
 MALE_PCT = 0.512
 
 # Hardcoded maximum allowed in/out migration rate
