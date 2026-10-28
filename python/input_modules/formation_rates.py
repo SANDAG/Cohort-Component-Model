@@ -61,7 +61,7 @@ def run_formation_rates(year: int, population: pd.DataFrame) -> pd.DataFrame:
 
         return formation_outputs
     else:
-        raise ValueError("Formation rates can only be run for the launch year.")
+        raise ValueError("Formation rates can only be run for the launch year")
 
 
 def _get_formation_inputs(year: int) -> dict[str, pd.DataFrame]:
