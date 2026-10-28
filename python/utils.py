@@ -107,6 +107,7 @@ COMMENTS = input_parser.comments
 ESTIMATES_RUN_ID = input_parser.estimates_run_id
 FERTILITY_RATES = input_parser.fertility_rates
 GQ_CONTROLS = input_parser.gq_controls
+HOUSING_CONTROLS = input_parser.housing_controls
 MIGRATION_CONTROLS = input_parser.migration_controls
 MORTALITY_RATES = input_parser.mortality_rates
 LOAD_TO_DATABASE = input_parser.load_to_database
@@ -120,6 +121,9 @@ if FERTILITY_RATES is not None:
 
 if GQ_CONTROLS is not None:
     logger.info("GQ controls loaded from configuration file")
+
+if HOUSING_CONTROLS is not None:
+    logger.info("Housing controls loaded from configuration file")
 
 if MIGRATION_CONTROLS is not None:
     logger.info("Migration controls loaded from configuration file")

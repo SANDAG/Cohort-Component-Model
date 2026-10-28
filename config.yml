@@ -5,6 +5,7 @@ configurations:
 csv:
   fertility_rates: null
   gq_controls: null
+  housing_controls: null
   migration_controls: null
   mortality_rates: null
 interval:

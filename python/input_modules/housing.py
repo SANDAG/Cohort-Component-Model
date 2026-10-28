@@ -35,7 +35,7 @@ def run_housing(
     for post-launch years to ensure that no housing units are lost within
     non-Mobile Home structure types.
 
-    TODO: Optionally, controls can be applied post-launch as opposed to using the
+    Optionally, controls can be applied post-launch as opposed to using the
     launch year totals, proportions, and rates to adjust:
         - The total mobile home households and housing units
         - The proportions of households by structure type
@@ -111,7 +111,60 @@ def _create_housing_outputs(
 
     if year == utils.LAUNCH_YEAR:
         return housing[["structure_type", "hs", "hh"]]
+    elif utils.HOUSING_CONTROLS is not None:
+        # Get housing controls for the increment
+        controls = utils.HOUSING_CONTROLS.loc[utils.HOUSING_CONTROLS["year"] == year]
+
+        # Extract the Mobile Home housing data separately as it is kept constant
+        housing_mh = pd.DataFrame(
+            {
+                "structure_type": ["Mobile Home"],
+                "hh": [controls["hh_mh"].sum()],
+                "hs": [controls["hs_mh"].sum()],
+            }
+        )
+
+        # Check the Mobile Home households control is not greater
+        # Than the total households from the formed households population
+        hh_mh = controls["hh_mh"].sum()
+        if hh_mh > population["hh"].sum():
+            raise ValueError("Mobile Home households control exceeds total households")
+        # Get the total households ignoring Mobile Homes, from the controls
+        total_hh_non_mh = population["hh"].sum() - hh_mh
+
+        # Apply household structure type proportions from the controls
+        # And integerize preserving total non-Mobile Home households
+        hh_mf, hh_sf = utils.integerize_1d(
+            data=pd.Series(
+                [
+                    controls["hh_mf_pct"].sum() * total_hh_non_mh,
+                    controls["hh_sf_pct"].sum() * total_hh_non_mh,
+                ]
+            ),
+            control=total_hh_non_mh,
+            methodology="weighted_random",
+            generator=generator,
+        )
+
+        # Calculate housing units using vacancy rates provided by controls
+        hs_mf = round(hh_mf / (1 - controls["vr_mf"].sum()))
+        hs_sf = round(hh_sf / (1 - controls["vr_sf"].sum()))
+
+        # Combine the calculated households and housing units into a DataFrame
+        housing_non_mh = pd.DataFrame(
+            {
+                "structure_type": ["Multifamily", "Single Family"],
+                "hh": [hh_mf, hh_sf],
+                "hs": [hs_mf, hs_sf],
+            }
+        )
+
     else:
+        # Extract the Mobile Home housing data separately as it is kept constant
+        housing_mh = housing.loc[housing["structure_type"] == "Mobile Home"][
+            ["structure_type", "hs", "hh"]
+        ]
+
         # Get the total households from the formed households population
         # And apply structure type proportions ignoring Mobile Homes as those are kept constant
         hh_mh = housing.loc[housing["structure_type"] == "Mobile Home", "hh"].sum()
@@ -143,33 +196,31 @@ def _create_housing_outputs(
             generator=generator,
         )
 
-        # Use the prior year housing data to ensure no housing units are lost
-        # For non-Mobile Home structure types
-        # Households are included in the max function to avoid edge-cases
-        # Where the calculated housing units may be less than the number of households
-        if prior_housing_data is not None:
-            prior_housing_non_mh = prior_housing_data.loc[
-                prior_housing_data["structure_type"] != "Mobile Home"
-            ][["structure_type", "hs"]]
-            housing_non_mh = housing_non_mh.merge(
-                right=prior_housing_non_mh, on="structure_type", suffixes=("", "_prior")
-            ).assign(hs=lambda x: x[["hs", "hs_prior", "hh"]].max(axis=1))[
-                ["structure_type", "hs", "hh"]
-            ]
-        else:
-            raise ValueError("No prior year housing data provided post-launch year")
+    # Use the prior year housing data to ensure no housing units are lost
+    # For non-Mobile Home structure types
+    # Households are included in the max function to avoid edge-cases
+    # Where the calculated housing units may be less than the number of households
+    if prior_housing_data is not None:
+        prior_housing_non_mh = prior_housing_data.loc[
+            prior_housing_data["structure_type"] != "Mobile Home"
+        ][["structure_type", "hs"]]
+        housing_non_mh = housing_non_mh.merge(
+            right=prior_housing_non_mh, on="structure_type", suffixes=("", "_prior")
+        ).assign(hs=lambda x: x[["hs", "hs_prior", "hh"]].max(axis=1))[
+            ["structure_type", "hs", "hh"]
+        ]
+    else:
+        raise ValueError("No prior year housing data provided post-launch year")
 
-        # Return the calculated households and housing units by structure type
-        # Adding back in the held-constant Mobile Home housholds and housing units
-        return pd.concat(
-            [
-                housing_non_mh,
-                housing.loc[housing["structure_type"] == "Mobile Home"][
-                    ["structure_type", "hs", "hh"]
-                ],
-            ],
-            ignore_index=True,
-        ).sort_values(by="structure_type")
+    # Return the calculated households and housing units by structure type
+    # Adding back in the held-constant Mobile Home housholds and housing units
+    return pd.concat(
+        [
+            housing_non_mh,
+            housing_mh,
+        ],
+        ignore_index=True,
+    ).sort_values(by="structure_type")
 
 
 def _validate_housing_outputs(housing_outputs: pd.DataFrame) -> None:

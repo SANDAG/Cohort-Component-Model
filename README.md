@@ -17,6 +17,7 @@ configurations:
 csv:
   fertility_rates: null  # optional csv with columns: (year, age, sex, race, rate_birth)
   gq_controls: null  # optional csv with columns: (year, gq_mil, gq_prison, gq_college)
+  housing_controls: null  # optional csv with columns: (year, hh_mh, hs_mh, hh_mf_pct, hh_sf_pct, vr_mf, vr_sf)
   migration_controls: null  # optional csv with columns: (year,ins,outs)
   mortality_rates: null  # optional csv with columns: (year, age, sex, race, rate_death)
 interval:  # forecast interval
@@ -48,6 +49,26 @@ year,gq_mil,gq_prison,gq_college
 ...
 2050,36789,11231,52430
 ```
+
+### Housing Controls File Format
+If housing controls are provided, the CSV should include one row per year post-launch year with all values >= 0:
+
+```csv
+year,hh_mh,hs_mh,hh_mf_pct,hh_sf_pct,vr_mf,vr_sf
+2026,39209,42348,0.378073,0.621927,0.078359,0.047428
+2027,39199,42215,0.382012,0.617988,0.081521,0.049853
+...
+2050,39182,42185,0.415863,0.584137,0.085697,0.051592
+```
+
+Where the fields are defined as follows:
+
+- hh_mh - Total Mobile Home Households
+- hs_mh - Total Mobile Home Housing Units
+- hh_mf_pct - Multifamily structure type proportion of Non-Mobile Home Households
+- hh_sf_pct - Single Family structure type proportion of Non-Mobile Home households
+- vr_mf - Gross vacancy rate for Multifamily structure type
+- vr_sf - Gross vacancy rate for Single Family structure type
 
 ### Migration Controls File Format
 If migration controls are provided, the CSV should include one row per year post-launch year with ins/outs totals > 0:

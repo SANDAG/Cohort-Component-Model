@@ -25,6 +25,8 @@ class InputParser:
             race, sex, and age. If not provided, set to None.
         gq_controls (pd.DataFrame | None): Optional group quarters population
             totals. If not provided, set to None.
+        housing_controls (pd.DataFrame | None): Optional housing control totals.
+            If not provided, set to None.
         migration_controls (pd.DataFrame | None): Optional migration control
             totals (ins/outs) for each post-launch increment year. If not
             provided, set to None.
@@ -42,6 +44,8 @@ class InputParser:
             configuration file and sets the fertility_rates attribute
         _parse_gq_controls(): Parses the group quarters population totals from the
             configuration file and sets the gq_controls attribute
+        _parse_housing_controls(): Parses the housing control totals from the
+            configuration file and sets the housing_controls attribute
         _parse_migration_controls(): Parses the migration controls mapping from the
             configuration file and sets the migration_controls attribute
         _parse_mortality_rates(): Parses the mortality rate controls from the
@@ -57,9 +61,11 @@ class InputParser:
         self.version = None
         self.comments = None
         self.estimates_run_id = None
+        self.fertility_rates = None
+        self.gq_controls = None
+        self.housing_controls = None
         self.migration_controls = None
         self.mortality_rates = None
-        self.fertility_rates = None
         self.load_to_database = None
 
     def parse_config(self) -> None:
@@ -79,6 +85,7 @@ class InputParser:
         self.estimates_run_id = self._parse_estimates_run_id()
         self.fertility_rates = self._parse_fertility_rates()
         self.gq_controls = self._parse_gq_controls()
+        self.housing_controls = self._parse_housing_controls()
         self.migration_controls = self._parse_migration_controls()
         self.mortality_rates = self._parse_mortality_rates()
         self.load_to_database = self._config.get("sql", {}).get(
@@ -106,6 +113,7 @@ class InputParser:
                 "schema": {
                     "fertility_rates": {"type": "string", "nullable": True},
                     "gq_controls": {"type": "string", "nullable": True},
+                    "housing_controls": {"type": "string", "nullable": True},
                     "migration_controls": {"type": "string", "nullable": True},
                     "mortality_rates": {"type": "string", "nullable": True},
                 },
@@ -203,12 +211,16 @@ class InputParser:
             raise ValueError(f"Error parsing fertility rate CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "age", "sex", "ethnicity", "rate_birth"}
-        if not required_cols.issubset(fertility_rates.columns):
+        required_cols = ["year", "age", "sex", "ethnicity", "rate_birth"]
+        if not set(required_cols).issubset(fertility_rates.columns):
             raise ValueError(
                 "Fertility rates must contain columns: "
                 "(year, age, sex, ethnicity, rate_birth)"
             )
+
+        # Ensure no columns contain null values
+        if fertility_rates[required_cols].isnull().any().any():
+            raise ValueError("Fertility rates contain null values")
 
         # Check fertility rates are > 0 and < 1
         if any(fertility_rates["rate_birth"] < 0) or any(
@@ -249,7 +261,7 @@ class InputParser:
                 null={},
             )
 
-        return fertility_rates[["year", "age", "sex", "ethnicity", "rate_birth"]]
+        return fertility_rates[required_cols]
 
     def _parse_gq_controls(self) -> pd.DataFrame | None:
         """Parse the group quarters (GQ) controls CSV file from the configuration file."""
@@ -272,11 +284,15 @@ class InputParser:
             raise ValueError(f"Error parsing GQ controls CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "gq_mil", "gq_prison", "gq_college"}
-        if not required_cols.issubset(gq_controls.columns):
+        required_cols = ["year", "gq_mil", "gq_prison", "gq_college"]
+        if not set(required_cols).issubset(gq_controls.columns):
             raise ValueError(
                 "GQ controls must contain columns: (year, gq_mil, gq_prison, gq_college)"
             )
+
+        # Ensure no columns contain null values
+        if gq_controls[required_cols].isnull().any().any():
+            raise ValueError("GQ controls contain null values")
 
         # Check control totals are > 0
         if (
@@ -306,7 +322,105 @@ class InputParser:
         if not all(year in gq_controls["year"].values for year in post_launch_years):
             raise ValueError("GQ controls must contain all post-launch years")
 
-        return gq_controls[["year", "gq_mil", "gq_prison", "gq_college"]]
+        return gq_controls[required_cols]
+
+    def _parse_housing_controls(self) -> pd.DataFrame | None:
+        """Parse the housing controls CSV file from the configuration file."""
+        # Check the housing controls file exists and is a valid CSV file
+        housing_controls_fp = self._config["csv"].get("housing_controls")
+        if housing_controls_fp is None:
+            return None
+
+        housing_controls_path = pathlib.Path(housing_controls_fp)
+        if not housing_controls_path.is_absolute():
+            housing_controls_path = (
+                pathlib.Path(__file__).resolve().parent.parent / housing_controls_path
+            )
+        try:
+            with open(housing_controls_path, "r") as f:
+                housing_controls = pd.read_csv(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Housing controls file not found: {housing_controls_fp}"
+            )
+        except pd.errors.ParserError as e:
+            raise ValueError(f"Error parsing housing controls CSV file: {e}")
+
+        # Ensure DataFrame contains required columns
+        required_cols = [
+            "year",
+            "hh_mh",
+            "hs_mh",
+            "hh_mf_pct",
+            "hh_sf_pct",
+            "vr_mf",
+            "vr_sf",
+        ]
+        if not set(required_cols).issubset(housing_controls.columns):
+            raise ValueError(
+                "Housing controls must contain columns: (year, hh_mh, hs_mh, hh_mf_pct, hh_sf_pct, vr_mf, vr_sf)"
+            )
+
+        # Ensure no columns contain null values
+        if housing_controls[required_cols].isnull().any().any():
+            raise ValueError("Housing controls contain null values")
+
+        # Check control totals are >= 0
+        if (
+            any(housing_controls["hh_mh"] < 0)
+            or any(housing_controls["hs_mh"] < 0)
+            or any(housing_controls["hh_mf_pct"] < 0)
+            or any(housing_controls["hh_sf_pct"] < 0)
+            or any(housing_controls["vr_mf"] < 0)
+            or any(housing_controls["vr_sf"] < 0)
+        ):
+            raise ValueError("Housing control totals must be >= 0")
+
+        # Check that the Mobile Home households and housing stock are integers
+        if not pd.api.types.is_integer_dtype(housing_controls["hh_mh"]):
+            raise ValueError("Mobile Home households must be integers")
+        if not pd.api.types.is_integer_dtype(housing_controls["hs_mh"]):
+            raise ValueError("Mobile Home housing stock must be integers")
+
+        # Check that the Mobile Home housing stock is >= the households
+        if any(housing_controls["hs_mh"] < housing_controls["hh_mh"]):
+            raise ValueError(
+                "Mobile Home housing stock must be >= Mobile Home households"
+            )
+
+        # Check that the Multifamily plus Single Family household proportion is equal to 1
+        if any(housing_controls["hh_mf_pct"] + housing_controls["hh_sf_pct"] != 1):
+            raise ValueError(
+                "The sum of Multifamily and Single Family household proportions must be equal to 1"
+            )
+
+        # Check that proportions are <= 1 and vacancy rates are < 1
+        if (
+            any(housing_controls["hh_mf_pct"] > 1)
+            or any(housing_controls["hh_sf_pct"] > 1)
+            or any(housing_controls["vr_mf"] >= 1)
+            or any(housing_controls["vr_sf"] >= 1)
+        ):
+            raise ValueError(
+                "Household proportions must be <= 1 and vacancy rates must be < 1"
+            )
+
+        # Check for duplicate years in housing controls
+        if housing_controls["year"].duplicated().any():
+            raise ValueError("Duplicate years found in housing controls")
+
+        # Check that all years in housing controls are post-launch years
+        post_launch_years = range(self.launch_year + 1, self.horizon_year + 1)  # type: ignore
+        if not all(year in post_launch_years for year in housing_controls["year"]):
+            raise ValueError("Housing controls must only contain post-launch years")
+
+        # Check that all post-launch years are present in housing controls
+        if not all(
+            year in housing_controls["year"].values for year in post_launch_years
+        ):
+            raise ValueError("Housing controls must contain all post-launch years")
+
+        return housing_controls[required_cols]
 
     def _parse_migration_controls(self) -> pd.DataFrame | None:
         """Parse the migration controls CSV file from the configuration file."""
@@ -331,11 +445,15 @@ class InputParser:
             raise ValueError(f"Error parsing migration controls CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "ins", "outs"}
-        if not required_cols.issubset(migration_controls.columns):
+        required_cols = ["year", "ins", "outs"]
+        if not set(required_cols).issubset(migration_controls.columns):
             raise ValueError(
                 "Migration controls must contain columns: (year, ins, outs)"
             )
+
+        # Ensure no columns contain null values
+        if migration_controls[required_cols].isnull().any().any():
+            raise ValueError("Migration controls contain null values")
 
         # Check control totals are > 0
         if any(migration_controls["ins"] <= 0) or any(migration_controls["outs"] <= 0):
@@ -356,7 +474,7 @@ class InputParser:
         ):
             raise ValueError("Migration controls must contain all post-launch years")
 
-        return migration_controls
+        return migration_controls[required_cols]
 
     def _parse_mortality_rates(self) -> pd.DataFrame | None:
         """Parse the mortality rates CSV file from the configuration file.
@@ -389,14 +507,14 @@ class InputParser:
             raise ValueError(f"Error parsing mortality rates CSV file: {e}")
 
         # Ensure DataFrame contains required columns
-        required_cols = {"year", "age", "sex", "ethnicity", "rate_death"}
-        if not required_cols.issubset(mortality_rates.columns):
+        required_cols = ["year", "age", "sex", "ethnicity", "rate_death"]
+        if not set(required_cols).issubset(mortality_rates.columns):
             raise ValueError(
                 "Mortality rates must contain columns: (year, age, sex, ethnicity, rate_death)"
             )
 
         # Required mortality-control fields cannot be null
-        if mortality_rates[list(required_cols)].isna().any().any():
+        if mortality_rates[required_cols].isna().any().any():
             raise ValueError("Mortality rates must not contain null values")
 
         # Check mortality rates are > 0 and < 1
@@ -436,4 +554,4 @@ class InputParser:
                 null={},
             )
 
-        return mortality_rates[["year", "age", "sex", "ethnicity", "rate_death"]]
+        return mortality_rates[required_cols]

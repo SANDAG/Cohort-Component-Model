@@ -5,7 +5,7 @@ This module generates households and housing units by structure type.
 | ----- | ------------- | ----- |
 | Households and Housing Units by Structure Type | Self-referential | Initial input for the launch year is provided by SANDAG's Estimates Program [Housing and Households](https://github.com/SANDAG/Estimates-Program/wiki/Housing-and-Households). Housing units by structure type are then used iteratively as input to ensure no housing units are destroyed within non-Mobile Home structure types |
 | Total Households | [Annual Cycle](https://github.com/SANDAG/Cohort-Component-Model/wiki/Annual-Cycle) | Post-launch year the total households from the Annual Cycle module are split by structure type using proportions of non-Mobile Home households by structure type calculated from the launch year or from the optionallly asserted controls |
-| Housing Controls | User-Input (Optional) | TODO: Optional CSV file of asserted Mobile Home households and housing units, the proportions of non-Mobile Home households by structure type, and vacancy rates for non-Mobile Home households by structure type for each increment year |
+| Housing Controls | User-Input (Optional) | Optional CSV file of asserted Mobile Home households and housing units, the proportions of non-Mobile Home households by structure type, and vacancy rates for non-Mobile Home households by structure type for each increment year |
 
 ## Households and Housing Units by Structure Type
 Households and housing units by structure type are provided directly by SANDAG's Estimates Program for the launch year. See [Housing and Households](https://github.com/SANDAG/Estimates-Program/wiki/Housing-and-Households). Post-launch year, the prior increment housing units are used to ensure that no housing units are destroyed within non-Mobile Home structure types. Mobile Home households and housing units are held constant unless otherwise optionally asserted by user-input controls.
@@ -14,7 +14,7 @@ Households and housing units by structure type are provided directly by SANDAG's
 See [Annual Cycle](https://github.com/SANDAG/Cohort-Component-Model/wiki/Annual-Cycle). The total households, excluding constant Mobile Home households, for the post-launch increments are split into structure types using the launch year proportions unless otherwise optionally asserted by user-input controls.
 
 ## Housing Controls
-TODO: An optional user defined CSV file containing control totals for Mobile home households and housing units, the proportions of non-Mobile Home households by structure type, and vacancy rates for non-Mobile Home structure types. If provided, the CSV should include one row per increment year, post-launch year. See the [README.md](https://github.com/SANDAG/Cohort-Component-Model/blob/main/README.md) for more information regarding the file structure and how to update the configuration file.
+An optional user defined CSV file containing control totals for Mobile home households and housing units, the proportions of non-Mobile Home households by structure type, and vacancy rates for non-Mobile Home structure types. If provided, the CSV should include one row per increment year, post-launch year. See the [README.md](https://github.com/SANDAG/Cohort-Component-Model/blob/main/README.md) for more information regarding the file structure and how to update the configuration file.
 
 # Outputs
 ## Households and Housing Units by Structure Type
