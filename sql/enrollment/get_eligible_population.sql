@@ -50,8 +50,8 @@ BEGIN
             WHERE [AGEP] < 99
         )
         SELECT
-            [ages].[AGEP],
-            ISNULL(SUM([PWGTP]), 0) AS [PWGTP]
+            [ages].[AGEP] AS [age],
+            ISNULL(SUM([PWGTP]), 0) AS [pop]
         FROM [ages]
         LEFT OUTER JOIN [acs].[pums].[vi_5y_' + @pums + '_persons_sd] AS [acs]
             ON [ages].[AGEP] = CASE WHEN [acs].[AGEP] >= 99 THEN 99 ELSE [acs].[AGEP] END
