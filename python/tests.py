@@ -21,6 +21,7 @@ _DISTINCT_COUNTS = {
     "age_undesa_deaths": 16,  # UN DESA rates cover ages 85-99 plus one aggregate 85+ row
     "age_births": 30,  # Fertility limited to ages 15-44
     "age_group": 20,  # Estimates Program age groups
+    "enrollment_category": 4,
     "ethnicity": 7,
     "pop_type": 5,
     "sex": 2,

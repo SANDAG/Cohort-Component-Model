@@ -1,4 +1,4 @@
-The Cohort Component model outputs three core datasets; the Population/Households/Group Quarters information, the Rates used to increment the Population and create Households/Group Quarters information, the households and housing units by structure type, and the Components of Change.
+The Cohort Component model outputs three core datasets; the Population/Households/Group Quarters information, the Rates used to increment the Population and create Households/Group Quarters information, the households and housing units by structure type, and the Components of Change. Additionally, school enrollment rates and counts as well as households and housing units by structure type are output.
 
 The individual datasets are described below.
 
@@ -54,7 +54,16 @@ The individual datasets are described below.
 | **rate_hh_seniors**  | float   | *Household characteristic rate; households with 1 or more seniors (>=65)* |
 
 
-## Table 3: Housing
+## Table 3: Enrollment
+| Field | Type | Description | 
+| :---: | :--: | ----------- |
+| **year**                | integer | *The increment year; includes the launch up to horizon year* |
+| **enrollment_category** | string  | *School enrollment category (K-4th, 5th-8th, 9th-12th, College)* |
+| **enrollment**          | integer | *Enrollment count* |
+| **rate_enrollment**     | float   | *School enrollment rate for the household population* |
+
+
+## Table 4: Housing
 | Field | Type | Description | 
 | :---: | :--: | ----------- |
 | **year**           | integer | *The increment year; includes the launch up to horizon year* |
@@ -63,7 +72,7 @@ The individual datasets are described below.
 | **hh**             | integer | *Households* |
 
 
-## Table 4: Components of Change
+## Table 5: Components of Change
 | Field | Type | Description | 
 | :---: | :--: | ----------- |
 | **year**           | integer | *The increment year; includes the launch up to horizon year* |
@@ -79,6 +88,6 @@ The individual datasets are described below.
 | **gq_college_adj** | integer | *Adjustments made to college group quarters* |
 
 # Storage Location
-Output files for each increment year from launch to horizon are written to the **output** folder as csv files; **population.csv**, **rates.csv**, **housing.csv**, and **components.csv**.
+Output files for each increment year from launch to horizon are written to the **output** folder as csv files; **population.csv**, **rates.csv**, **enrollment.csv**, **housing.csv**, and **components.csv**.
 
 Optionally, these outputs are assigned a run identifier and loaded to the production SQL database.
