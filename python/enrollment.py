@@ -26,7 +26,7 @@ def run_enrollment_rates(year: int) -> pd.DataFrame:
     College categories. For years 2023 and beyond, the California Department
     of Education enrollment data is used to adjust Nursery school/preschool
     persons into the Kindergarten category to account for universal TK and
-    misspecified enrollment data.
+    misspecified enrollment data in the ACS.
 
     The rates are only calculated from the ACS PUMS household population as it
     is assumed that all "Group Quarters - College" population is enrolled in

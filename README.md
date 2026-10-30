@@ -124,6 +124,23 @@ direction TB
         gq_college_adj INT
     }
 
+    outputs_enrollment {
+        run_id INT UK, FK
+        year INT UK
+        age INT UK
+        enrollment_category NVARCHAR(10) UK
+        enrollment INT
+        rate_enrollment FLOAT
+    }
+
+    outputs_housing {
+        run_id INT UK, FK
+        year INT UK
+        structure_type NVARCHAR(10) UK
+        hs INT
+        hh INT
+    }
+
     outputs_population {
         run_id INT UK, FK
         year INT UK
@@ -181,6 +198,8 @@ direction TB
     }
 
     outputs_components ||--o{ metadata_run : "run_id"
+    outputs_enrollment ||--o{ metadata_run : "run_id"
+    outputs_housing ||--o{ metadata_run : "run_id"
     outputs_population ||--o{ metadata_run : "run_id"
     outputs_rates ||--o{ metadata_run : "run_id"
 ```
