@@ -4,6 +4,7 @@ import logging
 
 import python.annual_cycle as annual_cycle
 import python.calculate_population as calculate_population
+import python.enrollment as enrollment
 import python.etl as etl
 
 import python.input_modules.birth_rates as birth_rates
@@ -100,6 +101,13 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
         housing_data = housing.run_housing(year=increment, population=population)
     utils.write_df(
         year=increment, df=housing_data, fp=utils.OUTPUT_FOLDER / "housing.csv"
+    )
+
+    # Calculate school enrollment --------------------------------------------
+    logger.info("Calculating school enrollment")
+    enrollment_data = enrollment.run_enrollment(population=population)
+    utils.write_df(
+        year=increment, df=enrollment_data, fp=utils.OUTPUT_FOLDER / "enrollment.csv"
     )
 
     # Do not calculate components of change and incremented population for after the horizon year

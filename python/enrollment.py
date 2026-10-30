@@ -1,4 +1,4 @@
-"""Get school enrollment rates by single year of age."""
+"""Calculate school enrollment rates and enrollment counts by single year of age."""
 
 import logging
 
@@ -15,6 +15,9 @@ generator = np.random.default_rng(utils.RANDOM_SEED)
 logger = logging.getLogger(__name__)
 
 
+# Decorator to cache the results of the function to improve performance
+# As it is called repeatedly for post-launch years
+@lru_cache(maxsize=1)
 def run_enrollment_rates(year: int) -> pd.DataFrame:
     """Orchestrator function to calculate enrollment rates.
 
@@ -46,18 +49,20 @@ def run_enrollment_rates(year: int) -> pd.DataFrame:
     if year == utils.LAUNCH_YEAR:
         logger.info("Calculating enrollment rates for launch year")
 
-        enrollment_inputs = _get_enrollment_inputs(year)
-        _validate_enrollment_inputs(enrollment_inputs)
+        enrollment_rates_inputs = _get_enrollment_rates_inputs(year)
+        _validate_enrollment_rates_inputs(enrollment_rates_inputs)
 
-        enrollment_outputs = _create_enrollment_outputs(enrollment_inputs)
-        _validate_enrollment_outputs(enrollment_outputs)
+        enrollment_rates_outputs = _create_enrollment_rates_outputs(
+            enrollment_rates_inputs
+        )
+        _validate_enrollment_rates_outputs(enrollment_rates_outputs)
 
-        return enrollment_outputs
+        return enrollment_rates_outputs
     else:
         raise ValueError("Enrollment rates can only be run for the launch year")
 
 
-def _get_enrollment_inputs(year: int) -> dict[str, pd.DataFrame]:
+def _get_enrollment_rates_inputs(year: int) -> dict[str, pd.DataFrame]:
     """Load input datasets for enrollment rate generation."""
     with utils.ESTIMATES_ENGINE.connect() as connection:
         with open(utils.SQL_FOLDER / "enrollment" / "get_acs_enrollment.sql") as file:
@@ -98,42 +103,42 @@ def _get_enrollment_inputs(year: int) -> dict[str, pd.DataFrame]:
     }
 
 
-def _validate_enrollment_inputs(
-    enrollment_inputs: dict[str, pd.DataFrame],
+def _validate_enrollment_rates_inputs(
+    enrollment_rates_inputs: dict[str, pd.DataFrame],
 ) -> None:
     """Validate the input datasets for school enrollment rates."""
     # Validate ACS enrollment counts
     tests.validate_data(
         table_name="Input ACS Enrollment Counts",
-        data=enrollment_inputs["acs_enrollment"],
+        data=enrollment_rates_inputs["acs_enrollment"],
         negative={},
         null={"null_ok": {"tk_reallocation", "enrollment_category"}},
     )
     # Validate ACS enrollment eligible population
     tests.validate_data(
         table_name="Input ACS Enrollment Eligible Population",
-        data=enrollment_inputs["eligible_population"],
+        data=enrollment_rates_inputs["eligible_population"],
         row_count={"key_columns": {"age"}},
         negative={},
         null={},
     )
     # Validate CDE enrollment counts
-    if not enrollment_inputs["cde_enrollment"].empty:
+    if not enrollment_rates_inputs["cde_enrollment"].empty:
         tests.validate_data(
             table_name="Input CDE Enrollment Counts",
-            data=enrollment_inputs["cde_enrollment"],
+            data=enrollment_rates_inputs["cde_enrollment"],
             negative={},
             null={},
         )
 
 
-def _create_enrollment_outputs(
-    enrollment_inputs: dict[str, pd.DataFrame],
+def _create_enrollment_rates_outputs(
+    enrollment_rates_inputs: dict[str, pd.DataFrame],
 ) -> pd.DataFrame:
     """Create the output DataFrame for enrollment rates."""
-    acs_enrollment = enrollment_inputs["acs_enrollment"]
-    eligible_population = enrollment_inputs["eligible_population"]
-    cde_enrollment = enrollment_inputs["cde_enrollment"]
+    acs_enrollment = enrollment_rates_inputs["acs_enrollment"]
+    eligible_population = enrollment_rates_inputs["eligible_population"]
+    cde_enrollment = enrollment_rates_inputs["cde_enrollment"]
 
     # If the CDE enrollment data is available
     if not cde_enrollment.empty:
@@ -184,7 +189,7 @@ def _create_enrollment_outputs(
         acs_enrollment, how="left", left_on="age", right_on="AGEP"
     ).assign(
         # Avoid divide by zero setting the rate to 0 when the population is 0
-        rate=lambda x: (x["PWGTP"] / x["pop"].replace(0, np.nan)).fillna(0)
+        rate_enrollment=lambda x: (x["PWGTP"] / x["pop"].replace(0, np.nan)).fillna(0)
     )
 
     # Ensure every age and enrollment category combination is present
@@ -202,18 +207,77 @@ def _create_enrollment_outputs(
         .reset_index()
     )
 
-    return enrollment_rates[["age", "enrollment_category", "rate"]]
+    return enrollment_rates[["age", "enrollment_category", "rate_enrollment"]]
 
 
-def _validate_enrollment_outputs(
-    enrollment_outputs: pd.DataFrame,
+def _validate_enrollment_rates_outputs(
+    enrollment_rates_outputs: pd.DataFrame,
 ) -> None:
     """Validate the output datasets for school enrollment rates."""
     # Validate ACS enrollment counts
     tests.validate_data(
         table_name="Output Enrollment Rates",
-        data=enrollment_outputs,
+        data=enrollment_rates_outputs,
         row_count={"key_columns": {"age", "enrollment_category"}},
         negative={},
         null={},
     )
+
+
+def run_enrollment(population: pd.DataFrame) -> pd.DataFrame:
+    """Calculate school enrollment counts for a given year and population.
+
+    Args:
+        population (pd.DataFrame): Population by single year of age, sex, and
+            race/ethnicity within type
+
+    Returns:
+        pd.DataFrame: The calculated school enrollment counts and rates by
+            single year of age and enrollment category
+    """
+    # Enrollment rates available only for the launch year
+    rates = run_enrollment_rates(year=utils.LAUNCH_YEAR)
+
+    # Apply the enrollment rates to the population to calculate enrollment counts
+    # Excluding all group quarters populations except for college students
+    enrollment = population.merge(rates, on="age").assign(
+        hhp=lambda df: df["pop"]
+        - df["gq_mil"]
+        - df["gq_college"]
+        - df["gq_prison"]
+        - df["gq_other"],
+        enrollment=lambda df: np.where(
+            df["enrollment_category"] == "College",
+            df["hhp"] * df["rate_enrollment"] + df["gq_college"],
+            df["hhp"] * df["rate_enrollment"],
+        ),
+    )
+
+    # Aggregate to single year of age and enrollment category
+    # Keeping the rates for reference in the output
+    # Taking the max rate for each age and enrollment category combination
+    enrollment = enrollment.groupby(["age", "enrollment_category"], as_index=False).agg(
+        enrollment=("enrollment", "sum"), rate_enrollment=("rate_enrollment", "max")
+    )
+
+    # Integerize the enrollment counts respecting their sum(s)
+    # Within enrollment categories
+    for category in enrollment["enrollment_category"].unique():
+        mask = enrollment["enrollment_category"] == category
+        enrollment.loc[mask, "enrollment"] = utils.integerize_1d(
+            data=enrollment.loc[mask, "enrollment"],
+            control=round(enrollment.loc[mask, "enrollment"].sum()),
+            methodology="weighted_random",
+            generator=generator,
+        )
+
+    # Validate enrollment
+    tests.validate_data(
+        table_name="Output Enrollment Counts and Rates",
+        data=enrollment,
+        row_count={"key_columns": {"age", "enrollment_category"}},
+        negative={},
+        null={},
+    )
+
+    return enrollment[["age", "enrollment_category", "enrollment", "rate_enrollment"]]
