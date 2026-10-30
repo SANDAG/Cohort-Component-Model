@@ -64,13 +64,17 @@ def run_enrollment_rates(year: int) -> pd.DataFrame:
 
 def _get_enrollment_rates_inputs(year: int) -> dict[str, pd.DataFrame]:
     """Load input datasets for enrollment rate generation."""
+    # Store initial year for SQL query ensuring SQL fallback
+    # Passes the correct year to subsequent inputs
+    query_params = {"year": year}
+
     with utils.ESTIMATES_ENGINE.connect() as connection:
         with open(utils.SQL_FOLDER / "enrollment" / "get_acs_enrollment.sql") as file:
             acs_enrollment = utils.read_sql_query_fallback(
                 max_lookback=1,
                 sql=sql.text(file.read()),
                 con=connection,
-                params={"year": year},
+                params=query_params,
             )
 
         with open(
@@ -80,7 +84,7 @@ def _get_enrollment_rates_inputs(year: int) -> dict[str, pd.DataFrame]:
                 max_lookback=1,
                 sql=sql.text(file.read()),
                 con=connection,
-                params={"year": year},
+                params={"year": query_params["year"]},
             )
 
     if year >= 2023:
@@ -89,7 +93,7 @@ def _get_enrollment_rates_inputs(year: int) -> dict[str, pd.DataFrame]:
             utils.DATA_FOLDER
             / "enrollment"
             / "K-12 Enrollment by Age Group and Grade.xlsx",
-            sheet_name=str(year),
+            sheet_name=str(query_params["year"]),
             skiprows=3,
         )
 
@@ -171,10 +175,10 @@ def _create_enrollment_rates_outputs(
                 ].sum()
                 allocation = min(cde_total - k_total, nursery_total)
 
-                # Apply allocation adjustment to the enrollment
+                # Apply allocation adjustment to the kindergarten enrollment
                 acs_enrollment.loc[
                     (acs_enrollment["AGEP"] == age)
-                    & (acs_enrollment["enrollment_category"] == "K-4th"),
+                    & (acs_enrollment["tk_reallocation"] == "Kindergarten"),
                     "PWGTP",
                 ] += allocation
 
