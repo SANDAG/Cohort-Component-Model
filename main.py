@@ -115,7 +115,7 @@ for increment in range(utils.LAUNCH_YEAR, utils.HORIZON_YEAR + 1):  # type: igno
         # Calculate Components of Change and create new population ----
         logger.info("Calculating components of change and incremented population")
         increment_data = annual_cycle.increment_population(
-            year=increment, population=population, rates=rates
+            population=population, rates=rates
         )
 
         # Write out components of change ----
