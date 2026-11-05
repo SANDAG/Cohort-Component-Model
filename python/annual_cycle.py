@@ -252,7 +252,6 @@ def create_newborns(population: pd.DataFrame) -> pd.DataFrame:
 
 
 def increment_population(
-    year: int,
     population: pd.DataFrame,
     rates: dict[str, pd.DataFrame],
 ) -> dict[str, pd.DataFrame]:
@@ -260,7 +259,6 @@ def increment_population(
     increment.
 
     Args:
-        year (int): Increment year
         population (pd.DataFrame): Population by single year of age, sex, and
             race/ethnicity
         rates (dict): Dictionary containing birth, death, and migration rates

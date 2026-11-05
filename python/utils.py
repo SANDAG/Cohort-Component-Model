@@ -163,7 +163,8 @@ AGE_MAPPING = {
     "85 and Older": {"min": 85, "max": 99},
 }
 
-# Hardcoded percentage of newborns that are Male sex
+# Percentage of newborns that are Male sex
+# See https://github.com/SANDAG/Cohort-Component-Model/issues/220
 MALE_PCT = 0.512
 
 # Hardcoded maximum allowed in/out migration rate
@@ -719,7 +720,13 @@ def weighted_moving_average(
 def wipe_output_files(folder: pathlib.Path = OUTPUT_FOLDER) -> int:
     """Delete model output CSV files and return count deleted."""
     deleted = 0
-    for filename in ["components.csv", "housing.csv", "population.csv", "rates.csv"]:
+    for filename in [
+        "components.csv",
+        "enrollment.csv",
+        "housing.csv",
+        "population.csv",
+        "rates.csv",
+    ]:
         file_path = folder / filename
         if file_path.is_file():
             file_path.unlink()

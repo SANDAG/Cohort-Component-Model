@@ -52,6 +52,22 @@ CREATE TABLE [outputs].[components]
 GO
 
 
+-- Create Table 'outputs.enrollment'
+CREATE TABLE [outputs].[enrollment]
+(
+    [run_id] INT NOT NULL,
+    [year] INT NOT NULL,
+    [age] INT NOT NULL,
+    [enrollment_category] NVARCHAR(10) NOT NULL,
+    [enrollment] INTEGER NOT NULL,
+    [rate_enrollment] FLOAT NOT NULL,
+    INDEX [ccsi_outputs_enrollment] CLUSTERED COLUMNSTORE,
+    CONSTRAINT [ixuq_outputs_enrollment] UNIQUE ([run_id], [year], [age], [enrollment_category]) WITH (DATA_COMPRESSION = PAGE),
+    CONSTRAINT [fk_outputs_enrollment_run_id] FOREIGN KEY ([run_id]) REFERENCES [metadata].[run] ([run_id])
+)
+GO
+
+
 -- Create Table 'outputs.housing'
 CREATE TABLE [outputs].[housing]
 (
