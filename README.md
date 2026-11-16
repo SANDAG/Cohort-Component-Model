@@ -10,10 +10,10 @@ Set the configuration file **config.yml** parameters specific to the model run o
 ## Configuration File Settings
 *Note that the configuration file contains datasets stored on a SQL server instance accessed at runtime through queries. It is possible to provide query results as local datasets and migrate the SQL datasets to the **csv** section of the configuration file to remove the dependency on the SQL instance.*
 ```yaml
-version: "1.0.0-dev"
+version: "1.1.0"
 comments: "No Comments" # Add comments pertaining to the run
 configurations:
-  estimates_run_id: 237  # the SANDAG Estimates Program production run to use for the launch year population
+  estimates_run_id: 240  # Series 16 Estimates 2020-2025
 csv:
   fertility_rates: null  # optional csv with columns: (year, age, sex, race, rate_birth)
   gq_controls: null  # optional csv with columns: (year, gq_mil, gq_prison, gq_college)

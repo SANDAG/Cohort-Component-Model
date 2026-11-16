@@ -99,7 +99,12 @@ class InputParser:
         schema = {
             "version": {
                 "type": "string",
-                "allowed": ["0.0.0-dev", "1.0.0", "1.0.0-dev"],
+                "allowed": [
+                    "0.0.0-dev",
+                    "1.0.0",
+                    "1.0.0-dev",
+                    "1.1.0",
+                ],
             },
             "comments": {"type": "string"},
             "configurations": {
