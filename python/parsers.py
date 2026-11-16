@@ -104,6 +104,7 @@ class InputParser:
                     "1.0.0",
                     "1.0.0-dev",
                     "1.1.0",
+                    "1.1.0-dev",
                 ],
             },
             "comments": {"type": "string"},
