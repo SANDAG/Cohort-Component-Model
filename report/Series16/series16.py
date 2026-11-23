@@ -2,32 +2,16 @@ import sklearn
 
 import numpy as np
 import pandas as pd
-import sqlalchemy as sql
 
 import python.input_modules.death_rates as death_rates
 import python.input_modules.launch_year as launch_year
-import python.utils as utils
 
 
 def get_mortality_rates(year: int) -> pd.DataFrame:
     """Calculate single-year-of-age mortality rates for a given year."""
     population = None
     if year >= 2022:
-        with utils.CCM_ENGINE.connect() as connection:
-            with open(utils.SQL_FOLDER / "launch" / "get_ase_distribution.sql") as file:
-                dof_ase = pd.read_sql_query(
-                    sql.text(file.read()), connection, params={"year": year}
-                )
-
-        with utils.ESTIMATES_ENGINE.connect() as connection:
-            with open(utils.SQL_FOLDER / "launch" / "get_estimates_ase.sql") as file:
-                estimates = pd.read_sql_query(
-                    sql.text(file.read()),
-                    connection,
-                    params={"run_id": utils.ESTIMATES_RUN_ID, "year": year},
-                )
-
-        launch_inputs = {"dof_ase": dof_ase, "estimates": estimates}
+        launch_inputs = launch_year._get_launch_inputs(year)
         launch_year._validate_launch_inputs(launch_inputs)
 
         population = launch_year._create_launch_outputs(launch_inputs)

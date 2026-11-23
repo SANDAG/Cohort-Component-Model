@@ -39,7 +39,7 @@ def run_launch_year() -> pd.DataFrame:
             single year of age and integerize within each age_group
         _validate_launch_outputs - Validate the output from the above function
     """
-    launch_inputs = _get_launch_inputs()
+    launch_inputs = _get_launch_inputs(utils.LAUNCH_YEAR)
     _validate_launch_inputs(launch_inputs)
 
     launch_outputs = _create_launch_outputs(launch_inputs)
@@ -48,8 +48,8 @@ def run_launch_year() -> pd.DataFrame:
     return launch_outputs
 
 
-def _get_launch_inputs() -> dict[str, pd.DataFrame]:
-    """Load input datasets for launch year population generation."""
+def _get_launch_inputs(year: int) -> dict[str, pd.DataFrame]:
+    """Load input datasets for year population generation."""
     # Load California DOF age/sex/ethnicity distribution
     with utils.CCM_ENGINE.connect() as connection:
         # Load California DOF age/sex/ethnicity distribution
@@ -57,16 +57,16 @@ def _get_launch_inputs() -> dict[str, pd.DataFrame]:
             utils.SQL_FOLDER / "launch" / "get_ase_distribution.sql", "r"
         ) as file:
             dof_ase = pd.read_sql_query(
-                sql.text(file.read()), connection, params={"year": utils.LAUNCH_YEAR}  # type: ignore
+                sql.text(file.read()), connection, params={"year": year}  # type: ignore
             )
 
-    # Load Estimates Program launch year population
+    # Load Estimates Program population
     with utils.ESTIMATES_ENGINE.connect() as connection:
         with open(utils.SQL_FOLDER / "launch" / "get_estimates_ase.sql", "r") as file:
             estimates = pd.read_sql_query(
                 sql.text(file.read()),
                 connection,
-                params={"run_id": utils.ESTIMATES_RUN_ID, "year": utils.LAUNCH_YEAR},  # type: ignore
+                params={"run_id": utils.ESTIMATES_RUN_ID, "year": year},  # type: ignore
             )
 
     return {"dof_ase": dof_ase, "estimates": estimates}
