@@ -229,7 +229,7 @@ with tab2:
                 labels={"Race/Ethnicity": ""},
             )
             .update_layout(
-                legend=dict(orientation="h", y=1.15),
+                legend=dict(orientation="h", y=1.19),
             )
             .update_xaxes(
                 range=[lfe["Year"].min() - 0.5, lfe["Year"].max() + 0.5],
