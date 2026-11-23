@@ -30,6 +30,8 @@ For ages under 85, mortality rates are calculated using CDC WONDER mortality dat
 
 For ages 85 and older, the United Nations Department of Economic and Social Affairs (UN DESA) Life Table Survivors dataset is used instead. Because this dataset is stratified only by age and sex, a scaling factor is applied to estimate age-, sex-, and race/ethnicity-specific mortality rates. A scaling factor is then derived by comparing implied mortality rates for ages 85 and older from CDC WONDER and solving for the value that aligns the UN DESA implied rate with CDC WONDER. UN DESA data is limited up to 2023 and subsequent launch years will use 2023 data. 
 
+In the resulting product between CDC WONDER and UN DESA, mortality rates are then smoothed within each year across ages to reduce volatility, especially those with low populations, while preserving the characteristic structure of the mortality curve (elevated infant mortality, declining young mortality, a rise starting in adolescence, and continued increase into older ages).
+
 Post-launch year, asserted mortality rates are used if provided.
 
 *See the **python/input_modules/death_rates.py** file and **sql/mortality** folder for underlying code used by the module.*
